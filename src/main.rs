@@ -1,14 +1,15 @@
+use options::Options;
 use pulldown_cmark::Parser;
-use render::Options;
 use std::fs;
 
 mod counting;
+mod fmt_utils;
 mod fragment;
+mod options;
 mod render;
 
 // TODO: nonprintables
 // TODO: trim trailing whitepace (ah I think that's why I had to add - 1 somehwere)
-// TODO: hardbreaks
 
 fn main() {
     let width = terminal_size::terminal_size()

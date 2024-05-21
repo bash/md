@@ -1,59 +1,12 @@
 use crate::counting::SectionCounter;
+use crate::fmt_utils::Repeat;
 use crate::fragment::{Fragment, FragmentWriter, Fragments, Word};
+use crate::options::Options;
 use anstyle::{AnsiColor, Reset, Style};
-use core::fmt;
 use pulldown_cmark::{Event, HeadingLevel, Tag, TagEnd, TextMergeStream};
 use std::io::{self, Write};
-use std::marker::PhantomData;
 use std::{iter, mem};
 use textwrap::core::display_width;
-
-#[derive(Debug)]
-#[non_exhaustive]
-pub struct Options {
-    pub columns: u16,
-    // pub symbol_repertoire: SymbolRepertoire,
-    // pub rule_style: RuleStyle,
-    // pub show_metadata_blocks: bool,
-}
-
-impl Options {
-    pub fn plain_text(columns: u16) -> Self {
-        Self { columns }
-    }
-}
-
-#[derive(Debug)]
-#[non_exhaustive]
-pub enum SymbolRepertoire {
-    Ascii,
-    Unicode,
-}
-
-#[derive(Debug)]
-pub struct RuleStyle(PhantomData<()>);
-
-impl RuleStyle {
-    /// A horizonal line.
-    pub const fn line() -> Self {
-        todo!()
-    }
-
-    /// Three spaced asterisks: "∗ ∗ ∗".
-    pub const fn dinkus() -> Self {
-        todo!()
-    }
-
-    /// A fleuron: "❧".
-    pub const fn fleuron() -> Self {
-        todo!()
-    }
-
-    /// An ornamental symbol e.g. a dingbat or a fleuron.
-    pub const fn ornament(c: char) -> Self {
-        todo!()
-    }
-}
 
 pub fn render<'a, I, W>(input: &mut I, output: &mut W, options: Options) -> io::Result<()>
 where
@@ -344,12 +297,6 @@ impl BlockStack {
     }
 }
 
-enum BlockKind {
-    Paragraph,
-    Heading(HeadingLevel),
-    Code(Option<String>),
-}
-
 #[derive(Debug)]
 struct Block {
     line_prefix: &'static str,
@@ -364,17 +311,6 @@ impl Default for Block {
             is_first_block: true,
             style: Style::new(),
         }
-    }
-}
-
-struct Repeat<T>(usize, T);
-
-impl<T> fmt::Display for Repeat<T>
-where
-    T: fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        (0..self.0).try_for_each(|_| self.1.fmt(f))
     }
 }
 
