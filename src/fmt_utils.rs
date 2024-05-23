@@ -12,7 +12,7 @@ where
     }
 }
 
-pub(crate) struct NoDebug<T>(T);
+pub(crate) struct NoDebug<T>(pub(crate) T);
 
 impl<T> From<T> for NoDebug<T> {
     fn from(value: T) -> Self {

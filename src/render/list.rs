@@ -2,7 +2,7 @@ use crate::fragment::Fragments;
 use crate::render::block;
 use crate::render::fragment::FragmentsExt;
 
-use super::RenderState;
+use super::Context;
 use pulldown_cmark::{Event, Tag, TagEnd};
 use std::io;
 use std::mem;
@@ -15,15 +15,15 @@ use std::mem;
 pub(super) fn list(
     first_item_number: Option<u64>,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    ctx.write_block_start()?;
 
     let mut item_number = first_item_number;
     take! {
         for event in events; until Event::End(TagEnd::List(..)) => {
             if let Event::Start(Tag::Item) = event {
-                item(item_number, events, state)?;
+                item(item_number, events, ctx)?;
                 item_number.as_mut().map(|c| *c += 1);
             } else {
                 unreachable!();
@@ -37,10 +37,10 @@ pub(super) fn list(
 fn item(
     number: Option<u64>,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
     let mut fragments = Fragments::default();
-    let scope = state.scope(state.style(), Some("   "));
+    let mut ctx = ctx.scope(|s| s.with_prefix("   "));
 
     match number {
         Some(n) => fragments.push_text(&format!("{n}. ")),
@@ -49,16 +49,13 @@ fn item(
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            if let Some(block_event) = fragments.try_push_event(event, state) {
+            if let Some(block_event) = fragments.try_push_event(event, &mut ctx) {
                 // If we get a block event, we only get block events from here on out.
-                state.write_fragments(mem::take(&mut fragments), state.style())?;
-                block(block_event, events, state)?;
+                ctx.write_fragments(mem::take(&mut fragments))?;
+                block(block_event, events, &mut ctx)?;
             }
         }
     }
 
-    state.write_fragments(fragments, state.style())?;
-    state.end_scope(scope);
-
-    Ok(())
+    ctx.write_fragments(fragments)
 }

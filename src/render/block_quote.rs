@@ -1,23 +1,21 @@
-use super::RenderState;
+use super::Context;
 use crate::render::block;
 use pulldown_cmark::{Event, TagEnd};
 use std::io;
 
 pub(super) fn block_quote(
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    ctx.write_block_start()?;
 
-    let scope = state.scope(state.style(), Some("┃ "));
+    let mut ctx = ctx.scope(|s| s.with_prefix("┃ "));
 
     take! {
         for event in events; until Event::End(TagEnd::BlockQuote) => {
-            block(event, events, state)?;
+            block(event, events, &mut ctx)?;
         }
     }
-
-    state.end_scope(scope);
 
     Ok(())
 }

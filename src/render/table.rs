@@ -1,4 +1,4 @@
-use super::RenderState;
+use super::Context;
 use anstyle::{AnsiColor, Reset};
 use pulldown_cmark::{Alignment, Event, TagEnd};
 use std::io::{self, Write as _};
@@ -6,12 +6,12 @@ use std::io::{self, Write as _};
 pub(super) fn table(
     _alignment: Vec<Alignment>,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    ctx.write_block_start()?;
 
     writeln!(
-        state.writer(),
+        ctx.writer(),
         "{}[TODO: table]{}",
         AnsiColor::Red.on_default().invert(),
         Reset

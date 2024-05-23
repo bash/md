@@ -1,4 +1,4 @@
-use super::RenderState;
+use super::Context;
 use anstyle::{Reset, Style};
 use pulldown_cmark::{CodeBlockKind, Event, TagEnd};
 use std::io::{self, Write as _};
@@ -7,12 +7,12 @@ use std::io::{self, Write as _};
 pub(super) fn code_block(
     _kind: CodeBlockKind<'_>,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    ctx.write_block_start()?;
 
     // TODO: allow writer to set/reset style
-    let mut writer = state.writer();
+    let mut writer = ctx.writer();
 
     write!(writer.raw(), "{}", Style::new().italic())?;
 

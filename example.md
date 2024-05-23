@@ -82,7 +82,7 @@ Amet luctus venenatis lectus magna fringilla urna porttitor. Ultricies mi quis h
 | iTerm2              | 10000      | 4.065856 ms  | 49.872777 ms  | 28.259948 ms |
 
 
-## Title with `code`
+## Title with `code` and *emph*
 
 # H1
 ## H2

@@ -1,4 +1,4 @@
-use super::RenderState;
+use super::Context;
 use crate::fragment::{Fragment, Fragments};
 use crate::render::fragment::FragmentsExt as _;
 use anstyle::{AnsiColor, Style};
@@ -9,21 +9,24 @@ use std::io;
 pub(super) fn heading(
     level: HeadingLevel,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
-    let mut fragments = Fragments::default();
+    ctx.write_block_start()?;
 
-    state.section_counter_mut().update(level);
-    fragments.push(format_heading_counter(state.section_counter().value()));
+    let mut fragments = Fragments::default();
+    let style = heading_style(ctx.style(), level);
+    let mut ctx = ctx.scope(|c| c.with_style(style));
+
+    ctx.section_counter_mut().update(level);
+    fragments.push(format_heading_counter(ctx.section_counter().value()));
 
     take! {
         for event in events; until Event::End(TagEnd::Heading(..)) => {
-            fragments.try_push_event(event, state);
+            fragments.try_push_event(event, &mut ctx);
         }
     }
 
-    state.write_block_start()?;
-    state.write_fragments(fragments, heading_style(state.style(), level))
+    ctx.write_fragments(fragments)
 }
 
 fn heading_style(style: Style, level: HeadingLevel) -> Style {

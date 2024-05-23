@@ -1,10 +1,9 @@
-use super::RenderState;
+use super::Context;
 use crate::fmt_utils::Repeat;
 use std::io::{self, Write as _};
-use textwrap::core::display_width;
 
-pub(super) fn rule(state: &mut RenderState) -> io::Result<()> {
-    state.write_block_start()?;
+pub(super) fn rule(ctx: &mut Context) -> io::Result<()> {
+    ctx.write_block_start()?;
 
     // let decoration = "∗ ∗ ∗";
     // let padding_size = state
@@ -18,6 +17,6 @@ pub(super) fn rule(state: &mut RenderState) -> io::Result<()> {
     //     pad = Repeat(padding_size, " "),
     // )
 
-    let columns = state.available_columns().saturating_sub(2);
-    writeln!(state.writer(), "◈{}◈", Repeat(columns, "─"))
+    let columns = ctx.available_columns().saturating_sub(2);
+    writeln!(ctx.writer(), "◈{}◈", Repeat(columns, "─"))
 }

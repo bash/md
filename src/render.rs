@@ -1,14 +1,13 @@
 use crate::options::Options;
-use anstyle::{Reset, Style};
 use pulldown_cmark::{Event, Tag, TagEnd, TextMergeStream};
-use std::io::{self, Write as _};
+use std::io::{self};
 
 #[macro_use]
 mod macros;
 
 mod fragment;
 mod state;
-use state::RenderState;
+use state::{Context, State};
 
 mod block_quote;
 mod code_block;
@@ -34,10 +33,11 @@ where
     W: io::Write,
 {
     let mut events = TextMergeStream::new(input);
-    let mut state = RenderState::new(output, options);
+    let mut state = State::new(options);
+    let mut context = Context::new(&mut state, output);
 
     while let Some(event) = events.next() {
-        block(event, &mut events, &mut state)?;
+        block(event, &mut events, &mut context)?;
     }
 
     Ok(())
@@ -46,19 +46,19 @@ where
 fn block(
     event: Event<'_>,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
     match event {
-        Event::Start(Tag::Paragraph) => paragraph(events, state),
-        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state),
-        Event::Start(Tag::BlockQuote(_kind)) => block_quote(events, state),
-        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state),
+        Event::Start(Tag::Paragraph) => paragraph(events, ctx),
+        Event::Start(Tag::Heading { level, .. }) => heading(level, events, ctx),
+        Event::Start(Tag::BlockQuote(_kind)) => block_quote(events, ctx),
+        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, ctx),
         Event::Start(Tag::HtmlBlock) => html_block(events),
-        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state),
-        Event::Start(Tag::FootnoteDefinition(reference)) => footnote_def(&reference, events, state),
-        Event::Start(Tag::Table(alignment)) => table(alignment, events, state),
+        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, ctx),
+        Event::Start(Tag::FootnoteDefinition(reference)) => footnote_def(&reference, events, ctx),
+        Event::Start(Tag::Table(alignment)) => table(alignment, events, ctx),
         Event::Start(Tag::MetadataBlock(_)) => metadata_block(events),
-        Event::Rule => rule(state),
+        Event::Rule => rule(ctx),
         _ => unreachable!("you have found a bug!"),
     }
 }

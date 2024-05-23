@@ -1,4 +1,4 @@
-use super::RenderState;
+use super::Context;
 use crate::render::block;
 use pulldown_cmark::{Event, TagEnd};
 use std::io;
@@ -8,12 +8,12 @@ use std::io;
 pub(super) fn footnote_def(
     _reference: &str,
     events: &mut dyn Iterator<Item = Event<'_>>,
-    state: &mut RenderState,
+    ctx: &mut Context,
 ) -> io::Result<()> {
     take! {
         // TODO: numbering
         for event in events; until Event::End(TagEnd::FootnoteDefinition) => {
-            block(event, events, state)?;
+            block(event, events, ctx)?;
         }
     }
     Ok(())
