@@ -1,349 +1,88 @@
 +++
-title = "Maybe in λ-calculus"
-description = "Read along as I implement the Maybe type and some useful functions for working on Maybe values in λ-calculus."
+title = "Markdown"
+description = "Here goes a short description or subtitle for this page"
+draft = true
 +++
 
-# Maybe in λ-calculus
+# Markdown `Showcase`
 
-I'm currently taking a class on [Models of Computation]. If you're studying at the University of Zurich or ETHZ I highly recommend that you take this class :) You'll get to solve really cool puzzles each week as part of the class.
+## Formatting Examples
+**Lorem** _ipsum_ [dolor sit](https://example.com) ~~amet~~, `consectetur`[^1] adipiscing elit, sed do eiusmod tempor incididunt[^2] ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-My favourite model of computation so far is [lambda calculus]. As a [functional programming enthusiast], I may be a bit biased though…
+[^1]: Here comes the footnote
 
-Going forward, I will assume that you have some basic knowledge of [lambda calculus].
+## Nested Formatting
+Here comes *italic with nested ~~strikethrough~~, then **bold**, and finally `some code`*.
 
-## What is a `Maybe`?
-A `Maybe` value represents an optional value. It can either be present (which we will call `Just`) or absent (which we will call `Nothing`).
+---
 
-`Maybe` goes by many different names depending on the programming language: [Rust] calls it [`Option`], Java [`Optional`] and Haskell calls it [`Maybe`].
+## H2
 
-If you're interested in learning more about `Maybe` then there's an [excellent introduction by Mark Seemann][ploeh-maybe] targeted at C# developers.
+Ac turpis egestas integer eget aliquet nibh praesent tristique magna. Amet luctus venenatis lectus magna fringilla urna porttitor. Ultricies mi quis hendrerit dolor. Risus in hendrerit gravida rutrum quisque non. Eleifend mi in nulla posuere sollicitudin aliquam.
 
-## Intuition
-The tricky thing with each model of computation is to build up an intuition of how to solve certain problems in the given model.
+### H3
+Duis ut diam quam nulla porttitor massa id neque. Pharetra convallis posuere morbi leo urna molestie. Nunc mattis enim ut tellus elementum. In iaculis nunc sed augue lacus viverra vitae congue eu. Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Lacinia at quis risus sed vulputate odio. Commodo odio aenean sed adipiscing diam donec. Morbi tristique senectus et netus et. Ut eu sem integer vitae justo eget.
 
-Let's look at some other data structures first—to build up this intuition.
-Don't worry, I will not be spoiling any of the exercises from the [Models of Computation] class ;)
-
-### Church Numerals
-[Church Numerals][church-encoding] encode a given natural number `n`, by applying a function `n` times.
-
-The first function application needs some starting value (or *seed*),
-so each number is a function that takes two arguments:
-
-```λ
-λf.λx.EXPR
+## Code
+```python
+print('Hello World')
 ```
 
-Here are the first four numbers:
+## Math
+$\sum_{k = 1}^n k = \frac{n(n + 1)}{2}$
 
-```λ
-λf.λx.x
-```
+## Quote
+> Don't believe everything you read on the internet.
+- Nikola Tesla
 
-</figure>
+## Ordered List
+1. One
+2. Two
+   1. Nested
+   2. Things
+3. Three
 
-```λ
-λf.λx.f x
-```
+## Unordered List
+* Foo
+* Bar
+* Baz
 
-```λ
-λf.λx.f (f x)
-```
+## Tasks
+* [ ] buy groceries
+* [x] clean kitchen
+* [x] fix bathroom lights
 
-```λ
-λf.λx.f (f (f x))
-```
+## Details
 
+<details>
+<summary>Expand for more :)</summary>
 
-### Tuples
-Tuples are similar to Church Numerals in that tuple values accept some function that they then apply.
-In the case of tuples, the function is applied with two arguments: one for the first value of the tuple and one for the second value of the tuple.
+Amet luctus venenatis lectus magna fringilla urna porttitor. Ultricies mi quis hendrerit dolor. 
 
-So the tuple `(X, Y)` would correspond with the following λ expression:
-```λ
-λs.s X Y
-```
+</details>
 
-We can then generalize this to an expression that creates a tuple:
-```λ
-λa b.λs.s a b
-# Note that this is equivalent to a function with three arguments:
-λa b s.s a b
-# ... or three functions with one argument each:
-λa.λb.λs.s a b
-```
+## Table
 
-Picking out the first or second value is easy: We call our tuple value with a function that picks one of its two arguments.
-
-So picking the first value out of a tuple would look something like this:
-```λ
-#              ╭─ This is the «constructor» from above
-#       ───────┴──────
-     ((λa.λb.λs.s a b) X Y) (λa.λb.a)
-#                            ───┬───
-#                               ╰─  This function  picks out
-#                                   the first of two arguments
-->>β (λs.s X Y) (λa.λb.a)
-->>β (λa.λb.a) X Y
-->>β X
-```
-
-Picking out the second value works analogously.
-
-> ℹ️ And now for a word ~~from our sponsor~~ about syntax: I'm using `->>β` to indicate β-reduction and `->>δ` to indicate δ-reduction (replacing definitions).
-
-### Booleans
-Booleans can be encoded as expressions that take two arguments: One that is called when the boolean is true and one that is called when the boolean is false:
-
-```λ
-λt f.t
-```
-
-```λ
-λt f.f
-```
-
-Let's experiment a bit:
-```λ
-#        ╭─ an expression that accepts a boolean
-#        │         ╭─ True
-#     ───┴────   ──┴───
-     (λb.b X Y) (λt f.t)
-#          ┬ ┬
-#          │ ╰─ If True, return Y
-#          ╰─ If False, return X
-->>β (λt f.t) X Y
-->>β X
-
-# As you can see, we get X, because the boolean was True.
-# Similarly, if we call our expression with False, we will get Y:
-     (λb.b X Y)(λt f.f)
-->>β (λt f.f) X Y
-->>β Y
-```
-
-This looks very promising! Like booleans, `Maybe` values also have two possible states.
-Unlike booleans however, one of the states—`Just`—carries a value.
-
-## Implementation
-Let's apply our newly gained knowledge to `Maybe`.
-Like booleans, our `Maybe` values are expressions of the form:
-```λ
-λj n.EXPR
-```
-The first argument `j` will be called when the `Maybe` value is `Just` \
-the second argument `n` will be called when the `Maybe` value is `Nothing`.
-
-The `Nothing` value is very straightforward. It's the same as `False`:
-
-```λ
-λj n.n
-```
+| Terminal            | Iterations | min          | max           | mean         |
+|---------------------|------------|--------------|---------------|--------------|
+| foot                | 10000      | 26.130 µs    | 248.260 µs    | 31.825 µs    |
+| XTerm               | 10000      | 33.550 µs    | 295.990 µs    | 39.926 µs    |
+| Konsole             | 10000      | 34.110 µs    | 3.652145 ms   | 38.094 µs    |
+| Alacritty           | 10000      | 40.340 µs    | 414.961 µs    | 57.569 µs    |
+| IntelliJ IDEA       | 10000      | 71.267 µs    | 2.453094 ms   | 154.491 µs   |
+| Terminal.app        | 10000      | 196.143 µs   | 25.064408 ms  | 241.916 µs   |
+| Hyper               | 10000      | 16.287473 ms | 57.534790 ms  | 20.040066 ms |
+| GNOME Console (vte) | 10000      | 8.157828 ms  | 56.823240 ms  | 20.656316 ms |
+| VSCode              | 10000      | 24.164008 ms | 140.036258 ms | 26.061349 ms |
+| iTerm2              | 10000      | 4.065856 ms  | 49.872777 ms  | 28.259948 ms |
 
 
-`Just` takes an additional first parameter as it has to store a value.
+## Title with `code`
 
-```λ
-λa.λj n.j a
-```
-
-You can see that `Just` values call `j` with the stored value.
-An instance `Just X` value would look like this:
-```λ
-λj n.j X
-```
-
-Just like with booleans we can decide what to do based on the state of a `Maybe` value:
-```λ
-#          ╭─ an expression that accepts a Maybe
-#          │                ╭─ Just X
-#     ─────┴──────   ───────┴───────
-     (λm. m incr 0) ((λa.λj n.j a) X)
-#           ─┬── ┬
-#            │   ╰─ If Nothing, return 0
-#            ╰─ If Just, increment the value
-->>β (λm. m incr 0)(λj n.j X)
-->>β (λj n.j X) incr 0
-->>β incr X
-
-# Similarly, if we pass in a Nothing value, we get 0:
-     (λm. m incr 0)(λj n. n)
-->>β (λj n. n) incr 0
-->>β 0
-```
-
-> 💭 With a bit of imagination, you could see our `Maybe` value as an implementation of the [Visitor pattern] modulo the separate `Visitor` type.
-
-Writing out these match expressions gets tedious quickly and is not very expressive.
-To improve on this, we'll implement some useful functions for working with `Maybe` values.
-
-### `bind`
-`bind` takes a `Maybe` and function that operates on the value of the `Maybe`. The function itself return a `Maybe`. The function is only applied if the `Maybe` is `Just`. Otherwise `Nothing` is returned.
-You can think of this as a «apply some operation on the value and flatten the nested `Maybe`s».
-
-```λ
-#   ╭─ a Maybe value
-#   │ ╭─ a function that accepts a value and returns a Maybe value
-#   ┴ ┴
-   λm f.m f Nothing
-#         ┬ ───┬───
-#         │    ╰─ If Nothing, return Nothing
-#         ╰─ If Just, apply the given function
-```
-
-Perhaps the simplest example is to use `bind` with the `Just` function[^1].
-We should get out the same `Maybe` value:
-
-```λ
-     bind (Just X) Just
-#    ─┬──
-#     ╰───────╮
-#     ────────┴───────
-->>δ (λm f.m f Nothing) (Just X) Just
-->>β (Just X) Just Nothing
-#     ──┬───  ─┬── ───┬───
-#       ╰───╮  │      ╰─────────────────╮
-#           │  ╰─────────────╮          │
-#      ─────┴─────      ─────┴─────   ──┴───
-->>δ ((λa.λj n.j a) X) (λa.λj n.j a) (λj n.n)
-->>β (λj n.j X) (λa.λj n.j a) (λj n.n)
-->>β (λa.λj n.j a) X
-->>β (λj n.j X)
-```
-
-As expected, this evaluates to `Just X`.
-
-While this example may not be that interesting,
-`bind` is very useful as a tool for implementing more functions.
-
-### `map`
-An operation perhaps more commonly used than `bind` is `map`:
-It applies a function to the value inside the `Maybe` only if it's present and returns a `Maybe` containing the new value[^2].
-
-We'll use `bind` to define `map`. Remember: `bind` expects our function to return a `Maybe`.
-This is easily satisfied by wrapping the given function in a new function that calls `Just` with the result:
-
-```λ
-#   ╭─ a Maybe value
-#   │ ╭─ a function that accepts a regular value
-#   ┴ ┴
-   λm f.bind m (λx. Just (f x))
-```
-
-For example, you have a `Maybe` containing some number that you want to multiply by two:
-
-```λ
-     map (Just X) double
-#    ─┬─
-#     ╰────────────╮
-#     ─────────────┴──────────────
-->>δ (λm f.bind m (λx. Just (f x))) (Just X) double
-#          ─┬──
-#           │
-#           ╰──────╮
-#           ───────┴────────
-->>δ (λm f.(λm f.m f Nothing) m (λx. Just (f x))) (Just X) double
-#      ┬ ┬                                        ───┬───  ──┬───
-#      │ ╰───────────────────────────────────────────┼───────╯
-#      ╰─────────────────────────────────────────────╯
-->>β (λm f.m f Nothing) (Just X) (λx. Just (double x))
-->>β (Just X) (λx. Just (double x)) Nothing
-#     ─┬──         ─┬──             ───┬───
-#      │            ╰─────────────╮    ╰──────────────────╮
-#      ╰───╮                      │                       │
-#     ─────┴──────           ─────┴─────               ───┴──
-->>δ ((λa.λj n.j a) X) (λx. (λa.λj n.j a) (double x)) (λj n.n)
-#       ┬           ┬        ┬             ───┬────
-#       ╰───────────╯        ╰────────────────╯
-->>β (λj n.j X) (λx. (λj n.j (double x))) (λj n.n)
-->>β (λx. (λj n.j (double x))) X
-->>β (λj n.j (double X))
-```
-
-This is the same as `Just (double X)`. Hurray it worked ✨ \
-We could do a similar demonstration for `Nothing`, but I leave that as an exercise to, my dear reader ;)
-
-### `filter`
-Another useful operation on `Maybe` values is `filter`:
-It takes a `Maybe` value and a predicate. If the value inside the `Maybe` fulfils the predicate then the `Maybe` value is left unchanged. Otherwise `Nothing` is returned.
-
-Just like with `map`, we can use `bind` as a building block to implement our new function:
-```λ
-#   ╭─ a Maybe value
-#   │ ╭─ a predicate (i.e. a function that takes a value
-#   │ │                    and returns a boolean)
-#   ┴ ┴ 
-   λm p.bind m (λx.p x (Just x) Nothing)
-#                       ──┬───  ───┬───
-#                         │        ╰─ If the predicate does not match,
-#                         │           return Nothing
-#                         │
-#                         ╰─ If the predicate matches,
-#                            return Just x
-```
-
-We'll  define an `isEven` predicate for the purpose of testing our filter function:
-```λ
-λn.n not True
-```
-
-And here's the definition of `not`:
-```
-λb.b False True
-```
-
-Let's test:
-
-```λ
-     filter (Just 3) isEven
-#    ──┬───
-#      │
-#      ╰────────────────╮
-#                       │
-#     ──────────────────┴──────────────────
-->>δ (λm p.bind m (λx.p x (Just x) Nothing)) (Just 3) isEven
-->>β bind (Just 3) (λx.isEven x (Just x) Nothing)
-#    ─┬──
-#     │
-#     ╰──────╮
-#            │
-#     ───────┴────────
-->>δ (λm f.m f Nothing) (Just 3) (λx.isEven x (Just x) Nothing)
-->>β (Just 3) (λx.isEven x (Just x) Nothing) Nothing
-#   ... I'm omitting some tedious intermediate steps for brevity.
-->>  isEven 3 (Just 3) Nothing
-->>  False (Just 3) Nothing
-->>  Nothing
-```
-
-If you were to pass in `Just 2` or `Just` of any other even number,
-you'd get back the original `Maybe` value instead of `Nothing`.
+# H1
+## H2
+### H3
+Notice that there is no extra space between these nested headings.
 
 
-## Outlook
-One of my favourite properties of lambda calculus is the composable nature of expressions.
-
-We could easily build more complicated structures (trees, linked lists, etc.) from the functions discussed in this post. I might write a follow-up post :)
-
-
-## Thanks
-I thank [@Mafii] for the the many helpful comments. All remaining errors are mine :)
-
-
-[^1]: This is in fact the [right identity law](https://wiki.haskell.org/Monad_laws) for monads.
-
-[^2]: In Haskell, this operation is known as [`fmap`] and is part of the `Functor` type class.
-
-[Models of Computation]: https://co2.ini.uzh.ch/Courses/Models/info.php
-[lambda calculus]: https://en.wikipedia.org/wiki/Lambda_calculus
-[Rust]: https://www.rust-lang.org
-[functional programming enthusiast]: https://github.com/polyadic/funcky/graphs/contributors
-[Visitor pattern]: https://en.wikipedia.org/wiki/Visitor_pattern
-[`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-[`Optional`]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
-[`Maybe`]: https://hackage.haskell.org/package/base/docs/Data-Maybe.html
-[ploeh-maybe]: https://blog.ploeh.dk/2022/04/25/the-maybe-monad/
-[church-encoding]: https://en.wikipedia.org/wiki/Church_encoding#Church_numerals
-[monad laws]: https://wiki.haskell.org/Monad_laws
-[`fmap`]: https://hackage.haskell.org/package/base/docs/Prelude.html#v:fmap
-[@Mafii]: https://github.com/Mafii
+[^2]: Aaaand a second footnote
