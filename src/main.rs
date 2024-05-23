@@ -3,8 +3,11 @@ use pulldown_cmark::Parser;
 use std::fs;
 
 mod counting;
+mod display_width;
 mod fmt_utils;
+mod footnotes;
 mod fragment;
+mod line_writer;
 mod options;
 mod render;
 

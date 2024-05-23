@@ -1,5 +1,6 @@
 use anstyle::{Reset, Style};
 use std::borrow::Cow;
+use std::ops::Deref;
 use std::{io, mem};
 use textwrap::core::Fragment as TextwrapFragment;
 use textwrap::wrap_algorithms::wrap_first_fit;
@@ -9,6 +10,7 @@ use textwrap::wrap_algorithms::wrap_first_fit;
 pub(crate) enum Fragment<'a> {
     Word(Word<'a>),
     SoftBreak,
+    HardBreak,
     PushStyle(Style),
     PopStyle,
 }
@@ -26,16 +28,15 @@ impl From<Style> for Fragment<'_> {
 }
 
 impl Fragment<'_> {
-    pub(crate) fn from_str(line: &str) -> impl Iterator<Item = Fragment<'_>> {
-        textwrap::WordSeparator::UnicodeBreakProperties
-            .find_words(line)
-            .map(|w| Fragment::Word(Word::from(w)))
+    pub(crate) fn word(word: &str) -> Fragment<'_> {
+        Fragment::Word(Word::new(word))
     }
 
     pub(crate) fn into_owned(self) -> Fragment<'static> {
         match self {
             Fragment::Word(w) => Fragment::Word(w.into_owned()),
             Fragment::SoftBreak => Fragment::SoftBreak,
+            Fragment::HardBreak => Fragment::HardBreak,
             Fragment::PushStyle(s) => Fragment::PushStyle(s),
             Fragment::PopStyle => Fragment::PopStyle,
         }
@@ -46,7 +47,10 @@ impl TextwrapFragment for Fragment<'_> {
     fn width(&self) -> f64 {
         match self {
             Fragment::Word(w) => w.width(),
-            Fragment::SoftBreak | Fragment::PushStyle(_) | Fragment::PopStyle => 0.,
+            Fragment::SoftBreak
+            | Fragment::HardBreak
+            | Fragment::PushStyle(_)
+            | Fragment::PopStyle => 0.,
         }
     }
 
@@ -54,14 +58,17 @@ impl TextwrapFragment for Fragment<'_> {
         match self {
             Fragment::Word(w) => w.whitespace_width(),
             Fragment::SoftBreak => 1.,
-            Fragment::PushStyle(_) | Fragment::PopStyle => 0.,
+            Fragment::PushStyle(_) | Fragment::PopStyle | Fragment::HardBreak => 0.,
         }
     }
 
     fn penalty_width(&self) -> f64 {
         match self {
             Fragment::Word(w) => w.penalty_width(),
-            Fragment::SoftBreak | Fragment::PushStyle(_) | Fragment::PopStyle => 0.,
+            Fragment::SoftBreak
+            | Fragment::PushStyle(_)
+            | Fragment::PopStyle
+            | Fragment::HardBreak => 0.,
         }
     }
 }
@@ -127,12 +134,33 @@ impl<'a> Fragments<'a> {
         self.fragments.push(fragment.into())
     }
 
+    pub(crate) fn push_text(&mut self, text: &str) {
+        self.extend(
+            textwrap::WordSeparator::UnicodeBreakProperties
+                .find_words(text)
+                .map(|w| Fragment::Word(Word::from(w)).into_owned()),
+        )
+    }
+
     pub(crate) fn extend(&mut self, fragments: impl IntoIterator<Item = Fragment<'a>>) {
         self.fragments.extend(fragments);
     }
+}
 
-    pub(crate) fn take(&mut self) -> Vec<Fragment<'a>> {
-        mem::replace(&mut self.fragments, Vec::new())
+impl<'a> IntoIterator for Fragments<'a> {
+    type Item = Fragment<'a>;
+    type IntoIter = <Vec<Fragment<'a>> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.fragments.into_iter()
+    }
+}
+
+impl<'a> Deref for Fragments<'a> {
+    type Target = [Fragment<'a>];
+
+    fn deref(&self) -> &Self::Target {
+        &self.fragments
     }
 }
 
@@ -154,13 +182,34 @@ impl FragmentWriter {
 }
 
 impl FragmentWriter {
-    pub(crate) fn write(&mut self, f: &Fragment<'_>, w: &mut dyn io::Write) -> io::Result<()> {
+    // TODO: trim trailing whitespace of each line
+    pub(crate) fn write_block(
+        &mut self,
+        fragments: &[Fragment<'_>],
+        available_columns: usize,
+        w: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        for forced_line in fragments.split(|f| matches!(f, Fragment::HardBreak)) {
+            let lines = wrap_first_fit(&forced_line, &[available_columns as f64]);
+            for line in lines.into_iter() {
+                if !line.is_empty() {
+                    write!(w, "{}", self.style_stack.head())?;
+                    line.iter().try_for_each(|f| self.write(f, w))?;
+                    write!(w, "{}", Reset)?;
+                    writeln!(w)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn write(&mut self, f: &Fragment<'_>, w: &mut dyn io::Write) -> io::Result<()> {
         match f {
             Fragment::Word(word) => write!(w, "{}{}", word.word, word.whitespace),
             Fragment::SoftBreak => write!(w, " "),
+            Fragment::HardBreak => unreachable!(),
             Fragment::PushStyle(s) => {
-                self.style_stack
-                    .push(update_style(self.style_stack.head(), *s));
+                self.style_stack.push(s.on_top_of(&self.style_stack.head()));
                 write!(w, "{}", self.style_stack.head())
             }
             Fragment::PopStyle => {
@@ -168,28 +217,6 @@ impl FragmentWriter {
                 write!(w, "{}{}", Reset, self.style_stack.head())
             }
         }
-    }
-
-    pub(crate) fn write_block(
-        &mut self,
-        fragments: Vec<Fragment<'_>>,
-        available_columns: usize,
-        w: &mut dyn io::Write,
-        mut write_prefix: impl FnMut(&mut dyn io::Write) -> io::Result<()>,
-    ) -> io::Result<()> {
-        let lines = wrap_first_fit(&fragments, &[available_columns as f64]);
-        for line in lines.into_iter() {
-            write!(w, "{}", Reset)?;
-            write_prefix(w)?;
-            write!(w, "{}", self.last_style())?;
-            line.iter().try_for_each(|f| self.write(f, w))?;
-            writeln!(w)?;
-        }
-        Ok(())
-    }
-
-    pub(crate) fn last_style(&self) -> Style {
-        self.style_stack.head()
     }
 }
 
@@ -221,13 +248,19 @@ impl StyleStack {
     }
 }
 
-fn update_style(old: Style, new: Style) -> Style {
-    let combined = old | new.get_effects();
-    combined
-        .fg_color(old.get_fg_color().or_else(|| new.get_fg_color()))
-        .bg_color(old.get_bg_color().or_else(|| new.get_bg_color()))
-        .underline_color(
-            old.get_underline_color()
-                .or_else(|| new.get_underline_color()),
-        )
+trait StyleExt {
+    fn on_top_of(&self, fallback: &Style) -> Style;
+}
+
+impl StyleExt for Style {
+    fn on_top_of(&self, fallback: &Style) -> Style {
+        Style::new()
+            .effects(self.get_effects() | fallback.get_effects())
+            .fg_color(self.get_fg_color().or_else(|| fallback.get_fg_color()))
+            .bg_color(self.get_bg_color().or_else(|| fallback.get_bg_color()))
+            .underline_color(
+                self.get_underline_color()
+                    .or_else(|| fallback.get_underline_color()),
+            )
+    }
 }

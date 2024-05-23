@@ -4,10 +4,12 @@ description = "Here goes a short description or subtitle for this page"
 draft = true
 +++
 
-# Markdown Showcase
+# Markdown `Showcase`
 
 ## Formatting Examples
-**Lorem** _ipsum_ [dolor sit](https://example.com) ~~amet~~, `consectetur` [^1] adipiscing elit, sed do eiusmod tempor incididunt [^2] ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Lorem** _ipsum_ [dolor sit](https://example.com) ~~amet~~, `consectetur`[^1] adipiscing elit, sed do eiusmod tempor incididunt[^2] ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+[^1]: Here comes the footnote
 
 ## Nested Formatting
 Here comes *italic with nested ~~strikethrough~~, then **bold**, and finally `some code`*.
@@ -45,6 +47,11 @@ $\sum_{k = 1}^n k = \frac{n(n + 1)}{2}$
 * Bar
 * Baz
 
+## Tasks
+* [ ] buy groceries
+* [x] clean kitchen
+* [x] fix bathroom lights
+
 ## Details
 
 <details>
@@ -77,6 +84,5 @@ Amet luctus venenatis lectus magna fringilla urna porttitor. Ultricies mi quis h
 ### H3
 Notice that there is no extra space between these nested headings.
 
-[^1]: Here comes the footnote
 
 [^2]: Aaaand a second footnote

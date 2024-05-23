@@ -9,3 +9,4 @@ textwrap = "0.16.1"
 fmtastic = { version = "0.2.0", git = "https://github.com/bash/fmtastic.git" }
 anstyle = "1.0.7"
 terminal_size = "0.3.0"
+memchr = "2.7.2"
