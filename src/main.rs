@@ -36,6 +36,7 @@ fn parser_options() -> pulldown_cmark::Options {
         | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS
         | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
         | Options::ENABLE_STRIKETHROUGH
+        | Options::ENABLE_MATH
 }
 
 // TODO: Special rendering of list item after quote.

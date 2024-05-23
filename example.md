@@ -29,7 +29,12 @@ print('Hello World')
 ```
 
 ## Math
-$\sum_{k = 1}^n k = \frac{n(n + 1)}{2}$
+### Display
+
+$$\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)$$
+
+### Inline
+Some inline math: $e = mc^2$
 
 ## Quote
 > Don't believe everything you read on the internet.

@@ -18,6 +18,7 @@ impl FragmentsExt for Fragments<'_> {
         event: Event<'a>,
         state: &mut RenderState,
     ) -> Option<Event<'a>> {
+        // TODO: sort this match
         match event {
             Event::Text(t) => self.push_text(&t),
             Event::Code(code) => {
@@ -25,6 +26,12 @@ impl FragmentsExt for Fragments<'_> {
                 self.push_text(&code);
                 self.push(Fragment::PopStyle);
             }
+            Event::InlineMath(math) => {
+                self.push(AnsiColor::Cyan.on_default().italic());
+                self.push_text(&math);
+                self.push(Fragment::PopStyle);
+            }
+            Event::DisplayMath(math) => self.extend(display_math(&math)),
             Event::Start(Tag::Strong) => self.push(Style::new().bold()),
             Event::End(TagEnd::Strong) => self.push(Fragment::PopStyle),
             Event::Start(Tag::Emphasis) => self.push(Style::new().italic()),
@@ -69,4 +76,16 @@ fn task_list_marker(checked: bool) -> Fragment<'static> {
     } else {
         Fragment::word("☐ ")
     }
+}
+
+fn display_math(_math: &str) -> [Fragment<'static>; 5] {
+    // TODO: syntax highlight as latex?
+    // TODO: allow writer to set/reset style
+    [
+        Fragment::HardBreak,
+        Fragment::PushStyle(AnsiColor::Red.on_default().invert()),
+        Fragment::word("[TODO: display math]").into_owned(),
+        Fragment::PopStyle,
+        Fragment::HardBreak,
+    ]
 }

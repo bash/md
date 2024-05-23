@@ -1,6 +1,7 @@
 use crate::options::Options;
+use anstyle::{Reset, Style};
 use pulldown_cmark::{Event, Tag, TagEnd, TextMergeStream};
-use std::io;
+use std::io::{self, Write as _};
 
 #[macro_use]
 mod macros;
@@ -50,7 +51,7 @@ fn block(
     match event {
         Event::Start(Tag::Paragraph) => paragraph(events, state),
         Event::Start(Tag::Heading { level, .. }) => heading(level, events, state),
-        Event::Start(Tag::BlockQuote) => block_quote(events, state),
+        Event::Start(Tag::BlockQuote(_kind)) => block_quote(events, state),
         Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state),
         Event::Start(Tag::HtmlBlock) => html_block(events),
         Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state),
