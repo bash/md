@@ -334,7 +334,6 @@ dependencies = [
  "anstyle",
  "bat",
  "fmtastic",
- "memchr",
  "pulldown-cmark",
  "terminal_size",
  "textwrap",
