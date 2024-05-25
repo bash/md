@@ -3,11 +3,9 @@ use crate::display_width::DisplayWidth;
 use crate::fmt_utils::NoDebug;
 use crate::footnotes::FootnoteCounter;
 use crate::fragment::{FragmentWriter, Fragments};
-use crate::line_writer::LineWriter;
 use crate::options::Options;
 use anstyle::Style;
 use std::borrow::Cow;
-use std::io::Write as _;
 use std::{io, iter, mem};
 
 type Prefix = DisplayWidth<Cow<'static, str>>;
@@ -40,7 +38,12 @@ impl<'a> State<'a> {
 
     pub(super) fn write_fragments(&mut self, fragments: Fragments) -> io::Result<()> {
         let mut writer = FragmentWriter::new(self.style());
-        writer.write_block(&fragments, self.available_columns(), &mut self.writer())
+        writer.write_block(
+            &fragments,
+            self.available_columns(),
+            &mut *self.output,
+            |w| write_prefix(&self.stack, w),
+        )
     }
 }
 
@@ -63,9 +66,12 @@ impl<'a> State<'a> {
         self.stack.head.style
     }
 
-    pub(super) fn writer(&mut self) -> LineWriter<'_> {
-        // TODO: all prefixes
-        LineWriter::new(&mut *self.output, self.stack.head.prefix.as_bytes())
+    pub(super) fn write_prefix(&mut self) -> io::Result<()> {
+        write_prefix(&self.stack, &mut *self.output)
+    }
+
+    pub(super) fn writer(&mut self) -> &mut dyn io::Write {
+        &mut *self.output
     }
 
     pub(super) fn reserved_columns(&self) -> usize {
@@ -78,9 +84,14 @@ impl<'a> State<'a> {
             self.stack.head.first_block = false;
             Ok(())
         } else {
-            writeln!(self.writer())
+            self.write_prefix()?;
+            writeln!(self.output)
         }
     }
+}
+
+fn write_prefix(stack: &Stack, w: &mut dyn io::Write) -> io::Result<()> {
+    stack.iter().try_for_each(|b| write!(w, "{}", b.prefix))
 }
 
 impl<'a> State<'a> {

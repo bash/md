@@ -7,7 +7,6 @@ mod display_width;
 mod fmt_utils;
 mod footnotes;
 mod fragment;
-mod line_writer;
 mod options;
 mod render;
 

@@ -188,11 +188,13 @@ impl FragmentWriter {
         fragments: &[Fragment<'_>],
         available_columns: usize,
         w: &mut dyn io::Write,
+        mut write_prefix: impl FnMut(&mut dyn io::Write) -> io::Result<()>,
     ) -> io::Result<()> {
         for forced_line in fragments.split(|f| matches!(f, Fragment::HardBreak)) {
             let lines = wrap_first_fit(&forced_line, &[available_columns as f64]);
             for line in lines.into_iter() {
                 if !line.is_empty() {
+                    write_prefix(w)?;
                     write!(w, "{}", self.style_stack.head())?;
                     line.iter().try_for_each(|f| self.write(f, w))?;
                     write!(w, "{}", Reset)?;

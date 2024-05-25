@@ -18,5 +18,6 @@ pub(super) fn rule(state: &mut State) -> io::Result<()> {
     // )
 
     let columns = state.available_columns().saturating_sub(2);
+    state.write_prefix()?;
     writeln!(state.writer(), "◈{}◈", Repeat(columns, "─"))
 }

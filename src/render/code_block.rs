@@ -1,7 +1,6 @@
 use super::{Events, State};
-use anstyle::{Reset, Style};
 use pulldown_cmark::{CodeBlockKind, Event, TagEnd};
-use std::io::{self, Write as _};
+use std::io;
 
 // TODO: syntax highlighting
 pub(super) fn code_block(
@@ -11,15 +10,12 @@ pub(super) fn code_block(
 ) -> io::Result<()> {
     state.write_block_start()?;
 
-    // TODO: allow writer to set/reset style
-    let mut writer = state.writer();
-
-    write!(writer.raw(), "{}", Style::new().italic())?;
-
+    // TODO: yes, yes we could use a buffer that only buffers until the next line...
+    let mut code = String::new();
     take! {
         for event in events; until Event::End(TagEnd::CodeBlock) => {
             if let Event::Text(text) = event {
-                write!(writer, "{}", text)?;
+                code.push_str(&text);
             } else {
                 // TODO: unreachable
                 panic!("Unexpected event {:#?}", event)
@@ -27,7 +23,10 @@ pub(super) fn code_block(
         }
     }
 
-    write!(writer.raw(), "{}", Reset)?;
+    for line in code.lines() {
+        state.write_prefix()?;
+        writeln!(state.writer(), "{line}")?;
+    }
 
     Ok(())
 }

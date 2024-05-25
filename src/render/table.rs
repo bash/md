@@ -10,6 +10,7 @@ pub(super) fn table(
 ) -> io::Result<()> {
     state.write_block_start()?;
 
+    state.write_prefix();
     writeln!(
         state.writer(),
         "{}[TODO: table]{}",
