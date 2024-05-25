@@ -1,6 +1,7 @@
 use options::Options;
 use pulldown_cmark::Parser;
 use std::fs;
+use std::io::ErrorKind;
 
 mod bullets;
 mod counting;
@@ -24,12 +25,16 @@ fn main() {
         .unwrap_or(180);
     let input = fs::read_to_string(arg).unwrap();
     let mut parser = Parser::new_ext(&input, parser_options());
-    render::render(
+
+    match render::render(
         &mut parser,
         &mut std::io::stdout(),
         Options::plain_text(width),
-    )
-    .unwrap();
+    ) {
+        Ok(_) => {}
+        Err(e) if e.kind() == ErrorKind::BrokenPipe => {}
+        Err(e) => panic!("{e:?}"),
+    }
 }
 
 fn parser_options() -> pulldown_cmark::Options {
