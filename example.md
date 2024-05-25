@@ -52,6 +52,18 @@ Some inline math: $e = mc^2$
 * Bar
 * Baz
 
+## List Formatting
+1. **Bold Text**
+2. Code Block
+   ```js
+   console.log('hello world')
+   ```
+   with text after code block
+3. Sublist with text before
+   * foo
+   * bar
+   * baz
+
 ## Tasks
 * [ ] buy groceries
 * [x] clean kitchen

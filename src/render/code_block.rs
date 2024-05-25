@@ -1,4 +1,5 @@
 use super::{Events, State};
+use anstyle::{Reset, Style};
 use pulldown_cmark::{CodeBlockKind, Event, TagEnd};
 use std::io;
 
@@ -25,7 +26,7 @@ pub(super) fn code_block(
 
     for line in code.lines() {
         state.write_prefix()?;
-        writeln!(state.writer(), "{line}")?;
+        writeln!(state.writer(), "{}{line}{}", Style::new().italic(), Reset)?;
     }
 
     Ok(())
