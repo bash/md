@@ -11,3 +11,4 @@ anstyle = "1.0.7"
 terminal_size = "0.3.0"
 memchr = "2.7.2"
 url = "2.5.0"
+bat = { version = "0.24.0", default-features = false, features = ["regex-onig"] }

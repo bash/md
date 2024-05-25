@@ -13,6 +13,7 @@ mod lookahead;
 mod options;
 mod prefix;
 mod render;
+mod syntax_highlighting;
 
 // TODO: nonprintables
 // TODO: trim trailing whitepace (ah I think that's why I had to add - 1 somehwere)
