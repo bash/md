@@ -56,13 +56,14 @@ fn color(kind: Option<BlockQuoteKind>) -> Style {
     }
 }
 
+// TODO: make emoji configurable
 fn title(kind: BlockQuoteKind) -> &'static str {
     match kind {
-        BlockQuoteKind::Note => "Note",
-        BlockQuoteKind::Tip => "Tip",
-        BlockQuoteKind::Important => "Important",
-        BlockQuoteKind::Warning => "Warning",
-        BlockQuoteKind::Caution => "Caution",
+        BlockQuoteKind::Note => "ℹ️  Note",
+        BlockQuoteKind::Tip => "💡 Tip",
+        BlockQuoteKind::Important => "💬 Important",
+        BlockQuoteKind::Warning => "⚠️  Warning",
+        BlockQuoteKind::Caution => "🛑 Caution",
     }
 }
 
