@@ -4,6 +4,7 @@ use std::ops::Deref;
 use std::{io, mem};
 use textwrap::core::Fragment as TextwrapFragment;
 use textwrap::wrap_algorithms::wrap_first_fit;
+use url::Url;
 
 /// A fragment of inline text that we can use with text wrapping.
 #[derive(Debug)]
@@ -13,6 +14,8 @@ pub(crate) enum Fragment<'a> {
     HardBreak,
     PushStyle(Style),
     PopStyle,
+    PushLink(Url),
+    PopLink,
 }
 
 impl<'a> From<Word<'a>> for Fragment<'a> {
@@ -39,6 +42,8 @@ impl Fragment<'_> {
             Fragment::HardBreak => Fragment::HardBreak,
             Fragment::PushStyle(s) => Fragment::PushStyle(s),
             Fragment::PopStyle => Fragment::PopStyle,
+            Fragment::PushLink(url) => Fragment::PushLink(url),
+            Fragment::PopLink => Fragment::PopLink,
         }
     }
 }
@@ -50,7 +55,9 @@ impl TextwrapFragment for Fragment<'_> {
             Fragment::SoftBreak
             | Fragment::HardBreak
             | Fragment::PushStyle(_)
-            | Fragment::PopStyle => 0.,
+            | Fragment::PopStyle
+            | Fragment::PushLink(_)
+            | Fragment::PopLink => 0.,
         }
     }
 
@@ -58,7 +65,11 @@ impl TextwrapFragment for Fragment<'_> {
         match self {
             Fragment::Word(w) => w.whitespace_width(),
             Fragment::SoftBreak => 1.,
-            Fragment::PushStyle(_) | Fragment::PopStyle | Fragment::HardBreak => 0.,
+            Fragment::PushStyle(_)
+            | Fragment::PopStyle
+            | Fragment::HardBreak
+            | Fragment::PushLink(_)
+            | Fragment::PopLink => 0.,
         }
     }
 
@@ -68,7 +79,9 @@ impl TextwrapFragment for Fragment<'_> {
             Fragment::SoftBreak
             | Fragment::PushStyle(_)
             | Fragment::PopStyle
-            | Fragment::HardBreak => 0.,
+            | Fragment::HardBreak
+            | Fragment::PushLink(_)
+            | Fragment::PopLink => 0.,
         }
     }
 }
@@ -171,12 +184,19 @@ impl<'a> Deref for Fragments<'a> {
 #[derive(Debug)]
 pub(crate) struct FragmentWriter {
     style_stack: StyleStack,
+    link: Option<Url>,
+    // The `id=` parameter helps the terminal connect links
+    // that are broken up into multiple pieces (e.g. when we break the line)
+    // https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
+    link_id: usize,
 }
 
 impl FragmentWriter {
     pub fn new(default_style: Style) -> FragmentWriter {
         Self {
             style_stack: StyleStack::new(default_style),
+            link: None,
+            link_id: 0,
         }
     }
 }
@@ -196,8 +216,14 @@ impl FragmentWriter {
                 if !line.is_empty() {
                     write_prefix(w)?;
                     write!(w, "{}", self.style_stack.head())?;
+                    if let Some(url) = self.link.as_ref() {
+                        write!(w, "\x1b]8;id={};{url}\x1b\\", self.link_id)?; // TODO: extract
+                    }
                     line.iter().try_for_each(|f| self.write(f, w))?;
                     write!(w, "{}", Reset)?;
+                    if let Some(_) = self.link.as_ref() {
+                        write!(w, "\x1b]8;;\x1b\\")?; // TODO: extract
+                    }
                     writeln!(w)?;
                 }
             }
@@ -217,6 +243,22 @@ impl FragmentWriter {
             Fragment::PopStyle => {
                 self.style_stack.pop();
                 write!(w, "{}{}", Reset, self.style_stack.head())
+            }
+            Fragment::PushLink(url) => {
+                if self.link.is_some() {
+                    panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
+                }
+                self.link = Some(url.clone());
+                self.link_id += 1;
+                write!(w, "\x1b]8;id={};{url}\x1b\\", self.link_id) // TODO: extract
+            }
+            Fragment::PopLink => {
+                // This must handle the case where the link was not pushed
+                // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
+                // Sending a "link reset" when no link is open is perfectly fine.
+                self.link = None;
+                write!(w, "\x1b]8;;\x1b\\")?;
+                Ok(())
             }
         }
     }

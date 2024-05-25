@@ -2,7 +2,8 @@ use super::State;
 use crate::fragment::{Fragment, Fragments, Word};
 use anstyle::{AnsiColor, Style};
 use fmtastic::Superscript;
-use pulldown_cmark::{Event, Tag, TagEnd};
+use pulldown_cmark::{Event, LinkType, Tag, TagEnd};
+use url::Url;
 
 pub(super) trait FragmentsExt {
     fn try_push_event<'a>(&mut self, event: &Event<'a>, state: &mut State) -> bool;
@@ -39,9 +40,14 @@ impl FragmentsExt for Fragments<'_> {
             }
             Event::SoftBreak => self.push(Fragment::SoftBreak),
             Event::HardBreak => self.push(Fragment::HardBreak),
-            Event::Start(Tag::Link { .. }) => {} // TODO: links
-            Event::End(TagEnd::Link) => {}
-            Event::TaskListMarker(checked) => self.push(task_list_marker(*checked)),
+            Event::Start(Tag::Link {
+                link_type,
+                dest_url,
+                title,
+                id,
+            }) => link(self, *link_type, &dest_url, &title, &id),
+            Event::End(TagEnd::Link) => self.push(Fragment::PopLink),
+            // Event::TaskListMarker is handled by the list item writer
             Event::InlineHtml(_html) => {}
             Event::FootnoteReference(reference) => {
                 self.extend(footnote_reference(&reference, state))
@@ -53,6 +59,13 @@ impl FragmentsExt for Fragments<'_> {
     }
 }
 
+fn link(f: &mut Fragments, link_type: LinkType, dest_url: &str, _title: &str, _id: &str) {
+    // TODO: file links, test email
+    if let Ok(url) = Url::parse(dest_url) {
+        f.push(Fragment::PushLink(url));
+    }
+}
+
 fn footnote_reference<'b>(reference: &str, state: &mut State) -> [Fragment<'b>; 3] {
     let text = format!("{}", Superscript(state.get_footnote_number(reference)));
     [
@@ -60,14 +73,6 @@ fn footnote_reference<'b>(reference: &str, state: &mut State) -> [Fragment<'b>; 
         Fragment::word(&text).into_owned(),
         Fragment::PopStyle,
     ]
-}
-
-fn task_list_marker(checked: bool) -> Fragment<'static> {
-    if checked {
-        Fragment::word("☒ ")
-    } else {
-        Fragment::word("☐ ")
-    }
 }
 
 fn display_math(_math: &str) -> [Fragment<'static>; 5] {
