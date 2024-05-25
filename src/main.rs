@@ -9,6 +9,7 @@ mod display_width;
 mod fmt_utils;
 mod footnotes;
 mod fragment;
+mod hyperlink;
 mod lookahead;
 mod options;
 mod prefix;

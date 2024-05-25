@@ -46,7 +46,7 @@ impl FragmentsExt for Fragments<'_> {
                 title,
                 id,
             }) => link(self, *link_type, &dest_url, &title, &id),
-            Event::End(TagEnd::Link) => self.push(Fragment::PopLink),
+            Event::End(TagEnd::Link) => self.push(Fragment::UnsetLink),
             // Event::TaskListMarker is handled by the list item writer
             Event::InlineHtml(_html) => {}
             Event::FootnoteReference(reference) => {
@@ -59,10 +59,10 @@ impl FragmentsExt for Fragments<'_> {
     }
 }
 
-fn link(f: &mut Fragments, link_type: LinkType, dest_url: &str, _title: &str, _id: &str) {
+fn link(f: &mut Fragments, _link_type: LinkType, dest_url: &str, _title: &str, _id: &str) {
     // TODO: file links, test email
     if let Ok(url) = Url::parse(dest_url) {
-        f.push(Fragment::PushLink(url));
+        f.push(Fragment::SetLink(url));
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::hyperlink::{CloseHyperlink, Hyperlink};
 use anstyle::{Reset, Style};
 use std::borrow::Cow;
 use std::ops::Deref;
@@ -14,8 +15,8 @@ pub(crate) enum Fragment<'a> {
     HardBreak,
     PushStyle(Style),
     PopStyle,
-    PushLink(Url),
-    PopLink,
+    SetLink(Url),
+    UnsetLink,
 }
 
 impl<'a> From<Word<'a>> for Fragment<'a> {
@@ -42,8 +43,8 @@ impl Fragment<'_> {
             Fragment::HardBreak => Fragment::HardBreak,
             Fragment::PushStyle(s) => Fragment::PushStyle(s),
             Fragment::PopStyle => Fragment::PopStyle,
-            Fragment::PushLink(url) => Fragment::PushLink(url),
-            Fragment::PopLink => Fragment::PopLink,
+            Fragment::SetLink(url) => Fragment::SetLink(url),
+            Fragment::UnsetLink => Fragment::UnsetLink,
         }
     }
 }
@@ -56,8 +57,8 @@ impl TextwrapFragment for Fragment<'_> {
             | Fragment::HardBreak
             | Fragment::PushStyle(_)
             | Fragment::PopStyle
-            | Fragment::PushLink(_)
-            | Fragment::PopLink => 0.,
+            | Fragment::SetLink(_)
+            | Fragment::UnsetLink => 0.,
         }
     }
 
@@ -68,8 +69,8 @@ impl TextwrapFragment for Fragment<'_> {
             Fragment::PushStyle(_)
             | Fragment::PopStyle
             | Fragment::HardBreak
-            | Fragment::PushLink(_)
-            | Fragment::PopLink => 0.,
+            | Fragment::SetLink(_)
+            | Fragment::UnsetLink => 0.,
         }
     }
 
@@ -80,8 +81,8 @@ impl TextwrapFragment for Fragment<'_> {
             | Fragment::PushStyle(_)
             | Fragment::PopStyle
             | Fragment::HardBreak
-            | Fragment::PushLink(_)
-            | Fragment::PopLink => 0.,
+            | Fragment::SetLink(_)
+            | Fragment::UnsetLink => 0.,
         }
     }
 }
@@ -217,12 +218,12 @@ impl FragmentWriter {
                     write_prefix(w)?;
                     write!(w, "{}", self.style_stack.head())?;
                     if let Some(url) = self.link.as_ref() {
-                        write!(w, "\x1b]8;id={};{url}\x1b\\", self.link_id)?; // TODO: extract
+                        write!(w, "{}", Hyperlink::new(url, self.link_id))?;
                     }
                     line.iter().try_for_each(|f| self.write(f, w))?;
                     write!(w, "{}", Reset)?;
                     if let Some(_) = self.link.as_ref() {
-                        write!(w, "\x1b]8;;\x1b\\")?; // TODO: extract
+                        write!(w, "{CloseHyperlink}")?;
                     }
                     writeln!(w)?;
                 }
@@ -244,21 +245,20 @@ impl FragmentWriter {
                 self.style_stack.pop();
                 write!(w, "{}{}", Reset, self.style_stack.head())
             }
-            Fragment::PushLink(url) => {
+            Fragment::SetLink(url) => {
                 if self.link.is_some() {
                     panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
                 }
                 self.link = Some(url.clone());
                 self.link_id += 1;
-                write!(w, "\x1b]8;id={};{url}\x1b\\", self.link_id) // TODO: extract
+                write!(w, "{}", Hyperlink::new(url, self.link_id))
             }
-            Fragment::PopLink => {
+            Fragment::UnsetLink => {
                 // This must handle the case where the link was not pushed
                 // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
                 // Sending a "link reset" when no link is open is perfectly fine.
                 self.link = None;
-                write!(w, "\x1b]8;;\x1b\\")?;
-                Ok(())
+                write!(w, "{CloseHyperlink}")
             }
         }
     }
