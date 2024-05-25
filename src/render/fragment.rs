@@ -53,8 +53,8 @@ impl FragmentsExt for Fragments<'_> {
     }
 }
 
-fn footnote_reference<'a, 'b>(reference: &'a str, state: &mut State) -> [Fragment<'b>; 3] {
-    let text = format!("{}", Superscript(state.get_footnote_number(&reference)));
+fn footnote_reference<'b>(reference: &str, state: &mut State) -> [Fragment<'b>; 3] {
+    let text = format!("{}", Superscript(state.get_footnote_number(reference)));
     [
         Fragment::PushStyle(AnsiColor::Green.on_default()),
         Fragment::word(&text).into_owned(),

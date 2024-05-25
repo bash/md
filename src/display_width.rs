@@ -18,7 +18,7 @@ impl<T> From<T> for DisplayWidth<T> {
     }
 }
 
-impl<'a, T> DisplayWidth<T>
+impl<T> DisplayWidth<T>
 where
     T: Deref<Target = str>,
 {

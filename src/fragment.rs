@@ -191,7 +191,7 @@ impl FragmentWriter {
         mut write_prefix: impl FnMut(&mut dyn io::Write) -> io::Result<()>,
     ) -> io::Result<()> {
         for forced_line in fragments.split(|f| matches!(f, Fragment::HardBreak)) {
-            let lines = wrap_first_fit(&forced_line, &[available_columns as f64]);
+            let lines = wrap_first_fit(forced_line, &[available_columns as f64]);
             for line in lines.into_iter() {
                 if !line.is_empty() {
                     write_prefix(w)?;

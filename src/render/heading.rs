@@ -37,7 +37,7 @@ fn heading_style(style: Style, level: HeadingLevel) -> Style {
     }
 }
 
-fn format_heading_counter<'a, 'b>(counters: &'a [usize]) -> Fragment<'b> {
+fn format_heading_counter<'b>(counters: &[usize]) -> Fragment<'b> {
     let mut output = String::new();
 
     if counters.len() >= 2 {
