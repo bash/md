@@ -9,12 +9,6 @@ pub(crate) struct DisplayWidth<T> {
     display_width: OnceCell<usize>,
 }
 
-impl<T> DisplayWidth<T> {
-    pub(crate) fn value(&self) -> &T {
-        &self.value
-    }
-}
-
 impl<T> From<T> for DisplayWidth<T> {
     fn from(value: T) -> Self {
         Self {

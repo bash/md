@@ -1,6 +1,6 @@
 use super::State;
 use crate::fmt_utils::Repeat;
-use std::io::{self, Write as _};
+use std::io;
 
 pub(super) fn rule(state: &mut State) -> io::Result<()> {
     state.write_block_start()?;

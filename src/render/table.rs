@@ -1,7 +1,7 @@
 use super::{Events, State};
 use anstyle::{AnsiColor, Reset};
 use pulldown_cmark::{Alignment, Event, TagEnd};
-use std::io::{self, Write as _};
+use std::io;
 
 pub(super) fn table(
     _alignment: Vec<Alignment>,
@@ -10,7 +10,7 @@ pub(super) fn table(
 ) -> io::Result<()> {
     state.write_block_start()?;
 
-    state.write_prefix();
+    state.write_prefix()?;
     writeln!(
         state.writer(),
         "{}[TODO: table]{}",

@@ -95,14 +95,6 @@ fn write_prefix(stack: &Stack, w: &mut dyn io::Write) -> io::Result<()> {
 }
 
 impl<'a> State<'a> {
-    pub(super) fn push_block(&mut self, block: Block) {
-        self.stack.push(block);
-    }
-
-    pub(super) fn pop_block(&mut self) {
-        self.stack.pop()
-    }
-
     pub(super) fn block<T>(&mut self, block: Block, f: impl FnOnce(&mut Self) -> T) -> T {
         self.stack.push(block);
         let result = f(self);

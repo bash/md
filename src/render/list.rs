@@ -24,7 +24,9 @@ pub(super) fn list(
         for event in events; until Event::End(TagEnd::List(..)) => {
             if let Event::Start(Tag::Item) = event {
                 item(item_number, events, state)?;
-                item_number.as_mut().map(|c| *c += 1);
+                if let Some(c) = item_number.as_mut() {
+                    *c += 1;
+                }
             } else {
                 unreachable!();
             }
