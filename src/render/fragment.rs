@@ -1,15 +1,15 @@
-use super::state::Context;
+use super::State;
 use crate::fragment::{Fragment, Fragments, Word};
 use anstyle::{AnsiColor, Style};
 use fmtastic::Superscript;
 use pulldown_cmark::{Event, Tag, TagEnd};
 
 pub(super) trait FragmentsExt {
-    fn try_push_event<'a>(&mut self, event: Event<'a>, ctx: &mut Context<'_>) -> Option<Event<'a>>;
+    fn try_push_event<'a>(&mut self, event: Event<'a>, state: &mut State) -> Option<Event<'a>>;
 }
 
 impl FragmentsExt for Fragments<'_> {
-    fn try_push_event<'a>(&mut self, event: Event<'a>, ctx: &mut Context<'_>) -> Option<Event<'a>> {
+    fn try_push_event<'a>(&mut self, event: Event<'a>, state: &mut State) -> Option<Event<'a>> {
         // TODO: sort this match
         match event {
             Event::Text(t) => self.push_text(&t),
@@ -43,7 +43,9 @@ impl FragmentsExt for Fragments<'_> {
             Event::End(TagEnd::Link) => {}
             Event::TaskListMarker(checked) => self.push(task_list_marker(checked)),
             Event::InlineHtml(_html) => {}
-            Event::FootnoteReference(reference) => self.extend(footnote_reference(&reference, ctx)),
+            Event::FootnoteReference(reference) => {
+                self.extend(footnote_reference(&reference, state))
+            }
             _ => return Some(event),
         }
 
@@ -51,8 +53,8 @@ impl FragmentsExt for Fragments<'_> {
     }
 }
 
-fn footnote_reference<'a, 'b>(reference: &'a str, ctx: &mut Context<'_>) -> [Fragment<'b>; 3] {
-    let text = format!("{}", Superscript(ctx.get_footnote_number(&reference)));
+fn footnote_reference<'a, 'b>(reference: &'a str, state: &mut State) -> [Fragment<'b>; 3] {
+    let text = format!("{}", Superscript(state.get_footnote_number(&reference)));
     [
         Fragment::PushStyle(AnsiColor::Green.on_default()),
         Fragment::word(&text).into_owned(),

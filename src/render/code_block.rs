@@ -1,4 +1,4 @@
-use super::Context;
+use super::{Events, State};
 use anstyle::{Reset, Style};
 use pulldown_cmark::{CodeBlockKind, Event, TagEnd};
 use std::io::{self, Write as _};
@@ -6,13 +6,13 @@ use std::io::{self, Write as _};
 // TODO: syntax highlighting
 pub(super) fn code_block(
     _kind: CodeBlockKind<'_>,
-    events: &mut dyn Iterator<Item = Event<'_>>,
-    ctx: &mut Context,
+    events: Events,
+    state: &mut State,
 ) -> io::Result<()> {
-    ctx.write_block_start()?;
+    state.write_block_start()?;
 
     // TODO: allow writer to set/reset style
-    let mut writer = ctx.writer();
+    let mut writer = state.writer();
 
     write!(writer.raw(), "{}", Style::new().italic())?;
 
@@ -21,6 +21,7 @@ pub(super) fn code_block(
             if let Event::Text(text) = event {
                 write!(writer, "{}", text)?;
             } else {
+                // TODO: unreachable
                 panic!("Unexpected event {:#?}", event)
             }
         }

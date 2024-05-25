@@ -2,7 +2,7 @@ use crate::fragment::Fragments;
 use crate::render::block;
 use crate::render::fragment::FragmentsExt;
 
-use super::Context;
+use super::{Block, Events, State};
 use pulldown_cmark::{Event, Tag, TagEnd};
 use std::io;
 use std::mem;
@@ -14,16 +14,16 @@ use std::mem;
 
 pub(super) fn list(
     first_item_number: Option<u64>,
-    events: &mut dyn Iterator<Item = Event<'_>>,
-    ctx: &mut Context,
+    events: Events,
+    state: &mut State,
 ) -> io::Result<()> {
-    ctx.write_block_start()?;
+    state.write_block_start()?;
 
     let mut item_number = first_item_number;
     take! {
         for event in events; until Event::End(TagEnd::List(..)) => {
             if let Event::Start(Tag::Item) = event {
-                item(item_number, events, ctx)?;
+                item(item_number, events, state)?;
                 item_number.as_mut().map(|c| *c += 1);
             } else {
                 unreachable!();
@@ -34,28 +34,26 @@ pub(super) fn list(
     Ok(())
 }
 
-fn item(
-    number: Option<u64>,
-    events: &mut dyn Iterator<Item = Event<'_>>,
-    ctx: &mut Context,
-) -> io::Result<()> {
-    let mut fragments = Fragments::default();
-    let mut ctx = ctx.scope(|s| s.with_prefix("   "));
+fn item(number: Option<u64>, events: Events, state: &mut State) -> io::Result<()> {
+    state.block(Block::default().with_prefix("   "), |state| {
+        let mut fragments = Fragments::default();
 
-    match number {
-        Some(n) => fragments.push_text(&format!("{n}. ")),
-        None => fragments.push_text("‒ "),
-    }
+        // TODO: extract into function
+        match number {
+            Some(n) => fragments.push_text(&format!("{n}. ")),
+            None => fragments.push_text("‒ "),
+        }
 
-    take! {
-        for event in events; until Event::End(TagEnd::Item) => {
-            if let Some(block_event) = fragments.try_push_event(event, &mut ctx) {
-                // If we get a block event, we only get block events from here on out.
-                ctx.write_fragments(mem::take(&mut fragments))?;
-                block(block_event, events, &mut ctx)?;
+        take! {
+            for event in events; until Event::End(TagEnd::Item) => {
+                if let Some(block_event) = fragments.try_push_event(event, state) {
+                    // If we get a block event, we only get block events from here on out.
+                    state.write_fragments(mem::take(&mut fragments))?;
+                    block(block_event, events, state)?;
+                }
             }
         }
-    }
 
-    ctx.write_fragments(fragments)
+        state.write_fragments(fragments)
+    })
 }

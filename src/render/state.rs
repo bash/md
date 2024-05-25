@@ -7,43 +7,35 @@ use crate::line_writer::LineWriter;
 use crate::options::Options;
 use anstyle::Style;
 use std::borrow::Cow;
-use std::io;
-use std::ops::DerefMut as _;
+use std::io::Write as _;
+use std::{io, iter, mem};
 
 type Prefix = DisplayWidth<Cow<'static, str>>;
 
 #[derive(Debug)]
-pub(super) struct Context<'a> {
-    /// "Global" state used for the entirety of
-    /// the rendering process.
-    state: &'a mut State,
-    /// Scoped state that can change (i.e. block quotes
-    /// add a prefix).
-    scope: Scope<'a>,
+pub(super) struct State<'a> {
+    output: NoDebug<&'a mut dyn io::Write>,
+    options: Options,
+    section_counter: SectionCounter,
+    footnote_counter: FootnoteCounter,
+    stack: Stack,
 }
 
-impl<'a> Context<'a> {
-    pub(super) fn new(state: &'a mut State, output: &'a mut dyn io::Write) -> Self {
+impl<'a> State<'a> {
+    pub(super) fn new(output: &'a mut dyn io::Write, options: Options) -> Self {
         Self {
-            state,
-            scope: Scope::new(output),
-        }
-    }
-
-    pub(super) fn scope(
-        &mut self,
-        f: impl for<'s> FnOnce(&'s mut Scope<'a>) -> Scope<'s>,
-    ) -> Context<'_> {
-        Context {
-            state: &mut self.state,
-            scope: f(&mut self.scope),
+            output: NoDebug(output),
+            options,
+            section_counter: SectionCounter::default(),
+            footnote_counter: FootnoteCounter::new(),
+            stack: Stack::default(),
         }
     }
 }
 
-impl<'a> Context<'a> {
+impl<'a> State<'a> {
     pub(super) fn available_columns(&self) -> usize {
-        (self.state.options.columns as usize) - self.reserved_columns()
+        (self.options.columns as usize) - self.reserved_columns()
     }
 
     pub(super) fn write_fragments(&mut self, fragments: Fragments) -> io::Result<()> {
@@ -52,93 +44,108 @@ impl<'a> Context<'a> {
     }
 }
 
-#[derive(Debug)]
-pub(super) struct State {
-    options: Options,
-    section_counter: SectionCounter,
-    footnote_counter: FootnoteCounter,
+impl<'a> State<'a> {
+    pub(super) fn section_counter(&self) -> &SectionCounter {
+        &self.section_counter
+    }
+
+    pub(super) fn get_footnote_number(&mut self, reference: &str) -> usize {
+        self.footnote_counter.get_number(reference)
+    }
+
+    pub(super) fn section_counter_mut(&mut self) -> &mut SectionCounter {
+        &mut self.section_counter
+    }
 }
 
-impl State {
-    pub(super) fn new(options: Options) -> Self {
-        Self {
-            options,
-            section_counter: SectionCounter::default(),
-            footnote_counter: FootnoteCounter::new(),
+impl<'a> State<'a> {
+    pub(super) fn style(&self) -> Style {
+        self.stack.head.style
+    }
+
+    pub(super) fn writer(&mut self) -> LineWriter<'_> {
+        // TODO: all prefixes
+        LineWriter::new(&mut *self.output, self.stack.head.prefix.as_bytes())
+    }
+
+    pub(super) fn reserved_columns(&self) -> usize {
+        // TODO: caching
+        self.stack.iter().map(|b| b.prefix.display_width()).sum()
+    }
+
+    pub(super) fn write_block_start(&mut self) -> io::Result<()> {
+        if self.stack.head.first_block {
+            self.stack.head.first_block = false;
+            Ok(())
+        } else {
+            writeln!(self.writer())
         }
     }
 }
 
-impl<'a> Context<'a> {
-    pub(super) fn section_counter(&self) -> &SectionCounter {
-        &self.state.section_counter
+impl<'a> State<'a> {
+    pub(super) fn push_block(&mut self, block: Block) {
+        self.stack.push(block);
     }
 
-    pub(super) fn get_footnote_number(&mut self, reference: &str) -> usize {
-        self.state.footnote_counter.get_number(reference)
+    pub(super) fn pop_block(&mut self) {
+        self.stack.pop()
     }
 
-    pub(super) fn section_counter_mut(&mut self) -> &mut SectionCounter {
-        &mut self.state.section_counter
+    pub(super) fn block<T>(&mut self, block: Block, f: impl FnOnce(&mut Self) -> T) -> T {
+        self.stack.push(block);
+        let result = f(self);
+        self.stack.pop();
+        result
+    }
+}
+
+#[derive(Debug, Default)]
+struct Stack {
+    head: Block,
+    tail: Vec<Block>,
+}
+
+impl Stack {
+    fn iter(&self) -> impl Iterator<Item = &Block> {
+        iter::once(&self.head).chain(self.tail.iter())
+    }
+
+    fn push(&mut self, block: Block) {
+        let old_head = mem::replace(&mut self.head, block);
+        self.tail.push(old_head);
+    }
+
+    fn pop(&mut self) {
+        self.head = self.tail.pop().expect("stack empty");
     }
 }
 
 #[derive(Debug)]
-pub(super) struct Scope<'a> {
-    output: NoDebug<&'a mut dyn io::Write>,
+pub(super) struct Block {
     first_block: bool,
     prefix: Prefix,
     style: Style,
 }
 
-impl<'a> Context<'a> {
-    pub(super) fn style(&self) -> Style {
-        self.scope.style
-    }
-
-    pub(super) fn writer(&mut self) -> LineWriter<'_> {
-        LineWriter::new(self.scope.output.deref_mut(), self.scope.prefix.as_bytes())
-    }
-
-    pub(super) fn reserved_columns(&self) -> usize {
-        self.scope.prefix.display_width()
-    }
-
-    pub(super) fn write_block_start(&mut self) -> io::Result<()> {
-        if self.scope.first_block {
-            self.scope.first_block = false;
-            Ok(())
-        } else {
-            writeln!(self.scope.output, "{}", self.scope.prefix)
+impl Default for Block {
+    fn default() -> Self {
+        Self {
+            first_block: true,
+            prefix: Default::default(),
+            style: Default::default(),
         }
     }
 }
 
-impl<'a> Scope<'a> {
-    fn new(output: &'a mut dyn io::Write) -> Self {
-        Self {
-            output: NoDebug::from(output),
-            first_block: true,
-            prefix: DisplayWidth::from(Cow::Borrowed("")),
-            style: Style::new(),
-        }
+impl Block {
+    pub(super) fn with_style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
     }
 
-    pub(super) fn with_style<'b>(&'b mut self, style: Style) -> Scope<'b> {
-        Scope {
-            output: NoDebug::from(&mut self.output.0 as &mut dyn io::Write),
-            first_block: true,
-            prefix: DisplayWidth::from(self.prefix.value().clone()), // TODO: what does this clone?
-            style,
-        }
-    }
-
-    pub(super) fn with_prefix<'b>(&'b mut self, prefix: &str) -> Scope<'b> {
-        Scope {
-            output: NoDebug::from(&mut self.output.0 as &mut dyn io::Write),
-            first_block: true,
-            prefix: DisplayWidth::from(Cow::Owned(format!("{}{prefix}", self.prefix))),
-            style: self.style,
-        }
+    pub(super) fn with_prefix(mut self, prefix: impl Into<Cow<'static, str>>) -> Self {
+        self.prefix = DisplayWidth::from(prefix.into());
+        self
     }
 }

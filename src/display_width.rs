@@ -3,7 +3,7 @@ use std::cell::OnceCell;
 use std::ops::Deref;
 use textwrap::core::display_width;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct DisplayWidth<T> {
     value: T,
     display_width: OnceCell<usize>,

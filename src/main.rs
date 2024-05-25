@@ -13,6 +13,7 @@ mod render;
 
 // TODO: nonprintables
 // TODO: trim trailing whitepace (ah I think that's why I had to add - 1 somehwere)
+// TODO: max text width
 
 fn main() {
     let width = terminal_size::terminal_size()
