@@ -2,12 +2,15 @@ use options::Options;
 use pulldown_cmark::Parser;
 use std::fs;
 
+mod bullets;
 mod counting;
 mod display_width;
 mod fmt_utils;
 mod footnotes;
 mod fragment;
+mod lookahead;
 mod options;
+mod prefix;
 mod render;
 
 // TODO: nonprintables
@@ -15,10 +18,11 @@ mod render;
 // TODO: max text width
 
 fn main() {
+    let arg = std::env::args_os().nth(1).expect("argument");
     let width = terminal_size::terminal_size()
         .map(|(width, _)| width.0)
         .unwrap_or(180);
-    let input = fs::read_to_string("example.md").unwrap();
+    let input = fs::read_to_string(arg).unwrap();
     let mut parser = Parser::new_ext(&input, parser_options());
     render::render(
         &mut parser,
@@ -37,6 +41,7 @@ fn parser_options() -> pulldown_cmark::Options {
         | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_MATH
+        | Options::ENABLE_GFM // Enables admonitions i.e. [!NOTE], ...
 }
 
 // TODO: Special rendering of list item after quote.

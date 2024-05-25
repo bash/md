@@ -40,6 +40,12 @@ Some inline math: $e = mc^2$
 > Don't believe everything you read on the internet.
 - Nikola Tesla
 
+## Block Quote Followed by List
+> Block quote
+- Foo
+- Bar
+- Baz
+
 ## Ordered List
 1. One
 2. Two
@@ -63,6 +69,27 @@ Some inline math: $e = mc^2$
    * foo
    * bar
    * baz
+
+## Quoted List
+> 1. Wow
+> 2. What
+> 3. A
+> 4. Quote
+
+## Deeply Nested List
+1. Wow
+   1. Much
+      1. Nesting
+         1. Such
+            1. Deep
+               1. List
+* Wow
+   * Much
+      * Nesting
+         * Such
+            * Deep
+               * List
+
 
 ## Tasks
 * [ ] buy groceries

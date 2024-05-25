@@ -9,7 +9,7 @@ pub(super) fn paragraph(events: Events, state: &mut State) -> io::Result<()> {
 
     take! {
         for event in events; until Event::End(TagEnd::Paragraph) => {
-            fragments.try_push_event(event, state);
+            fragments.try_push_event(&event, state);
         }
     }
 

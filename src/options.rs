@@ -3,7 +3,9 @@ use std::marker::PhantomData;
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Options {
+    // TODO: use u64 for integer types that are not indexes.
     pub columns: u16,
+    pub text_max_columns: usize,
     // pub symbol_repertoire: SymbolRepertoire,
     // pub rule_style: RuleStyle,
     // pub show_metadata_blocks: bool,
@@ -11,7 +13,10 @@ pub struct Options {
 
 impl Options {
     pub fn plain_text(columns: u16) -> Self {
-        Self { columns }
+        Self {
+            columns,
+            text_max_columns: 100,
+        }
     }
 }
 

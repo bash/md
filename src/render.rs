@@ -1,3 +1,4 @@
+use crate::lookahead::Lookaheadable;
 use crate::options::Options;
 use pulldown_cmark::{Event, Tag, TagEnd, TextMergeStream};
 use std::io::{self};
@@ -7,7 +8,7 @@ mod macros;
 
 mod fragment;
 mod state;
-use state::{Block, State};
+use state::State;
 
 mod block_quote;
 mod code_block;
@@ -27,14 +28,18 @@ use paragraph::*;
 use rule::*;
 use table::*;
 
-type Events<'a, 'b> = &'a mut dyn Iterator<Item = Event<'b>>;
+type Events<'a, 'b, 'c> =
+    &'a mut Lookaheadable<Event<'b>, TextMergeStream<'b, &'c mut dyn Iterator<Item = Event<'b>>>>;
 
-pub fn render<'a, I, W>(input: &mut I, output: &mut W, options: Options) -> io::Result<()>
+pub fn render<'a, 'e, W>(
+    input: &'a mut dyn Iterator<Item = Event<'e>>,
+    output: &mut W,
+    options: Options,
+) -> io::Result<()>
 where
-    I: Iterator<Item = Event<'a>>,
     W: io::Write,
 {
-    let mut events = TextMergeStream::new(input);
+    let mut events = Lookaheadable::new(TextMergeStream::new(input));
     let mut state = State::new(output, options);
 
     while let Some(event) = events.next() {
@@ -48,7 +53,7 @@ fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
     match event {
         Event::Start(Tag::Paragraph) => paragraph(events, state),
         Event::Start(Tag::Heading { level, .. }) => heading(level, events, state),
-        Event::Start(Tag::BlockQuote(_kind)) => block_quote(events, state),
+        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state),
         Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state),
         Event::Start(Tag::HtmlBlock) => html_block(events),
         Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state),
@@ -56,7 +61,7 @@ fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
         Event::Start(Tag::Table(alignment)) => table(alignment, events, state),
         Event::Start(Tag::MetadataBlock(_)) => metadata_block(events),
         Event::Rule => rule(state),
-        _ => unreachable!("you have found a bug!"),
+        event => unreachable!("you have found a bug! {:#?}", event),
     }
 }
 

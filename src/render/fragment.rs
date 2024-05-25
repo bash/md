@@ -5,11 +5,11 @@ use fmtastic::Superscript;
 use pulldown_cmark::{Event, Tag, TagEnd};
 
 pub(super) trait FragmentsExt {
-    fn try_push_event<'a>(&mut self, event: Event<'a>, state: &mut State) -> Option<Event<'a>>;
+    fn try_push_event<'a>(&mut self, event: &Event<'a>, state: &mut State) -> bool;
 }
 
 impl FragmentsExt for Fragments<'_> {
-    fn try_push_event<'a>(&mut self, event: Event<'a>, state: &mut State) -> Option<Event<'a>> {
+    fn try_push_event<'a>(&mut self, event: &Event<'a>, state: &mut State) -> bool {
         // TODO: sort this match
         match event {
             Event::Text(t) => self.push_text(&t),
@@ -41,15 +41,15 @@ impl FragmentsExt for Fragments<'_> {
             Event::HardBreak => self.push(Fragment::HardBreak),
             Event::Start(Tag::Link { .. }) => {} // TODO: links
             Event::End(TagEnd::Link) => {}
-            Event::TaskListMarker(checked) => self.push(task_list_marker(checked)),
+            Event::TaskListMarker(checked) => self.push(task_list_marker(*checked)),
             Event::InlineHtml(_html) => {}
             Event::FootnoteReference(reference) => {
                 self.extend(footnote_reference(&reference, state))
             }
-            _ => return Some(event),
+            _ => return false,
         }
 
-        None
+        true
     }
 }
 

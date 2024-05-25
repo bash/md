@@ -1,5 +1,6 @@
-use super::{Block, Events, State};
-use crate::fragment::{Fragment, Fragments};
+use super::{Events, State};
+use crate::fragment::Fragments;
+use crate::prefix::Prefix;
 use crate::render::fragment::FragmentsExt as _;
 use anstyle::{AnsiColor, Style};
 use pulldown_cmark::{Event, HeadingLevel, TagEnd};
@@ -10,20 +11,22 @@ pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) ->
     state.write_block_start()?;
     state.section_counter_mut().update(level);
 
-    let block = Block::default().with_style(heading_style(state.style(), level));
-    state.block(block, |state| {
-        let mut fragments = Fragments::default();
+    let prefix = Prefix::continued(numbering(state.section_counter().value()));
 
-        fragments.push(format_heading_counter(state.section_counter().value()));
+    state.block(
+        |b| b.styled(|s| heading_style(s, level)).prefix(prefix),
+        |state| {
+            let mut fragments = Fragments::default();
 
-        take! {
-            for event in events; until Event::End(TagEnd::Heading(..)) => {
-                fragments.try_push_event(event, state);
+            take! {
+                for event in events; until Event::End(TagEnd::Heading(..)) => {
+                    fragments.try_push_event(&event, state);
+                }
             }
-        }
 
-        state.write_fragments(fragments)
-    })
+            state.write_fragments(fragments)
+        },
+    )
 }
 
 fn heading_style(style: Style, level: HeadingLevel) -> Style {
@@ -37,15 +40,17 @@ fn heading_style(style: Style, level: HeadingLevel) -> Style {
     }
 }
 
-fn format_heading_counter<'b>(counters: &[usize]) -> Fragment<'b> {
+fn numbering<'b>(counters: &[usize]) -> String {
     let mut output = String::new();
+    let counters = &counters[1..];
 
-    if counters.len() >= 2 {
-        for c in &counters[1..] {
+    // No numbering for sections with leading zeroes.
+    if !counters.is_empty() && !counters.starts_with(&[0]) {
+        for c in counters {
             write!(output, "{c}.").unwrap(); // TODO
         }
         write!(output, " ").unwrap(); // TODO
     }
 
-    Fragment::word(&output).into_owned()
+    output
 }
