@@ -40,6 +40,10 @@ Some inline math: $e = mc^2$
 > Don't believe everything you read on the internet.
 - Nikola Tesla
 
+## Admonitions
+> [!TIP]
+> For more examples see [example.md](./example.md).
+
 ## Block Quote Followed by List
 > Block quote
 - Foo

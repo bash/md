@@ -1,3 +1,4 @@
+use crate::options::SymbolRepertoire;
 use crate::render::Events;
 use anstyle::{AnsiColor, Style};
 use pulldown_cmark::{BlockQuoteKind, Event, Tag};
@@ -27,14 +28,20 @@ impl Kind {
         }
     }
 
-    // TODO: make emoji configurable
-    pub(super) fn title(self) -> Option<&'static str> {
+    pub(super) fn title(self, symbols: SymbolRepertoire) -> Option<&'static str> {
+        // `U+FE0F` is used to request an emoji presentation for an emoji character.
+        // has little effect in my tests, hopefully the situation will improve over time.
         match self {
-            Markup(Note) => Some("ℹ️  Note"),
-            Markup(Tip) => Some("💡 Tip"),
-            Markup(Important) => Some("💬 Important"),
-            Markup(Warning) => Some("⚠️  Warning"),
-            Markup(Caution) => Some("🛑 Caution"),
+            Markup(Note) if symbols.has_emoji() => Some("ℹ️\u{FE0F} Note"),
+            Markup(Note) => Some("Note"),
+            Markup(Tip) if symbols.has_emoji() => Some("💡 Tip"),
+            Markup(Tip) => Some("Tip"),
+            Markup(Important) if symbols.has_emoji() => Some("💬 Important"),
+            Markup(Important) => Some("Important"),
+            Markup(Warning) if symbols.has_emoji() => Some("⚠️\u{FE0F} Warning"),
+            Markup(Warning) => Some("Warning"),
+            Markup(Caution) if symbols.has_emoji() => Some("🛑 Caution"),
+            Markup(Caution) => Some("Caution"),
             Text(_) => None,
         }
     }

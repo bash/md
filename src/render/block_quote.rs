@@ -44,7 +44,7 @@ pub(super) fn block_quote(
 
 fn write_title(kind: Option<Kind>, state: &mut State) -> io::Result<()> {
     if let Some(kind) = kind {
-        if let Some(title) = kind.title() {
+        if let Some(title) = kind.title(state.options().symbol_repertoire) {
             state.write_prefix()?;
             writeln!(state.writer(), "{}{title}{Reset}", kind.style().bold())?;
         }

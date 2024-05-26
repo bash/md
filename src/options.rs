@@ -6,9 +6,37 @@ pub struct Options {
     // TODO: use u64 for integer types that are not indexes.
     pub columns: u16,
     pub text_max_columns: usize,
-    // pub symbol_repertoire: SymbolRepertoire,
+    pub symbol_repertoire: SymbolRepertoire,
     // pub rule_style: RuleStyle,
     // pub show_metadata_blocks: bool,
+}
+
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub struct SymbolRepertoire(SymbolRepertoireImpl);
+
+impl SymbolRepertoire {
+    pub const fn unicode(emoji: bool) -> Self {
+        if emoji {
+            SymbolRepertoire(SymbolRepertoireImpl::UnicodeWithEmoji)
+        } else {
+            SymbolRepertoire(SymbolRepertoireImpl::Unicode)
+        }
+    }
+
+    pub const fn ascii() -> Self {
+        SymbolRepertoire(SymbolRepertoireImpl::Ascii)
+    }
+
+    pub(crate) fn is_unicode(self) -> bool {
+        matches!(
+            self.0,
+            SymbolRepertoireImpl::Unicode | SymbolRepertoireImpl::UnicodeWithEmoji
+        )
+    }
+
+    pub(crate) fn has_emoji(self) -> bool {
+        matches!(self.0, SymbolRepertoireImpl::UnicodeWithEmoji)
+    }
 }
 
 impl Options {
@@ -16,15 +44,18 @@ impl Options {
         Self {
             columns,
             text_max_columns: 100,
+            symbol_repertoire: SymbolRepertoire::unicode(true),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
-pub enum SymbolRepertoire {
-    Ascii,
+pub enum SymbolRepertoireImpl {
+    #[default]
+    UnicodeWithEmoji,
     Unicode,
+    Ascii,
 }
 
 #[derive(Debug)]

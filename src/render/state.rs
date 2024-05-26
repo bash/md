@@ -23,16 +23,20 @@ impl<'a> State<'a> {
     pub(super) fn new(output: &'a mut dyn io::Write, options: Options) -> Self {
         Self {
             output: NoDebug(output),
+            bullets: Bullets::default_for(options.symbol_repertoire),
             options,
             section_counter: SectionCounter::default(),
             footnote_counter: FootnoteCounter::new(),
-            bullets: Bullets::default(),
             stack: Stack::default(),
         }
     }
 }
 
 impl<'a> State<'a> {
+    pub(super) fn options(&self) -> &Options {
+        &self.options
+    }
+
     pub(super) fn available_columns(&self) -> usize {
         (self.options.columns as usize) - self.reserved_columns()
     }

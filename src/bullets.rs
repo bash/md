@@ -1,9 +1,15 @@
+use crate::options::SymbolRepertoire;
+
 #[derive(Debug, Clone)]
 pub(crate) struct Bullets(BulletsImpl);
 
-impl Default for Bullets {
-    fn default() -> Self {
-        Self(BulletsImpl::Static(&["•", "◦", "▪", "‣"]))
+impl Bullets {
+    pub(crate) fn default_for(symbols: SymbolRepertoire) -> Self {
+        if symbols.is_unicode() {
+            Self(BulletsImpl::Static(&["•", "◦", "▪", "‣"]))
+        } else {
+            Self(BulletsImpl::Static(&["*", "-", "+"]))
+        }
     }
 }
 
