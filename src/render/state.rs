@@ -102,10 +102,6 @@ impl<'a> State<'a> {
             self.write_blank_line()
         }
     }
-
-    pub(super) fn unset_first_block(&mut self) {
-        self.stack.head.first_block = false;
-    }
 }
 
 fn write_prefix(stack: &mut Stack, w: &mut dyn io::Write) -> io::Result<()> {

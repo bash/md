@@ -12,13 +12,17 @@ pub(super) fn block_quote(
     state: &mut State,
 ) -> io::Result<()> {
     state.write_block_start()?;
+
+    let kind = kind
+        .map(Kind::Gfm)
+        .or_else(|| detect_kind_from_text(events).map(Kind::FromText));
+
     state.block::<io::Result<_>>(
         |b| b.prefix(prefix(kind)),
         |state| {
-            if let Some(title) = kind.map(title) {
+            if let Some(title) = kind.and_then(title) {
                 state.write_prefix()?;
                 writeln!(state.writer(), "{}{title}{Reset}", color(kind).bold())?;
-                state.unset_first_block();
             }
 
             take! {
@@ -40,13 +44,13 @@ pub(super) fn block_quote(
     Ok(())
 }
 
-fn prefix(kind: Option<BlockQuoteKind>) -> Prefix {
+fn prefix(kind: Option<Kind>) -> Prefix {
     let style = color(kind);
     Prefix::uniform(format!("{style}┃{Reset} "))
 }
 
-fn color(kind: Option<BlockQuoteKind>) -> Style {
-    match kind {
+fn color(kind: Option<Kind>) -> Style {
+    match kind.map(BlockQuoteKind::from) {
         None => Style::new(),
         Some(BlockQuoteKind::Note) => AnsiColor::Blue.on_default(),
         Some(BlockQuoteKind::Tip) => AnsiColor::Green.on_default(),
@@ -57,17 +61,75 @@ fn color(kind: Option<BlockQuoteKind>) -> Style {
 }
 
 // TODO: make emoji configurable
-fn title(kind: BlockQuoteKind) -> &'static str {
+fn title(kind: Kind) -> Option<&'static str> {
+    use Kind::Gfm;
     match kind {
-        BlockQuoteKind::Note => "ℹ️  Note",
-        BlockQuoteKind::Tip => "💡 Tip",
-        BlockQuoteKind::Important => "💬 Important",
-        BlockQuoteKind::Warning => "⚠️  Warning",
-        BlockQuoteKind::Caution => "🛑 Caution",
+        Gfm(BlockQuoteKind::Note) => Some("ℹ️  Note"),
+        Gfm(BlockQuoteKind::Tip) => Some("💡 Tip"),
+        Gfm(BlockQuoteKind::Important) => Some("💬 Important"),
+        Gfm(BlockQuoteKind::Warning) => Some("⚠️  Warning"),
+        Gfm(BlockQuoteKind::Caution) => Some("🛑 Caution"),
+        _ => None,
+    }
+}
+
+fn detect_kind_from_text(events: Events) -> Option<BlockQuoteKind> {
+    enum PeekState {
+        Initial,
+        Paragraph,
+    }
+    use BlockQuoteKind::*;
+    use PeekState::*;
+
+    let mut state = Initial;
+    let mut events = events.lookahead();
+
+    macro_rules! starts_with {
+        ($text:ident, $symbol:literal) => {
+            $text.trim_start().starts_with($symbol)
+        };
+    }
+
+    while let Some(event) = events.next() {
+        state = match (state, &event) {
+            (Initial, Event::Start(Tag::Paragraph)) => Paragraph,
+            (Paragraph, Event::Start(Tag::Emphasis | Tag::Strong)) => Paragraph,
+            (Paragraph, Event::End(TagEnd::Emphasis | TagEnd::Strong)) => Paragraph,
+            (Paragraph, Event::Text(text)) if starts_with!(text, "ℹ️") => return Some(Note),
+            (Paragraph, Event::Text(text)) if starts_with!(text, "💡") => return Some(Tip),
+            (Paragraph, Event::Text(text)) if starts_with!(text, "💬") => return Some(Important),
+            (Paragraph, Event::Text(text)) if starts_with!(text, "⚠️") => return Some(Warning),
+            (Paragraph, Event::Text(text)) if starts_with!(text, "🛑") => return Some(Caution),
+            _ => return None,
+        }
+    }
+
+    None
+}
+
+#[derive(Debug, Copy, Clone)]
+enum Kind {
+    Gfm(BlockQuoteKind),
+    FromText(BlockQuoteKind),
+}
+
+impl From<Kind> for BlockQuoteKind {
+    fn from(kind: Kind) -> Self {
+        match kind {
+            Kind::Gfm(k) => k,
+            Kind::FromText(k) => k,
+        }
     }
 }
 
 fn quote_author<'a>(events: Events<'_, 'a, '_>, render_state: &mut State) -> Option<Fragments<'a>> {
+    enum PeekState {
+        Initial,
+        List,
+        Item,
+        ItemEnd,
+    }
+
     use PeekState::*;
     let mut state = Initial;
     let mut events = events.lookahead();
@@ -86,11 +148,4 @@ fn quote_author<'a>(events: Events<'_, 'a, '_>, render_state: &mut State) -> Opt
         };
     }
     None
-}
-
-enum PeekState {
-    Initial,
-    List,
-    Item,
-    ItemEnd,
 }
