@@ -4,6 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+pulldown-cmark.workspace = true
+textwrap.workspace = true
+fmtastic.workspace = true
+anstyle.workspace = true
+terminal_size.workspace = true
+url.workspace = true
+bat.workspace = true
+md-language-names = { path = "crates/md-language-names" }
+
+[workspace.dependencies]
 pulldown-cmark = "0.11.0"
 textwrap = "0.16.1"
 fmtastic = { version = "0.2.0", git = "https://github.com/bash/fmtastic.git" }
@@ -11,3 +21,6 @@ anstyle = "1.0.7"
 terminal_size = "0.3.0"
 url = "2.5.0"
 bat = { version = "0.24.0", default-features = false, features = ["regex-onig"] }
+
+[workspace]
+members = ["crates/md-language-names"]

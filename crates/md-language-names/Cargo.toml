@@ -1,0 +1,15 @@
+[package]
+name = "md-language-names"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+phf_codegen = "0.11.1"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
+bat.workspace = true
+syntect = "5.2.0"
+
+[dependencies]
+phf = { version = "0.11.1", default-features = false }
+bat.workspace = true

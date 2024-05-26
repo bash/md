@@ -4,6 +4,7 @@ use bat::config::Config as BatConfig;
 use bat::controller::Controller as BatController;
 use bat::input::Input;
 use bat::WrappingMode;
+use md_language_names::lookup_bat_language;
 use std::borrow::Cow;
 
 // TODO: can we detect if bat supports a given language
@@ -15,11 +16,14 @@ pub(crate) fn highlight(code: &str, options: &Options) -> String {
 
 fn try_highlight(code: &str, options: &Options) -> bat::error::Result<String> {
     let assets = HighlightingAssets::from_binary(); // TODO: re-use
-    let config = bat_config(options);
+    let config = bat_config(options, &assets);
     let controller = BatController::new(&config, &assets);
     let inputs = vec![Input::from_reader(Box::new(code.as_bytes()))];
     let mut output = String::new();
-    controller.run(inputs, Some(&mut output)).map(|_| output)
+    controller
+        .run_with_error_handler(inputs, Some(&mut output), |e, _w| _ = dbg!(e))
+        .inspect_err(|e| _ = dbg!(e))
+        .map(|_| output)
 }
 
 #[derive(Debug)]
@@ -28,8 +32,13 @@ pub(crate) struct Options<'a> {
     pub(crate) language: Option<Cow<'a, str>>,
 }
 
-fn bat_config<'a>(options: &'a Options) -> BatConfig<'a> {
-    let language = options.language.as_ref().map(|l| parse_language(&l));
+// TODO: use theme appropriate for dark/light mode
+// TODO: make theme configurable
+fn bat_config<'a>(options: &'a Options, assets: &'a HighlightingAssets) -> BatConfig<'a> {
+    let language = options
+        .language
+        .as_ref()
+        .and_then(|l| lookup_bat_language(l, assets));
     BatConfig {
         language,
         term_width: options.available_columns,
@@ -38,23 +47,5 @@ fn bat_config<'a>(options: &'a Options) -> BatConfig<'a> {
         wrapping_mode: WrappingMode::Character,
         // theme: "ansi".to_owned(),
         ..Default::default()
-    }
-}
-
-fn parse_language(language: &str) -> &str {
-    let language = remove_modifier(language);
-    match language {
-        "shell" => "bash", // not supported by bat but by GitHub
-        l => l,
-    }
-}
-
-fn remove_modifier(language: &str) -> &str {
-    // Languages can have a modifier separated by a comma
-    // e.g. `rust,no_run`
-    let comma = language.find(',');
-    match comma {
-        Some(comma) => &language[..comma],
-        None => language,
     }
 }
