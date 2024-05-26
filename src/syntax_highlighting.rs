@@ -6,6 +6,8 @@ use bat::input::Input;
 use bat::WrappingMode;
 use std::borrow::Cow;
 
+// TODO: can we detect if bat supports a given language
+// so we can gracefully fall back to plain?
 pub(crate) fn highlight(code: &str, options: &Options) -> String {
     try_highlight(code, options)
         .unwrap_or_else(|_error| format!("{}{code}{Reset}", Style::new().italic()))
@@ -41,7 +43,10 @@ fn bat_config<'a>(options: &'a Options) -> BatConfig<'a> {
 
 fn parse_language(language: &str) -> &str {
     let language = remove_modifier(language);
-    language
+    match language {
+        "shell" => "bash", // not supported by bat but by GitHub
+        l => l,
+    }
 }
 
 fn remove_modifier(language: &str) -> &str {

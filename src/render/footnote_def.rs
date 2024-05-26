@@ -21,8 +21,8 @@ pub(super) fn footnote_def(reference: &str, events: Events, state: &mut State) -
         Superscript(number)
     ));
 
+    // TODO: collapse multiple footnote defs following each other into one logical "section".
     state.write_block_start()?;
-
     // TODO: write prefix and writeln is getting awfully repetitive...
     state.write_prefix()?;
     writeln!(state.writer(), "──────")?;
