@@ -11,3 +11,7 @@ fn main() {
 >     println!("hello world");
 > }
 > ```
+
+```Gemfile
+gem "example"
+```
