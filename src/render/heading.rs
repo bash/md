@@ -40,6 +40,11 @@ fn heading_style(style: Style, level: HeadingLevel) -> Style {
     }
 }
 
+// TODO: having numbering for changelog files is really not nice
+// Since this needs to be configurable anyways maybe we can have a heuristic
+// that detects changelog files by name (any or no extension):
+// * changelog, CHANGELOG, RELEASE_NOTES, releasenotes, RELEASENOTES
+// others?
 fn numbering<'b>(counters: &[usize]) -> String {
     let mut output = String::new();
     let counters = &counters[1..];

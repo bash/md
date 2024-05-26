@@ -42,6 +42,7 @@ pub(super) fn code_block(
     Box::write(&highlighted, state, Style::new().dimmed())
 }
 
+// TODO: pulldown-cmark's README breaks here, check why
 struct Box;
 
 impl Box {

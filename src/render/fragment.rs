@@ -5,6 +5,8 @@ use fmtastic::Superscript;
 use pulldown_cmark::{Event, LinkType, Tag, TagEnd};
 use url::Url;
 
+// TODO: double spaces are usually not rendered in HTML, we should also filter that.
+
 pub(super) trait FragmentsExt {
     fn try_push_event<'a>(&mut self, event: &Event<'a>, state: &mut State) -> bool;
 }
