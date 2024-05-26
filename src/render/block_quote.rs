@@ -1,10 +1,13 @@
+use self::classification::{classify, Kind};
 use super::{block, Events, State};
 use crate::fragment::Fragments;
 use crate::prefix::Prefix;
 use crate::render::fragment::FragmentsExt;
-use anstyle::{AnsiColor, Reset, Style};
+use anstyle::{Reset, Style};
 use pulldown_cmark::{BlockQuoteKind, Event, Tag, TagEnd};
 use std::io;
+
+mod classification;
 
 pub(super) fn block_quote(
     kind: Option<BlockQuoteKind>,
@@ -13,17 +16,12 @@ pub(super) fn block_quote(
 ) -> io::Result<()> {
     state.write_block_start()?;
 
-    let kind = kind
-        .map(Kind::Gfm)
-        .or_else(|| detect_kind_from_text(events).map(Kind::FromText));
+    let kind = classify(events, kind);
 
     state.block::<io::Result<_>>(
         |b| b.prefix(prefix(kind)),
         |state| {
-            if let Some(title) = kind.and_then(title) {
-                state.write_prefix()?;
-                writeln!(state.writer(), "{}{title}{Reset}", color(kind).bold())?;
-            }
+            write_title(kind, state)?;
 
             take! {
                 for event in events; until Event::End(TagEnd::BlockQuote) => {
@@ -44,82 +42,19 @@ pub(super) fn block_quote(
     Ok(())
 }
 
+fn write_title(kind: Option<Kind>, state: &mut State) -> io::Result<()> {
+    if let Some(kind) = kind {
+        if let Some(title) = kind.title() {
+            state.write_prefix()?;
+            writeln!(state.writer(), "{}{title}{Reset}", kind.style().bold())?;
+        }
+    }
+    Ok(())
+}
+
 fn prefix(kind: Option<Kind>) -> Prefix {
-    let style = color(kind);
+    let style = kind.map(|k| k.style()).unwrap_or(Style::new());
     Prefix::uniform(format!("{style}┃{Reset} "))
-}
-
-fn color(kind: Option<Kind>) -> Style {
-    match kind.map(BlockQuoteKind::from) {
-        None => Style::new(),
-        Some(BlockQuoteKind::Note) => AnsiColor::Blue.on_default(),
-        Some(BlockQuoteKind::Tip) => AnsiColor::Green.on_default(),
-        Some(BlockQuoteKind::Important) => AnsiColor::Magenta.on_default(),
-        Some(BlockQuoteKind::Warning) => AnsiColor::Yellow.on_default(),
-        Some(BlockQuoteKind::Caution) => AnsiColor::Red.on_default(),
-    }
-}
-
-// TODO: make emoji configurable
-fn title(kind: Kind) -> Option<&'static str> {
-    use Kind::Gfm;
-    match kind {
-        Gfm(BlockQuoteKind::Note) => Some("ℹ️  Note"),
-        Gfm(BlockQuoteKind::Tip) => Some("💡 Tip"),
-        Gfm(BlockQuoteKind::Important) => Some("💬 Important"),
-        Gfm(BlockQuoteKind::Warning) => Some("⚠️  Warning"),
-        Gfm(BlockQuoteKind::Caution) => Some("🛑 Caution"),
-        _ => None,
-    }
-}
-
-fn detect_kind_from_text(events: Events) -> Option<BlockQuoteKind> {
-    enum PeekState {
-        Initial,
-        Paragraph,
-    }
-    use BlockQuoteKind::*;
-    use PeekState::*;
-
-    let mut state = Initial;
-    let mut events = events.lookahead();
-
-    macro_rules! starts_with {
-        ($text:ident, $symbol:literal) => {
-            $text.trim_start().starts_with($symbol)
-        };
-    }
-
-    while let Some(event) = events.next() {
-        state = match (state, &event) {
-            (Initial, Event::Start(Tag::Paragraph)) => Paragraph,
-            (Paragraph, Event::Start(Tag::Emphasis | Tag::Strong)) => Paragraph,
-            (Paragraph, Event::End(TagEnd::Emphasis | TagEnd::Strong)) => Paragraph,
-            (Paragraph, Event::Text(text)) if starts_with!(text, "ℹ️") => return Some(Note),
-            (Paragraph, Event::Text(text)) if starts_with!(text, "💡") => return Some(Tip),
-            (Paragraph, Event::Text(text)) if starts_with!(text, "💬") => return Some(Important),
-            (Paragraph, Event::Text(text)) if starts_with!(text, "⚠️") => return Some(Warning),
-            (Paragraph, Event::Text(text)) if starts_with!(text, "🛑") => return Some(Caution),
-            _ => return None,
-        }
-    }
-
-    None
-}
-
-#[derive(Debug, Copy, Clone)]
-enum Kind {
-    Gfm(BlockQuoteKind),
-    FromText(BlockQuoteKind),
-}
-
-impl From<Kind> for BlockQuoteKind {
-    fn from(kind: Kind) -> Self {
-        match kind {
-            Kind::Gfm(k) => k,
-            Kind::FromText(k) => k,
-        }
-    }
 }
 
 fn quote_author<'a>(events: Events<'_, 'a, '_>, render_state: &mut State) -> Option<Fragments<'a>> {

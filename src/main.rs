@@ -1,5 +1,6 @@
 use options::Options;
 use pulldown_cmark::Parser;
+use render::default_parser_options;
 use std::fs;
 use std::io::ErrorKind;
 
@@ -17,7 +18,7 @@ mod render;
 mod syntax_highlighting;
 
 // TODO: nonprintables
-// TODO: trim trailing whitepace (ah I think that's why I had to add - 1 somehwere)
+// TODO: trim trailing whitespace (ah I think that's why I had to add - 1 somehwere)
 // TODO: max text width
 
 fn main() {
@@ -26,7 +27,7 @@ fn main() {
         .map(|(width, _)| width.0)
         .unwrap_or(180);
     let input = fs::read_to_string(arg).unwrap();
-    let mut parser = Parser::new_ext(&input, parser_options());
+    let mut parser = Parser::new_ext(&input, default_parser_options());
 
     match render::render(
         &mut parser,
@@ -37,18 +38,6 @@ fn main() {
         Err(e) if e.kind() == ErrorKind::BrokenPipe => {}
         Err(e) => panic!("{e:?}"),
     }
-}
-
-fn parser_options() -> pulldown_cmark::Options {
-    use pulldown_cmark::Options;
-    Options::ENABLE_FOOTNOTES
-        | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_TABLES
-        | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS
-        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
-        | Options::ENABLE_STRIKETHROUGH
-        | Options::ENABLE_MATH
-        | Options::ENABLE_GFM // Enables admonitions i.e. [!NOTE], ...
 }
 
 // TODO: Special rendering of list item after quote.

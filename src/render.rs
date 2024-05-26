@@ -28,8 +28,9 @@ use paragraph::*;
 use rule::*;
 use table::*;
 
-type Events<'a, 'b, 'c> =
-    &'a mut Lookaheadable<Event<'b>, TextMergeStream<'b, &'c mut dyn Iterator<Item = Event<'b>>>>;
+type EventsOwned<'b, 'c> =
+    Lookaheadable<Event<'b>, TextMergeStream<'b, &'c mut dyn Iterator<Item = Event<'b>>>>;
+type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
 
 pub fn render<'a, 'e, W>(
     input: &'a mut dyn Iterator<Item = Event<'e>>,
@@ -39,7 +40,7 @@ pub fn render<'a, 'e, W>(
 where
     W: io::Write,
 {
-    let mut events = Lookaheadable::new(TextMergeStream::new(input));
+    let mut events = wrap_events(input);
     let mut state = State::new(output, options);
 
     while let Some(event) = events.next() {
@@ -47,6 +48,22 @@ where
     }
 
     Ok(())
+}
+
+pub fn default_parser_options() -> pulldown_cmark::Options {
+    use pulldown_cmark::Options;
+    Options::ENABLE_FOOTNOTES
+        | Options::ENABLE_TASKLISTS
+        | Options::ENABLE_TABLES
+        | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS
+        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
+        | Options::ENABLE_STRIKETHROUGH
+        | Options::ENABLE_MATH
+        | Options::ENABLE_GFM // Enables admonitions i.e. [!NOTE], ...
+}
+
+fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> EventsOwned<'b, 'c> {
+    Lookaheadable::new(TextMergeStream::new(events))
 }
 
 fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
