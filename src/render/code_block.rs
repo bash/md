@@ -53,6 +53,7 @@ impl Box {
 
     fn write(text: &str, state: &mut State, border_style: Style) -> io::Result<()> {
         let box_width = text.lines().map(display_width).max().unwrap_or(0);
+        state.write_prefix()?;
         writeln!(
             state.writer(),
             "{border_style}╭{}╮{Reset}",
@@ -67,6 +68,7 @@ impl Box {
                 f = Repeat(fill, " ")
             )?;
         }
+        state.write_prefix()?;
         writeln!(
             state.writer(),
             "{border_style}╰{}╯{Reset}",
