@@ -220,6 +220,8 @@ impl FragmentWriter {
                     if let Some(url) = self.link.as_ref() {
                         write!(w, "{}", Hyperlink::new(url, self.link_id))?;
                     }
+                    // TODO: drop soft breaks if they are at the start or end of the line
+                    // TODO: combine consecutive soft breaks.
                     line.iter().try_for_each(|f| self.write(f, w))?;
                     write!(w, "{}", Reset)?;
                     if let Some(_) = self.link.as_ref() {
