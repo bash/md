@@ -9,6 +9,7 @@ pub struct Options {
     pub symbol_repertoire: SymbolRepertoire,
     // pub rule_style: RuleStyle,
     // pub show_metadata_blocks: bool,
+    pub hyperlinks: bool,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
@@ -45,6 +46,7 @@ impl Options {
             columns,
             text_max_columns: 100,
             symbol_repertoire: SymbolRepertoire::unicode(true),
+            hyperlinks: true,
         }
     }
 }

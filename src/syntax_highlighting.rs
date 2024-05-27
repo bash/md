@@ -45,7 +45,7 @@ fn bat_config<'a>(options: &'a Options, assets: &'a HighlightingAssets) -> BatCo
         colored_output: true,
         true_color: true,
         wrapping_mode: WrappingMode::Character,
-        // theme: "ansi".to_owned(),
+        theme: "ansi".to_owned(),
         ..Default::default()
     }
 }

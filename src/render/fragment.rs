@@ -42,6 +42,9 @@ impl FragmentsExt for Fragments<'_> {
             }
             Event::SoftBreak => self.push(Fragment::SoftBreak),
             Event::HardBreak => self.push(Fragment::HardBreak),
+
+            Event::Start(Tag::Link { .. }) if !state.options().hyperlinks => {}
+            Event::End(TagEnd::Link) if !state.options().hyperlinks => {}
             Event::Start(Tag::Link {
                 link_type,
                 dest_url,
@@ -49,6 +52,7 @@ impl FragmentsExt for Fragments<'_> {
                 id,
             }) => link(self, *link_type, &dest_url, &title, &id),
             Event::End(TagEnd::Link) => self.push(Fragment::UnsetLink),
+
             // Event::TaskListMarker is handled by the list item writer
             Event::InlineHtml(_html) => {}
             Event::FootnoteReference(reference) => {
