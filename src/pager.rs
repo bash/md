@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::ffi::OsString;
+use std::fmt::Write as _;
 use std::path::Path;
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::{env, fmt, io};
@@ -74,7 +76,10 @@ impl Pager {
             .stdin(Stdio::piped())
             .args(&self.args)
             .args(self.mandatory_args())
-            .args(self.title_args(title));
+            .args(self.title_args(title))
+            // Setting it as env var means that we get a nice prompt
+            // when using bat (which in turn uses less) as pager.
+            .env("LESS", less_prompt_env_var(title));
 
         match command.spawn() {
             Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -96,11 +101,22 @@ impl Pager {
 
     fn title_args(&self, title: &str) -> Vec<String> {
         match self.kind {
-            PagerKind::Less => vec!["--prompt".to_owned(), LessPrompt { title }.to_string()],
             PagerKind::Bat => vec!["--file-name".to_owned(), title.to_owned()],
             _ => Vec::default(),
         }
     }
+}
+
+fn less_prompt_env_var(title: &str) -> OsString {
+    let mut args = env::var_os("LESS").unwrap_or_default();
+    if !args.is_empty() {
+        args.push(" ");
+    }
+    // From less' man page:
+    // > Some options [...] require a string to follow the option letter.
+    // > The string for that option is considered to end when a dollar sign (`$`) is found.
+    _ = write!(args, "-Ps{}$", LessPrompt { title });
+    args
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -140,6 +156,15 @@ impl fmt::Display for LessPrompt<'_> {
     }
 }
 
+/// From less' man page:
+/// > Any characters other than the special ones (question mark, colon, period, percent, and backslash)
+/// > become literally part of the prompt. Any of the special characters may be included in
+/// > the prompt literally by preceding it with a backslash.
+///
+/// Why is the dollar replaced? \
+/// Again, quoting from less' man page:
+/// > Some options [...] require a string to follow the option letter.
+/// > The string for that option is considered to end when a dollar sign (`$`) is found.
 struct LessEscape<'a>(&'a str);
 
 impl fmt::Display for LessEscape<'_> {
