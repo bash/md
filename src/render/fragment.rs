@@ -54,6 +54,8 @@ impl FragmentsExt for Fragments<'_> {
             Event::End(TagEnd::Link) => self.push(Fragment::UnsetLink),
 
             // Event::TaskListMarker is handled by the list item writer
+            Event::InlineHtml(html) if is_br_tag(html) => self.push(Fragment::HardBreak),
+
             Event::InlineHtml(_html) => {}
             Event::FootnoteReference(reference) => {
                 self.extend(footnote_reference(&reference, state))
@@ -63,6 +65,11 @@ impl FragmentsExt for Fragments<'_> {
 
         true
     }
+}
+
+fn is_br_tag(html: &str) -> bool {
+    let html = html.replace(char::is_whitespace, "");
+    html == "<br>" || html == "<br/>"
 }
 
 fn link(f: &mut Fragments, _link_type: LinkType, dest_url: &str, _title: &str, _id: &str) {
