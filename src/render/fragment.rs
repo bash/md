@@ -6,7 +6,6 @@ use pulldown_cmark::{Event, LinkType, Tag, TagEnd};
 use url::Url;
 
 // TODO: double spaces are usually not rendered in HTML, we should also filter that.
-
 pub(super) trait FragmentsExt {
     fn try_push_event<'a>(&mut self, event: &Event<'a>, state: &mut State) -> bool;
 }
@@ -35,6 +34,7 @@ impl FragmentsExt for Fragments<'_> {
             Event::End(TagEnd::Strikethrough) => self.push(Fragment::PopStyle),
             Event::Start(Tag::Image { .. }) => {
                 self.push(Style::new().invert());
+                // TODO: ideally this would be a non-breaking space, but since we've already split the words its too late :/
                 self.push(Word::new("🖼 "));
             }
             Event::End(TagEnd::Image) => {
