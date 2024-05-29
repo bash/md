@@ -343,6 +343,7 @@ dependencies = [
  "md-language-names",
  "pulldown-cmark",
  "shell-words",
+ "smallvec",
  "terminal_size",
  "textwrap",
  "thiserror",
@@ -676,6 +677,12 @@ name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38b58827f4464d87d377d175e90bf58eb00fd8716ff0a62f80356b5e61555d0d"
+
+[[package]]
+name = "smallvec"
+version = "1.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
 name = "smawk"

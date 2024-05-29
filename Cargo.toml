@@ -16,6 +16,7 @@ shell-words = "1.1.0"
 thiserror = "1.0.61"
 unicode-linebreak-chunked = { git = "https://github.com/bash/unicode-linebreak-chunked.git", branch = "tables" }
 trait-set = "0.3.0"
+smallvec = "1.13.2"
 
 [workspace.dependencies]
 pulldown-cmark = "0.11.0"

@@ -1,10 +1,11 @@
 use super::display_width::DisplayWidth;
 use super::Chunk;
 use pulldown_cmark::CowStr;
+use smallvec::SmallVec;
 
 #[derive(Debug)]
 pub(super) struct ChunkBuffer<'a, P> {
-    buffer: Vec<BufferedChunk<'a, P>>,
+    buffer: SmallVec<[BufferedChunk<'a, P>; 8]>,
     display_width: usize,
 }
 
@@ -20,6 +21,7 @@ impl<'a, P> Default for ChunkBuffer<'a, P> {
 impl<'a, P> ChunkBuffer<'a, P> {
     pub(super) fn push(&mut self, chunk: BufferedChunk<'a, P>) {
         if let BufferedChunk::Text(t) = &chunk {
+            // TODO: deal with overflows?
             self.display_width += t.display_width();
         }
         self.buffer.push(chunk);
