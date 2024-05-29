@@ -45,8 +45,7 @@ fn does_not_emit_line_start_for_passthrough_elements() {
     ];
     let expected = vec![
         Chunk::LineStart,
-        // TODO: this should not contain a newline
-        Chunk::text("this_text_fills_up_the_line\n"),
+        Chunk::text("this_text_fills_up_the_line"),
         Chunk::Passthrough(A),
         Chunk::LineEnd,
     ];
@@ -58,12 +57,10 @@ fn breaks_at_newline_characters() {
     let raw_chunks = vec![RawChunk::Text("foo\nbar\nbaz".into())];
     let expected = vec![
         Chunk::LineStart,
-        // TODO: this should not contain a newline
-        Chunk::text("foo\n"),
+        Chunk::text("foo"),
         Chunk::LineEnd,
         Chunk::LineStart,
-        // TODO: this should not contain a newline
-        Chunk::text("bar\n"),
+        Chunk::text("bar"),
         Chunk::LineEnd,
         Chunk::LineStart,
         Chunk::text("baz"),

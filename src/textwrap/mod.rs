@@ -119,18 +119,18 @@ impl<'a, P> ChunkLayouter<'a, P> {
     fn text<E>(&mut self, s: CowStr<'a>, mut f: impl for<'c> ChunkFn<'c, P, E>) -> Result<(), E> {
         for fragment in self.line_breaks.fragments(&s) {
             match fragment {
-                Fragment::Complete(start, end, opportunity) => {
+                Fragment::Complete(range, opportunity) => {
                     yield_(
-                        CowStr::Borrowed(&s[start..end]),
+                        CowStr::Borrowed(&s[range]),
                         &mut f,
                         &mut self.state,
                         &mut self.buffer,
                         opportunity,
                     )?;
                 }
-                Fragment::Partial(start) => {
+                Fragment::Partial(range) => {
                     self.buffer
-                        .push(BufferedChunk::Text(DisplayWidth::from(slice(&s, start..))));
+                        .push(BufferedChunk::Text(DisplayWidth::from(slice(&s, range))));
                 }
             }
         }

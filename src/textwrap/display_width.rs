@@ -31,6 +31,7 @@ impl<T> DisplayWidth<T>
 where
     T: Deref<Target = str>,
 {
+    // TODO: use `unicode_width::UnicodeWidthChar` directly
     pub(crate) fn display_width(&self) -> usize {
         *self
             .display_width
