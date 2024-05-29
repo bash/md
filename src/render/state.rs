@@ -2,7 +2,7 @@ use crate::bullets::Bullets;
 use crate::counting::SectionCounter;
 use crate::fmt_utils::NoDebug;
 use crate::footnotes::FootnoteCounter;
-use crate::fragment::{FragmentWriter, Fragments};
+use crate::fragment::{FragmentWriter, WritePrefixFn};
 use crate::options::Options;
 use crate::prefix::{Prefix, PrefixMeasurement};
 use anstyle::{Reset, Style};
@@ -41,11 +41,11 @@ impl<'a> State<'a> {
         (self.options.columns as usize) - self.reserved_columns()
     }
 
-    pub(super) fn write_fragments(&mut self, fragments: Fragments) -> io::Result<()> {
-        let mut writer = FragmentWriter::new(self.style());
-        // TODO: pass measurement by line
-        writer.write_block(
-            &fragments,
+    pub(super) fn fragment_writer<'i, 'w>(
+        &'w mut self,
+    ) -> FragmentWriter<'i, 'w, impl WritePrefixFn + 'w> {
+        FragmentWriter::new(
+            self.style(),
             min(self.available_columns(), self.options.text_max_columns),
             &mut *self.output,
             |w| write_prefix(&mut self.stack, w),

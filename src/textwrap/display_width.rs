@@ -1,12 +1,25 @@
 use core::fmt;
 use std::cell::OnceCell;
 use std::ops::Deref;
-use textwrap::core::display_width;
+use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default, Eq)]
 pub(crate) struct DisplayWidth<T> {
     value: T,
-    display_width: OnceCell<usize>,
+    width: OnceCell<usize>,
+}
+
+impl<T> UnicodeWidthStr for DisplayWidth<T>
+where
+    T: Deref<Target = str>,
+{
+    fn width(&self) -> usize {
+        *self.width.get_or_init(|| self.value.width())
+    }
+
+    fn width_cjk(&self) -> usize {
+        unimplemented!("currently not needed")
+    }
 }
 
 impl<T> PartialEq for DisplayWidth<T>
@@ -22,20 +35,8 @@ impl<T> From<T> for DisplayWidth<T> {
     fn from(value: T) -> Self {
         Self {
             value,
-            display_width: OnceCell::new(),
+            width: OnceCell::new(),
         }
-    }
-}
-
-impl<T> DisplayWidth<T>
-where
-    T: Deref<Target = str>,
-{
-    // TODO: use `unicode_width::UnicodeWidthChar` directly
-    pub(crate) fn display_width(&self) -> usize {
-        *self
-            .display_width
-            .get_or_init(|| display_width(&self.value))
     }
 }
 

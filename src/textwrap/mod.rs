@@ -10,9 +10,9 @@ use buffer::{BufferedChunk, ChunkBuffer};
 use fragment::{Fragment, LinebreaksExt as _};
 use pulldown_cmark::{CowStr, InlineStr};
 use std::ops::Index;
-use textwrap::core::display_width;
 use trait_set::trait_set;
 use unicode_linebreak_chunked::{BreakOpportunity, Linebreaks};
+use unicode_width::UnicodeWidthStr as _;
 
 /// A chunk of inline text that can be passed to the layouter.
 #[derive(Debug, Clone)]
@@ -48,6 +48,7 @@ pub(crate) enum Chunk<'a, P> {
 }
 
 impl<'a, P> Chunk<'a, P> {
+    #[cfg(test)]
     pub(crate) fn text(s: impl Into<CowStr<'a>>) -> Self {
         Chunk::Text(DisplayWidth::from(s.into()))
     }
@@ -63,6 +64,7 @@ impl<'a, P> Chunk<'a, P> {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct ChunkLayouter<'a, P> {
     state: LineState,
     line_breaks: Linebreaks,
@@ -82,6 +84,7 @@ impl<'a, P> ChunkLayouter<'a, P> {
     }
 }
 
+#[derive(Debug)]
 struct LineState {
     max_width: usize,
     used_width: usize,
@@ -159,6 +162,7 @@ where
     }
 }
 
+// TODO: trim trailing whitespace of each line
 fn yield_<'a, 's, P, E>(
     s: CowStr<'s>,
     mut f: impl for<'c> ChunkFn<'c, P, E>,
@@ -167,7 +171,7 @@ fn yield_<'a, 's, P, E>(
     opportunity: BreakOpportunity,
 ) -> Result<(), E> {
     let s = DisplayWidth::from(s);
-    let chunk_width = display_width(&s);
+    let chunk_width = s.width();
     let total_width = buffer.display_width() + chunk_width;
 
     if state.used_width != 0 && state.used_width + total_width > state.max_width {
@@ -181,9 +185,7 @@ fn yield_<'a, 's, P, E>(
 
     buffer.drain().try_for_each(|chunk| f(chunk.into()))?;
 
-    if !s.is_empty() {
-        f(Chunk::Text(s))?;
-    }
+    f(Chunk::Text(s))?;
 
     state.used_width += total_width;
 

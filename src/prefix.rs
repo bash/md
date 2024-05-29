@@ -2,7 +2,7 @@ use crate::textwrap::DisplayWidth;
 use std::borrow::{Borrow, Cow};
 use std::iter::Sum;
 use std::ops::Add;
-use textwrap::core::display_width;
+use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default)]
 pub(crate) struct Prefix {
@@ -23,7 +23,7 @@ impl Prefix {
     // TODO: better name
     pub(crate) fn continued(value: impl Into<Cow<'static, str>>) -> Self {
         let value = value.into();
-        Self::uniform(" ".repeat(display_width(&value))).with_first_special(value)
+        Self::uniform(" ".repeat(value.width())).with_first_special(value)
     }
 
     pub(crate) fn with_first_special(mut self, value: impl Into<Cow<'static, str>>) -> Self {
@@ -32,9 +32,9 @@ impl Prefix {
     }
 
     pub(crate) fn measure(&self) -> PrefixMeasurement {
-        let rest = self.rest.display_width();
+        let rest = self.rest.width();
         PrefixMeasurement(
-            self.first.as_deref().map(display_width).unwrap_or(rest),
+            self.first.as_deref().map(|v| v.width()).unwrap_or(rest),
             rest,
         )
     }

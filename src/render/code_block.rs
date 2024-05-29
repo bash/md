@@ -4,7 +4,7 @@ use crate::syntax_highlighting::{highlight, Options};
 use anstyle::{Reset, Style};
 use pulldown_cmark::{CodeBlockKind, Event, TagEnd};
 use std::io;
-use textwrap::core::display_width;
+use unicode_width::UnicodeWidthStr;
 
 pub(super) fn code_block(
     kind: CodeBlockKind<'_>,
@@ -34,25 +34,32 @@ pub(super) fn code_block(
     let highlighted = highlight(
         &code,
         &Options {
-            available_columns: Box::available_columns(state.available_columns()),
+            available_columns: state.available_columns(),
             language,
         },
     );
 
-    Box::write(&highlighted, state, Style::new().dimmed())
+    // TODO: fix width calculation and re-enable
+    // BoxWidget::write(&highlighted, state, Style::new().dimmed())
+
+    for line in highlighted.lines() {
+        state.write_prefix()?;
+        writeln!(state.writer(), "{line}")?;
+    }
+    Ok(())
 }
 
 // TODO: pulldown-cmark's README breaks here, check why
-struct Box;
+struct BoxWidget;
 
-impl Box {
+impl BoxWidget {
     fn available_columns(available_columns: usize) -> usize {
         const BORDER_AND_PADDING_WIDTH: usize = 4;
         available_columns - BORDER_AND_PADDING_WIDTH
     }
 
     fn write(text: &str, state: &mut State, border_style: Style) -> io::Result<()> {
-        let box_width = text.lines().map(display_width).max().unwrap_or(0);
+        let box_width = text.lines().map(UnicodeWidthStr::width).max().unwrap_or(0);
         state.write_prefix()?;
         writeln!(
             state.writer(),
@@ -60,7 +67,7 @@ impl Box {
             Repeat(box_width + 2, "─")
         )?;
         for line in text.lines() {
-            let fill = box_width - display_width(line);
+            let fill = box_width - line.width();
             state.write_prefix()?;
             writeln!(
                 state.writer(),

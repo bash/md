@@ -1,18 +1,18 @@
 use super::{Events, State};
-use crate::fragment::Fragments;
-use crate::render::fragment::FragmentsExt as _;
+use crate::render::fragment::FragmentWriterExt;
 use pulldown_cmark::{Event, TagEnd};
 use std::io;
 
 pub(super) fn paragraph(events: Events, state: &mut State) -> io::Result<()> {
-    let mut fragments = Fragments::default();
+    state.write_block_start()?;
+
+    let mut fragments = state.fragment_writer();
 
     take! {
         for event in events; until Event::End(TagEnd::Paragraph) => {
-            fragments.try_push_event(&event, state);
+            fragments.try_write_event(event)?;
         }
     }
 
-    state.write_block_start()?;
-    state.write_fragments(fragments)
+    fragments.end()
 }

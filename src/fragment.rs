@@ -1,17 +1,16 @@
 use crate::hyperlink::{CloseHyperlink, Hyperlink};
 use crate::style::{StyleExt as _, StyleStack};
+use crate::textwrap::{Chunk, ChunkLayouter, RawChunk};
 use anstyle::{Reset, Style};
-use std::borrow::Cow;
+use pulldown_cmark::CowStr;
 use std::io;
-use std::ops::Deref;
-use textwrap::core::Fragment as TextwrapFragment;
-use textwrap::wrap_algorithms::wrap_first_fit;
+use trait_set::trait_set;
 use url::Url;
 
-/// A fragment of inline text that we can use with text wrapping.
+/// TODO: rename to `Inline`.
 #[derive(Debug)]
 pub(crate) enum Fragment<'a> {
-    Word(Word<'a>),
+    Text(CowStr<'a>),
     SoftBreak,
     HardBreak,
     PushStyle(Style),
@@ -20,9 +19,26 @@ pub(crate) enum Fragment<'a> {
     UnsetLink,
 }
 
-impl<'a> From<Word<'a>> for Fragment<'a> {
-    fn from(value: Word<'a>) -> Self {
-        Fragment::Word(value)
+impl<'a> From<Fragment<'a>> for RawChunk<'a, Fragment<'a>> {
+    fn from(value: Fragment<'a>) -> Self {
+        match value {
+            Fragment::Text(text) => RawChunk::Text(text),
+            Fragment::SoftBreak => RawChunk::soft_break(),
+            Fragment::HardBreak => RawChunk::hard_break(),
+            other => RawChunk::Passthrough(other),
+        }
+    }
+}
+
+impl<'a> From<CowStr<'a>> for Fragment<'a> {
+    fn from(value: CowStr<'a>) -> Self {
+        Fragment::Text(value)
+    }
+}
+
+impl<'a> From<&'a str> for Fragment<'a> {
+    fn from(value: &'a str) -> Self {
+        Fragment::Text(CowStr::from(value))
     }
 }
 
@@ -32,159 +48,22 @@ impl From<Style> for Fragment<'_> {
     }
 }
 
-impl Fragment<'_> {
-    pub(crate) fn word(word: &str) -> Fragment<'_> {
-        Fragment::Word(Word::new(word))
-    }
-
-    pub(crate) fn into_owned(self) -> Fragment<'static> {
-        match self {
-            Fragment::Word(w) => Fragment::Word(w.into_owned()),
-            Fragment::SoftBreak => Fragment::SoftBreak,
-            Fragment::HardBreak => Fragment::HardBreak,
-            Fragment::PushStyle(s) => Fragment::PushStyle(s),
-            Fragment::PopStyle => Fragment::PopStyle,
-            Fragment::SetLink(url) => Fragment::SetLink(url),
-            Fragment::UnsetLink => Fragment::UnsetLink,
-        }
-    }
-}
-
-impl TextwrapFragment for Fragment<'_> {
-    fn width(&self) -> f64 {
-        match self {
-            Fragment::Word(w) => w.width(),
-            Fragment::SoftBreak
-            | Fragment::HardBreak
-            | Fragment::PushStyle(_)
-            | Fragment::PopStyle
-            | Fragment::SetLink(_)
-            | Fragment::UnsetLink => 0.,
-        }
-    }
-
-    fn whitespace_width(&self) -> f64 {
-        match self {
-            Fragment::Word(w) => w.whitespace_width(),
-            Fragment::SoftBreak => 1.,
-            Fragment::PushStyle(_)
-            | Fragment::PopStyle
-            | Fragment::HardBreak
-            | Fragment::SetLink(_)
-            | Fragment::UnsetLink => 0.,
-        }
-    }
-
-    fn penalty_width(&self) -> f64 {
-        match self {
-            Fragment::Word(w) => w.penalty_width(),
-            Fragment::SoftBreak
-            | Fragment::PushStyle(_)
-            | Fragment::PopStyle
-            | Fragment::HardBreak
-            | Fragment::SetLink(_)
-            | Fragment::UnsetLink => 0.,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct Word<'a> {
-    pub(crate) word: Cow<'a, str>,
-    /// Whitespace to insert if the word does not fall at the end of a line.
-    pub(crate) whitespace: Cow<'a, str>,
-    /// Penalty string to insert if the word falls at the end of a line.
-    pub(crate) penalty: Cow<'a, str>,
-    // Cached width in columns.
-    width: f64,
-}
-
-impl Word<'_> {
-    pub(crate) fn new(word: &str) -> Word<'_> {
-        Word::from(textwrap::core::Word::from(word))
-    }
-
-    pub(crate) fn into_owned(self) -> Word<'static> {
-        Word {
-            word: Cow::Owned(self.word.into_owned()),
-            whitespace: Cow::Owned(self.whitespace.into_owned()),
-            penalty: Cow::Owned(self.penalty.into_owned()),
-            width: self.width,
-        }
-    }
-}
-
-impl<'a> From<textwrap::core::Word<'a>> for Word<'a> {
-    fn from(w: textwrap::core::Word<'a>) -> Self {
-        Self {
-            word: Cow::Borrowed(w.word),
-            whitespace: Cow::Borrowed(w.whitespace),
-            penalty: Cow::Borrowed(w.penalty),
-            width: textwrap::core::Fragment::width(&w),
-        }
-    }
-}
-
-impl TextwrapFragment for Word<'_> {
-    fn width(&self) -> f64 {
-        self.width
-    }
-
-    fn whitespace_width(&self) -> f64 {
-        self.whitespace.len() as f64
-    }
-
-    fn penalty_width(&self) -> f64 {
-        self.penalty.len() as f64
-    }
-}
-
-#[derive(Debug, Default)]
-pub(crate) struct Fragments<'a> {
-    fragments: Vec<Fragment<'a>>,
-}
-
-impl<'a> Fragments<'a> {
-    pub(crate) fn push(&mut self, fragment: impl Into<Fragment<'a>>) {
-        self.fragments.push(fragment.into())
-    }
-
-    pub(crate) fn push_text(&mut self, text: &str) {
-        self.extend(
-            textwrap::WordSeparator::UnicodeBreakProperties
-                .find_words(text)
-                .map(|w| Fragment::Word(Word::from(w)).into_owned()),
-        )
-    }
-
-    pub(crate) fn extend(&mut self, fragments: impl IntoIterator<Item = Fragment<'a>>) {
-        self.fragments.extend(fragments);
-    }
-}
-
-impl<'a> IntoIterator for Fragments<'a> {
-    type Item = Fragment<'a>;
-    type IntoIter = <Vec<Fragment<'a>> as IntoIterator>::IntoIter;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.fragments.into_iter()
-    }
-}
-
-impl<'a> Deref for Fragments<'a> {
-    type Target = [Fragment<'a>];
-
-    fn deref(&self) -> &Self::Target {
-        &self.fragments
-    }
-}
-
 /// Writes a fragment and tracks the last used style.
 ///
 /// This is useful when we want to render across multiple lines
 /// when each line has a prefix with its own styling (e.g. blockquote, list).
-#[derive(Debug)]
-pub(crate) struct FragmentWriter {
+pub(crate) struct FragmentWriter<'a, 'w, F> {
+    chunk_layouter: ChunkLayouter<'a, Fragment<'a>>,
+    state: WriterState<'w, F>,
+}
+
+trait_set! {
+    pub(crate) trait WritePrefixFn = FnMut(&mut dyn io::Write) -> io::Result<()>;
+}
+
+struct WriterState<'w, F> {
+    writer: &'w mut dyn io::Write,
+    write_prefix: F,
     style_stack: StyleStack,
     link: Option<Url>,
     // The `id=` parameter helps the terminal connect links
@@ -193,76 +72,113 @@ pub(crate) struct FragmentWriter {
     link_id: usize,
 }
 
-impl FragmentWriter {
-    pub fn new(default_style: Style) -> FragmentWriter {
+impl<'a, 'w, F> FragmentWriter<'a, 'w, F>
+where
+    F: WritePrefixFn,
+{
+    pub fn new(
+        default_style: Style,
+        max_width: usize,
+        writer: &'w mut dyn io::Write,
+        write_prefix: F,
+    ) -> Self {
         Self {
-            style_stack: StyleStack::new(default_style),
-            link: None,
-            link_id: 0,
+            chunk_layouter: ChunkLayouter::new(max_width),
+            state: WriterState {
+                style_stack: StyleStack::new(default_style),
+                link: None,
+                link_id: 0,
+                writer,
+                write_prefix,
+            },
         }
     }
 }
 
-impl FragmentWriter {
-    // TODO: trim trailing whitespace of each line
-    pub(crate) fn write_block(
-        &mut self,
-        fragments: &[Fragment<'_>],
-        available_columns: usize,
-        w: &mut dyn io::Write,
-        mut write_prefix: impl FnMut(&mut dyn io::Write) -> io::Result<()>,
-    ) -> io::Result<()> {
-        for forced_line in fragments.split(|f| matches!(f, Fragment::HardBreak)) {
-            let lines = wrap_first_fit(forced_line, &[available_columns as f64]);
-            for line in lines.into_iter() {
-                if !line.is_empty() {
-                    write_prefix(w)?;
-                    write!(w, "{}", self.style_stack.head())?;
-                    if let Some(url) = self.link.as_ref() {
-                        write!(w, "{}", Hyperlink::new(url, self.link_id))?;
-                    }
-                    // TODO: drop soft breaks if they are at the start or end of the line
-                    // TODO: combine consecutive soft breaks.
-                    line.iter().try_for_each(|f| self.write(f, w))?;
-                    write!(w, "{}", Reset)?;
-                    if let Some(_) = self.link.as_ref() {
-                        write!(w, "{CloseHyperlink}")?;
-                    }
-                    writeln!(w)?;
-                }
-            }
-        }
-        Ok(())
+impl<'a, 'w, F> FragmentWriter<'a, 'w, F>
+where
+    F: WritePrefixFn,
+{
+    pub(crate) fn write(&mut self, fragment: impl Into<Fragment<'a>>) -> io::Result<()> {
+        let raw_chunk = RawChunk::from(fragment.into());
+        self.chunk_layouter
+            .chunk(raw_chunk, |chunk| write_chunk(chunk, &mut self.state))
     }
 
-    fn write(&mut self, f: &Fragment<'_>, w: &mut dyn io::Write) -> io::Result<()> {
-        match f {
-            Fragment::Word(word) => write!(w, "{}{}", word.word, word.whitespace),
-            Fragment::SoftBreak => write!(w, " "),
-            Fragment::HardBreak => unreachable!(),
-            Fragment::PushStyle(s) => {
-                self.style_stack.push(s.on_top_of(&self.style_stack.head()));
-                write!(w, "{}", self.style_stack.head())
+    pub(crate) fn end(&mut self) -> io::Result<()> {
+        self.chunk_layouter
+            .end(|chunk| write_chunk(chunk, &mut self.state))
+    }
+
+    pub(crate) fn write_iter(
+        &mut self,
+        fragments: impl IntoIterator<Item = Fragment<'a>>,
+    ) -> io::Result<()> {
+        fragments.into_iter().try_for_each(|f| self.write(f))
+    }
+}
+
+fn write_chunk<F>(chunk: Chunk<Fragment<'_>>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
+where
+    F: WritePrefixFn,
+{
+    match chunk {
+        Chunk::LineStart => line_start(ctx),
+        Chunk::Text(text) => write!(ctx.writer, "{text}"),
+        Chunk::Passthrough(f) => fragment(f, ctx),
+        Chunk::LineEnd => line_end(ctx),
+    }
+}
+
+fn line_start<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()>
+where
+    F: WritePrefixFn,
+{
+    (ctx.write_prefix)(ctx.writer)?;
+    write!(ctx.writer, "{}", ctx.style_stack.head())?;
+    if let Some(url) = ctx.link.as_ref() {
+        write!(ctx.writer, "{}", Hyperlink::new(url, ctx.link_id))?;
+    }
+    Ok(())
+}
+
+fn line_end<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()> {
+    write!(ctx.writer, "{}", Reset)?;
+    if let Some(_) = ctx.link.as_ref() {
+        write!(ctx.writer, "{CloseHyperlink}")?;
+    }
+    writeln!(ctx.writer)
+}
+
+fn fragment<F>(fragment: Fragment<'_>, ctx: &mut WriterState<'_, F>) -> io::Result<()> {
+    let w = &mut *ctx.writer;
+    let style_stack = &mut ctx.style_stack;
+    match fragment {
+        Fragment::Text(_) | Fragment::SoftBreak | Fragment::HardBreak => {
+            unreachable!("these should not be passthrough")
+        }
+        Fragment::PushStyle(s) => {
+            style_stack.push(s.on_top_of(&style_stack.head()));
+            write!(w, "{}", style_stack.head())
+        }
+        Fragment::PopStyle => {
+            style_stack.pop();
+            write!(w, "{Reset}{}", style_stack.head())
+        }
+        Fragment::SetLink(url) => {
+            if ctx.link.is_some() {
+                panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
             }
-            Fragment::PopStyle => {
-                self.style_stack.pop();
-                write!(w, "{}{}", Reset, self.style_stack.head())
-            }
-            Fragment::SetLink(url) => {
-                if self.link.is_some() {
-                    panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
-                }
-                self.link = Some(url.clone());
-                self.link_id += 1;
-                write!(w, "{}", Hyperlink::new(url, self.link_id))
-            }
-            Fragment::UnsetLink => {
-                // This must handle the case where the link was not pushed
-                // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
-                // Sending a "link reset" when no link is open is perfectly fine.
-                self.link = None;
-                write!(w, "{CloseHyperlink}")
-            }
+            ctx.link = Some(url.clone());
+            ctx.link_id += 1;
+            write!(w, "{}", Hyperlink::new(url, ctx.link_id))
+        }
+        Fragment::UnsetLink => {
+            // This must handle the case where the link was not pushed
+            // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
+            // Sending a "link reset" when no link is open is perfectly fine.
+            ctx.link = None;
+            write!(w, "{CloseHyperlink}")
         }
     }
 }

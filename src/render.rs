@@ -28,6 +28,7 @@ use paragraph::*;
 use rule::*;
 use table::*;
 
+// TODO: these lifetimes are horrible, make them clearer
 type EventsOwned<'b, 'c> =
     Lookaheadable<Event<'b>, TextMergeStream<'b, &'c mut dyn Iterator<Item = Event<'b>>>>;
 type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
@@ -67,19 +68,33 @@ fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> Events
 }
 
 fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
-    match event {
-        Event::Start(Tag::Paragraph) => paragraph(events, state),
-        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state),
-        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state),
-        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state),
-        Event::Start(Tag::HtmlBlock) => html_block(events),
-        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state),
-        Event::Start(Tag::FootnoteDefinition(reference)) => footnote_def(&reference, events, state),
-        Event::Start(Tag::Table(alignment)) => table(alignment, events, state),
-        Event::Start(Tag::MetadataBlock(_)) => metadata_block(events),
-        Event::Rule => rule(state),
-        event => unreachable!("you have found a bug! {:#?}", event),
+    if let Some(rejected) = try_block(event, events, state)? {
+        panic!("Unexpected event {:?} in block context", rejected);
     }
+    Ok(())
+}
+
+fn try_block<'a>(
+    event: Event<'a>,
+    events: Events,
+    state: &mut State,
+) -> io::Result<Option<Event<'a>>> {
+    match event {
+        Event::Start(Tag::Paragraph) => paragraph(events, state)?,
+        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state)?,
+        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state)?,
+        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state)?,
+        Event::Start(Tag::HtmlBlock) => html_block(events)?,
+        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state)?,
+        Event::Start(Tag::FootnoteDefinition(reference)) => {
+            footnote_def(&reference, events, state)?
+        }
+        Event::Start(Tag::Table(alignment)) => table(alignment, events, state)?,
+        Event::Start(Tag::MetadataBlock(_)) => metadata_block(events)?,
+        Event::Rule => rule(state)?,
+        event => return Ok(Some(event)),
+    };
+    Ok(None)
 }
 
 fn metadata_block(events: Events) -> io::Result<()> {

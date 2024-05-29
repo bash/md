@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 pulldown-cmark.workspace = true
-textwrap.workspace = true
 fmtastic.workspace = true
 anstyle.workspace = true
 terminal_size.workspace = true
@@ -17,10 +16,10 @@ thiserror = "1.0.61"
 unicode-linebreak-chunked = { git = "https://github.com/bash/unicode-linebreak-chunked.git", branch = "tables" }
 trait-set = "0.3.0"
 smallvec = "1.13.2"
+unicode-width = "0.1.12"
 
 [workspace.dependencies]
 pulldown-cmark = "0.11.0"
-textwrap = "0.16.1"
 fmtastic = { version = "0.2.0", git = "https://github.com/bash/fmtastic.git" }
 anstyle = "1.0.7"
 terminal_size = "0.3.0"

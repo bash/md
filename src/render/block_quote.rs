@@ -1,8 +1,7 @@
 use self::classification::{classify, Kind};
 use super::{block, Events, State};
-use crate::fragment::Fragments;
+use crate::fragment::Fragment;
 use crate::prefix::Prefix;
-use crate::render::fragment::FragmentsExt;
 use anstyle::{Reset, Style};
 use pulldown_cmark::{BlockQuoteKind, Event, Tag, TagEnd};
 use std::io;
@@ -31,14 +30,14 @@ pub(super) fn block_quote(
             Ok(())
         },
     )?;
-    if let Some(author) = quote_author(events, state) {
-        state.write_blank_line()?;
-        let prefix = Prefix::uniform("    ").with_first_special("  ― ");
-        state.block::<io::Result<_>>(
-            |b| b.prefix(prefix).styled(|s| s.italic()),
-            |state| state.write_fragments(author),
-        )?;
-    }
+    // if let Some(author) = quote_author(events, state) {
+    //     state.write_blank_line()?;
+    //     let prefix = Prefix::uniform("    ").with_first_special("  ― ");
+    //     state.block::<io::Result<_>>(
+    //         |b| b.prefix(prefix).styled(|s| s.italic()),
+    //         |state| state.fragment_writer().write_all(author),
+    //     )?;
+    // }
     Ok(())
 }
 
@@ -57,30 +56,33 @@ fn prefix(kind: Option<Kind>) -> Prefix {
     Prefix::uniform(format!("{style}┃{Reset} "))
 }
 
-fn quote_author<'a>(events: Events<'_, 'a, '_>, render_state: &mut State) -> Option<Fragments<'a>> {
-    enum PeekState {
-        Initial,
-        List,
-        Item,
-        ItemEnd,
-    }
+// fn quote_author<'a>(
+//     events: Events<'_, 'a, '_>,
+//     render_state: &mut State,
+// ) -> Option<Vec<Fragment<'a>>> {
+//     enum PeekState {
+//         Initial,
+//         List,
+//         Item,
+//         ItemEnd,
+//     }
 
-    use PeekState::*;
-    let mut state = Initial;
-    let mut events = events.lookahead();
-    let mut fragments = Fragments::default();
-    while let Some(event) = events.next() {
-        state = match (state, &event) {
-            (Initial, Event::Start(Tag::List(None))) => List,
-            (List, Event::Start(Tag::Item)) => Item,
-            (Item, event) if fragments.try_push_event(&event, render_state) => Item,
-            (Item, Event::End(TagEnd::Item)) => ItemEnd,
-            (ItemEnd, Event::End(TagEnd::List(_))) => {
-                _ = events.commit();
-                return Some(fragments);
-            }
-            _unexpected => return None,
-        };
-    }
-    None
-}
+//     use PeekState::*;
+//     let mut state = Initial;
+//     let mut events = events.lookahead();
+//     let mut fragments = Vec::default();
+//     while let Some(event) = events.next() {
+//         state = match (state, &event) {
+//             (Initial, Event::Start(Tag::List(None))) => List,
+//             (List, Event::Start(Tag::Item)) => Item,
+//             (Item, event) if fragments.try_push_event(&event, render_state) => Item,
+//             (Item, Event::End(TagEnd::Item)) => ItemEnd,
+//             (ItemEnd, Event::End(TagEnd::List(_))) => {
+//                 _ = events.commit();
+//                 return Some(fragments);
+//             }
+//             _unexpected => return None,
+//         };
+//     }
+//     None
+// }

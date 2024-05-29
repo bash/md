@@ -1,7 +1,6 @@
 use super::{Events, State};
-use crate::fragment::Fragments;
 use crate::prefix::Prefix;
-use crate::render::fragment::FragmentsExt as _;
+use crate::render::fragment::FragmentWriterExt;
 use anstyle::{AnsiColor, Style};
 use pulldown_cmark::{Event, HeadingLevel, TagEnd};
 use std::fmt::Write as _;
@@ -16,15 +15,15 @@ pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) ->
     state.block(
         |b| b.styled(|s| heading_style(s, level)).prefix(prefix),
         |state| {
-            let mut fragments = Fragments::default();
+            let mut writer = state.fragment_writer();
 
             take! {
                 for event in events; until Event::End(TagEnd::Heading(..)) => {
-                    fragments.try_push_event(&event, state);
+                    writer.try_write_event(event)?;
                 }
             }
 
-            state.write_fragments(fragments)
+            writer.end()
         },
     )
 }
