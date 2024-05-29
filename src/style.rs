@@ -24,8 +24,11 @@ impl StyleStack {
     }
 
     pub(crate) fn pop(&mut self) {
-        // TODO: should we silently fail instead?
-        self.head = self.tail.pop().expect("stack empty");
+        if let Some(new_head) = self.tail.pop() {
+            self.head = new_head;
+        } else if cfg!(debug_assertions) {
+            panic!("stack empty");
+        }
     }
 }
 
