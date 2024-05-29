@@ -9,18 +9,6 @@ pub(crate) struct DisplayWidth<T> {
     display_width: OnceCell<usize>,
 }
 
-impl<T> DisplayWidth<T> {
-    // TODO: get rid of this
-    pub(crate) fn pre_measured(value: T, width: usize) -> Self {
-        let display_width = OnceCell::new();
-        _ = display_width.set(width);
-        DisplayWidth {
-            value,
-            display_width,
-        }
-    }
-}
-
 impl<T> PartialEq for DisplayWidth<T>
 where
     T: PartialEq,

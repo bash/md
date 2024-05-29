@@ -166,6 +166,7 @@ fn yield_<'a, 's, P, E>(
     buffer: &mut ChunkBuffer<'a, P>,
     opportunity: BreakOpportunity,
 ) -> Result<(), E> {
+    let s = DisplayWidth::from(s);
     let chunk_width = display_width(&s);
     let total_width = buffer.display_width() + chunk_width;
 
@@ -181,7 +182,7 @@ fn yield_<'a, 's, P, E>(
     buffer.drain().try_for_each(|chunk| f(chunk.into()))?;
 
     if !s.is_empty() {
-        f(Chunk::Text(DisplayWidth::pre_measured(s, chunk_width)))?;
+        f(Chunk::Text(s))?;
     }
 
     state.used_width += total_width;
