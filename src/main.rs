@@ -21,6 +21,7 @@ mod pager;
 mod paging;
 mod prefix;
 mod render;
+mod style;
 mod syntax_highlighting;
 mod textwrap;
 
