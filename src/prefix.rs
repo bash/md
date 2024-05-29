@@ -1,4 +1,4 @@
-use crate::display_width::DisplayWidth;
+use crate::textwrap::DisplayWidth;
 use std::borrow::{Borrow, Cow};
 use std::iter::Sum;
 use std::ops::Add;

@@ -3,10 +3,31 @@ use std::cell::OnceCell;
 use std::ops::Deref;
 use textwrap::core::display_width;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Eq)]
 pub(crate) struct DisplayWidth<T> {
     value: T,
     display_width: OnceCell<usize>,
+}
+
+impl<T> DisplayWidth<T> {
+    // TODO: get rid of this
+    pub(crate) fn pre_measured(value: T, width: usize) -> Self {
+        let display_width = OnceCell::new();
+        _ = display_width.set(width);
+        DisplayWidth {
+            value,
+            display_width,
+        }
+    }
+}
+
+impl<T> PartialEq for DisplayWidth<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
 }
 
 impl<T> From<T> for DisplayWidth<T> {

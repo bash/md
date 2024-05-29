@@ -10,7 +10,6 @@ use std::{env, fs};
 
 mod bullets;
 mod counting;
-mod display_width;
 mod fmt_utils;
 mod footnotes;
 mod fragment;
@@ -23,6 +22,7 @@ mod paging;
 mod prefix;
 mod render;
 mod syntax_highlighting;
+mod textwrap;
 
 // TODO: nonprintables
 // TODO: trim trailing whitespace (ah I think that's why I had to add - 1 somehwere)
