@@ -1,4 +1,5 @@
 use anstyle::{Reset, Style};
+use file_uri::{current_dir, file_in_current_dir};
 use options::Options;
 use output::Output;
 use paging::PagingChoice;
@@ -7,10 +8,12 @@ use render::default_parser_options;
 use std::io::{stdin, ErrorKind, IsTerminal, Read};
 use std::path::Path;
 use std::{env, fs};
+use url::Url;
 
 mod bullets;
 mod chars;
 mod counting;
+mod file_uri;
 mod fmt_utils;
 mod footnotes;
 mod fragment;
@@ -35,11 +38,12 @@ fn main() {
     let width = terminal_size::terminal_size()
         .map(|(width, _)| width.0)
         .unwrap_or(180);
-    let (input, input_name) = read_input();
-    let mut parser = Parser::new_ext(&input, default_parser_options());
+    let input = read_input();
+    let mut parser = Parser::new_ext(&input.markdown, default_parser_options());
 
-    let mut output = Output::from_env(&input_name, PagingChoice::Auto).unwrap();
+    let mut output = Output::from_env(&input.file_name, PagingChoice::Auto).unwrap();
     let mut options = Options::plain_text(width);
+    options.base_url = Some(input.base_url);
     options.hyperlinks = output.hyperlinks();
     options.columns = options
         .columns
@@ -52,16 +56,24 @@ fn main() {
     }
 }
 
-fn read_input() -> (String, String) {
+struct Input {
+    markdown: String,
+    file_name: String,
+    base_url: Url,
+}
+
+// TODO: this needs to be moved and refactored
+fn read_input() -> Input {
     match env::args_os().nth(1) {
-        Some(path) => (
-            fs::read_to_string(&path).unwrap(),
-            Path::new(&path)
+        Some(path) => Input {
+            markdown: fs::read_to_string(&path).unwrap(),
+            file_name: Path::new(&path)
                 .file_name()
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .to_string(),
-        ),
+            base_url: file_in_current_dir(path).unwrap(),
+        },
         None => {
             let mut input = String::new();
 
@@ -74,7 +86,11 @@ fn read_input() -> (String, String) {
             }
 
             stdin().read_to_string(&mut input).unwrap();
-            (input, "STDIN".to_owned())
+            Input {
+                markdown: input,
+                file_name: "STDIN".to_owned(),
+                base_url: current_dir().unwrap(),
+            }
         }
     }
 }

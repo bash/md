@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use url::Url;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -10,6 +11,9 @@ pub struct Options {
     // pub rule_style: RuleStyle,
     // pub show_metadata_blocks: bool,
     pub hyperlinks: bool,
+    /// Absolute URL that will be used as base for resolving
+    /// relative links found in the document.
+    pub base_url: Option<Url>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
@@ -47,6 +51,7 @@ impl Options {
             text_max_columns: 100,
             symbol_repertoire: SymbolRepertoire::unicode(true),
             hyperlinks: true,
+            base_url: None,
         }
     }
 }

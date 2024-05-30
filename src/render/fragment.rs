@@ -92,13 +92,22 @@ fn link<'a>(
     state: &State,
 ) -> Fragments<'a> {
     if state.options().hyperlinks {
-        // TODO: file links, test email
-        if let Ok(url) = Url::parse(dest_url) {
+        if let Some(url) = parse_url(dest_url, state) {
             return fragments![Fragment::SetLink(url)];
         }
     }
 
     Fragments::default()
+}
+
+fn parse_url(url: &str, state: &State) -> Option<Url> {
+    Url::parse(url).ok().or_else(|| {
+        state
+            .options()
+            .base_url
+            .as_ref()
+            .and_then(|b| b.join(url).ok())
+    })
 }
 
 fn footnote_reference<'a>(reference: &str, state: &mut State) -> Fragments<'a> {
