@@ -45,7 +45,7 @@ fn heading_style(style: Style, level: HeadingLevel) -> Style {
 // that detects changelog files by name (any or no extension):
 // * changelog, CHANGELOG, RELEASE_NOTES, releasenotes, RELEASENOTES
 // others?
-fn numbering<'b>(counters: &[usize]) -> String {
+fn numbering(counters: &[usize]) -> String {
     let mut output = String::new();
     let counters = &counters[1..];
 

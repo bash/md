@@ -63,7 +63,7 @@ fn list_style_type_from_item(events: Events) -> Option<ListStyleType> {
     }
 }
 
-fn item<'a>(
+fn item(
     list_type: ListStyleType,
     events: Events,
     state: &mut State,

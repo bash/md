@@ -3,7 +3,6 @@ use crate::fmt_utils::NoDebug;
 use crate::fragment::{FragmentWriter, WritePrefixFn};
 use crate::prefix::{Prefix, PrefixMeasurement};
 use anstyle::{Reset, Style};
-use std::cmp::min;
 use std::{io, iter, mem};
 
 #[derive(Debug)]
@@ -57,10 +56,7 @@ impl<'w> Writer<'w> {
     ) -> FragmentWriter<'i, 's, impl WritePrefixFn + 's> {
         FragmentWriter::new(
             self.style(),
-            min(
-                state.available_columns(self),
-                state.options().text_max_columns,
-            ),
+            state.text_columns(self),
             &mut *self.output,
             |w| write_prefix(&mut self.stack, w),
         )
