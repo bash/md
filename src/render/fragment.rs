@@ -1,76 +1,57 @@
 use super::State;
-use crate::fragment::{Fragment, FragmentWriter, WritePrefixFn};
+use crate::fragment::Fragment;
 use anstyle::{AnsiColor, Style};
 use fmtastic::Superscript;
-use pulldown_cmark::{Event, LinkType, Tag, TagEnd};
-use std::io;
+use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use smallvec::{smallvec, SmallVec};
 use url::Url;
 
-// TODO: double spaces are usually not rendered in HTML, we should also filter that.
-pub(super) trait FragmentWriterExt<'a> {
-    fn try_write_event(&mut self, event: Event<'a>) -> io::Result<Option<Event<'a>>>;
+type Fragments<'a> = SmallVec<[Fragment<'a>; 4]>;
+
+macro_rules! fragments {
+    ($($x:expr),*$(,)*) => {
+        smallvec![$(Fragment::from($x),)*]
+    }
 }
 
-impl<'a, F> FragmentWriterExt<'a> for FragmentWriter<'a, '_, F>
-where
-    F: WritePrefixFn,
-{
-    fn try_write_event(&mut self, event: Event<'a>) -> io::Result<Option<Event<'a>>> {
-        // TODO: sort this match
-        match event {
-            Event::Text(t) => self.write(t)?,
-            Event::Code(code) => {
-                self.write(AnsiColor::Yellow.on_default().italic())?;
-                self.write(code)?;
-                self.write(Fragment::PopStyle)?;
-            }
-            Event::InlineMath(math) => {
-                self.write(AnsiColor::Cyan.on_default().italic())?;
-                self.write(math)?;
-                self.write(Fragment::PopStyle)?;
-            }
-            Event::DisplayMath(math) => self.write_iter(display_math(&math))?,
-            Event::Start(Tag::Strong) => self.write(Style::new().bold())?,
-            Event::End(TagEnd::Strong) => self.write(Fragment::PopStyle)?,
-            Event::Start(Tag::Emphasis) => self.write(Style::new().italic())?,
-            Event::End(TagEnd::Emphasis) => self.write(Fragment::PopStyle)?,
-            Event::Start(Tag::Strikethrough) => self.write(Style::new().strikethrough())?,
-            Event::End(TagEnd::Strikethrough) => self.write(Fragment::PopStyle)?,
-            Event::Start(Tag::Image { .. }) => {
-                const NO_BREAK_SPACE: &str = "\u{00A0}";
-                self.write(Style::new().invert())?;
-                self.write("🖼")?;
-                self.write(NO_BREAK_SPACE)?;
-            }
-            Event::End(TagEnd::Image) => {
-                self.write(Fragment::PopStyle)?;
-            }
-            Event::SoftBreak => self.write(Fragment::SoftBreak)?,
-            Event::HardBreak => self.write(Fragment::HardBreak)?,
+pub(super) fn into_fragments<'a>(event: Event<'a>) -> Fragments<'a> {
+    try_into_fragments(event).unwrap_or_else(|event| panic!("Unhandled event {event:#?}"))
+}
 
-            // TODO: get access to state somehow?
-            // Event::Start(Tag::Link { .. }) if !state.options().hyperlinks => {}
-            // Event::End(TagEnd::Link) if !state.options().hyperlinks => {}
-            Event::Start(Tag::Link {
-                link_type,
-                dest_url,
-                title,
-                id,
-            }) => link(self, link_type, &dest_url, &title, &id)?,
-            Event::End(TagEnd::Link) => self.write(Fragment::UnsetLink)?,
-
-            // Event::TaskListMarker is handled by the list item writer
-            Event::InlineHtml(html) if is_br_tag(&html) => self.write(Fragment::HardBreak)?,
-
-            Event::InlineHtml(_html) => {}
-            // TODO: get access to state somehow?
-            // Event::FootnoteReference(reference) => {
-            //     self.write_iter(footnote_reference(&reference, state))?;
-            // }
-            event => return Ok(Some(event)),
-        }
-
-        Ok(None)
+// TODO: double spaces are usually not rendered in HTML, we should also filter that.
+pub(super) fn try_into_fragments<'a>(event: Event<'a>) -> Result<Fragments<'a>, Event<'a>> {
+    match event {
+        // TODO: get access to state
+        // Event::Start(Tag::Link { .. }) if !state.options().hyperlinks => {}
+        // Event::End(TagEnd::Link) if !state.options().hyperlinks => {}
+        // Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, state)),
+        Event::FootnoteReference(_) => Ok(Fragments::default()),
+        Event::Text(text) => Ok(fragments![text]),
+        Event::Code(c) => Ok(code(c)),
+        Event::InlineMath(math) => Ok(code(math)),
+        Event::DisplayMath(_) => Ok(display_math()),
+        Event::Start(Tag::Strong) => Ok(fragments![Style::new().bold()]),
+        Event::End(TagEnd::Strong) => Ok(fragments![Fragment::PopStyle]),
+        Event::Start(Tag::Emphasis) => Ok(fragments![Style::new().italic()]),
+        Event::End(TagEnd::Emphasis) => Ok(fragments![Fragment::PopStyle]),
+        Event::Start(Tag::Strikethrough) => Ok(fragments![Style::new().strikethrough()]),
+        Event::End(TagEnd::Strikethrough) => Ok(fragments![Fragment::PopStyle]),
+        Event::Start(Tag::Image { .. }) => Ok(image_start()),
+        Event::End(TagEnd::Image) => Ok(image_end()),
+        Event::Start(Tag::Link {
+            link_type,
+            dest_url,
+            title,
+            id,
+        }) => Ok(link(link_type, &dest_url, &title, &id)),
+        Event::End(TagEnd::Link) => Ok(fragments![Fragment::UnsetLink]),
+        Event::SoftBreak => Ok(fragments![Fragment::SoftBreak]),
+        Event::HardBreak => Ok(fragments![Fragment::HardBreak]),
+        Event::InlineHtml(html) if is_br_tag(&html) => Ok(fragments![Fragment::HardBreak]),
+        Event::InlineHtml(_html) => Ok(Fragments::default()),
+        // `Event::TaskListMarker` is handled by the list item writer so no need to handle it here.
+        // All other events are "rejected".
+        event => Err(event),
     }
 }
 
@@ -79,40 +60,45 @@ fn is_br_tag(html: &str) -> bool {
     html == "<br>" || html == "<br/>"
 }
 
-fn link<F>(
-    f: &mut FragmentWriter<'_, '_, F>,
-    _link_type: LinkType,
-    dest_url: &str,
-    _title: &str,
-    _id: &str,
-) -> io::Result<()>
-where
-    F: WritePrefixFn,
-{
-    // TODO: file links, test email
-    if let Ok(url) = Url::parse(dest_url) {
-        f.write(Fragment::SetLink(url))?;
-    }
-    Ok(())
+fn code(code: CowStr) -> Fragments {
+    fragments![
+        AnsiColor::Cyan.on_default().italic(),
+        code,
+        Fragment::PopStyle
+    ]
 }
 
-fn footnote_reference<'b>(reference: &str, state: &mut State) -> [Fragment<'b>; 3] {
-    let text = format!("{}", Superscript(state.get_footnote_number(reference)));
-    [
-        Fragment::PushStyle(AnsiColor::Green.on_default()),
-        Fragment::Text(text.into()),
+fn display_math<'a>() -> Fragments<'a> {
+    fragments![
+        AnsiColor::Red.on_default().invert(),
+        "[TODO: display math]",
         Fragment::PopStyle,
     ]
 }
 
-fn display_math(_math: &str) -> [Fragment<'static>; 3] {
-    // TODO: syntax highlight as latex?
-    // TODO: allow writer to set/reset style
-    [
-        // Fragment::HardBreak,
-        Fragment::PushStyle(AnsiColor::Red.on_default().invert()),
-        Fragment::Text("[TODO: display math]".into()),
-        Fragment::PopStyle,
-        // Fragment::HardBreak,
+fn image_start<'a>() -> Fragments<'a> {
+    const NO_BREAK_SPACE: &str = "\u{00A0}";
+    fragments![Style::new().invert(), "🖼", NO_BREAK_SPACE]
+}
+
+fn image_end<'a>() -> Fragments<'a> {
+    fragments![Fragment::PopStyle]
+}
+
+fn link<'a>(_link_type: LinkType, dest_url: &str, _title: &str, _id: &str) -> Fragments<'a> {
+    // TODO: file links, test email
+    if let Ok(url) = Url::parse(dest_url) {
+        fragments![Fragment::SetLink(url)]
+    } else {
+        Fragments::default()
+    }
+}
+
+fn footnote_reference<'a>(reference: &str, state: &mut State) -> Fragments<'a> {
+    let text = format!("{}", Superscript(state.get_footnote_number(reference)));
+    fragments![
+        AnsiColor::Green.on_default(),
+        CowStr::from(text),
+        Fragment::PopStyle
     ]
 }

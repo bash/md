@@ -1,14 +1,14 @@
 use super::{Events, State};
 use crate::prefix::Prefix;
-use crate::render::fragment::FragmentWriterExt;
+use crate::render::fragment::into_fragments;
 use anstyle::{AnsiColor, Style};
 use pulldown_cmark::{Event, HeadingLevel, TagEnd};
 use std::fmt::Write as _;
 use std::io;
 
 pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) -> io::Result<()> {
-    state.write_block_start()?;
     state.section_counter_mut().update(level);
+    state.write_block_start()?;
 
     let prefix = Prefix::continued(numbering(state.section_counter().value()));
 
@@ -19,7 +19,7 @@ pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) ->
 
             take! {
                 for event in events; until Event::End(TagEnd::Heading(..)) => {
-                    writer.try_write_event(event)?;
+                    writer.write_iter(into_fragments(event))?;
                 }
             }
 

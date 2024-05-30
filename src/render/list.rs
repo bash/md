@@ -1,7 +1,8 @@
 use super::{Events, State};
 use crate::prefix::Prefix;
 use crate::render::block;
-use crate::render::fragment::FragmentWriterExt;
+use crate::render::fragment::into_fragments;
+use crate::render::fragment::try_into_fragments;
 use crate::render::try_block;
 use anstyle::Reset;
 use anstyle::Style;
@@ -92,14 +93,17 @@ fn list_item_inlines<'a>(
     let mut writer = state.fragment_writer();
 
     if let Some(event) = first_event {
-        writer.try_write_event(event)?;
+        writer.write_iter(into_fragments(event))?;
     }
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            if let Some(rejected_event) = writer.try_write_event(event)? {
-                writer.end()?;
-                return Ok(Some(ListItemState::Blocks(rejected_event)));
+            match try_into_fragments(event) {
+                Ok(fragments) => writer.write_iter(fragments)?,
+                Err(rejected_event) => {
+                    writer.end()?;
+                    return Ok(Some(ListItemState::Blocks(rejected_event)));
+                }
             }
         }
     }

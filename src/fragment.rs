@@ -105,7 +105,7 @@ where
             .chunk(raw_chunk, |chunk| write_chunk(chunk, &mut self.state))
     }
 
-    pub(crate) fn end(&mut self) -> io::Result<()> {
+    pub(crate) fn end(mut self) -> io::Result<()> {
         self.chunk_layouter
             .end(|chunk| write_chunk(chunk, &mut self.state))
     }
@@ -115,6 +115,14 @@ where
         fragments: impl IntoIterator<Item = Fragment<'a>>,
     ) -> io::Result<()> {
         fragments.into_iter().try_for_each(|f| self.write(f))
+    }
+
+    pub(crate) fn write_all(
+        mut self,
+        fragments: impl IntoIterator<Item = Fragment<'a>>,
+    ) -> io::Result<()> {
+        self.write_iter(fragments)?;
+        self.end()
     }
 }
 
