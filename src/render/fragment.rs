@@ -1,4 +1,5 @@
 use super::State;
+use crate::chars::NO_BREAK_SPACE;
 use crate::fragment::Fragment;
 use anstyle::{AnsiColor, Style};
 use fmtastic::Superscript;
@@ -76,7 +77,6 @@ fn display_math<'a>() -> Fragments<'a> {
 }
 
 fn image_start<'a>() -> Fragments<'a> {
-    const NO_BREAK_SPACE: &str = "\u{00A0}";
     fragments![Style::new().invert(), "🖼", NO_BREAK_SPACE]
 }
 

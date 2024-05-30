@@ -9,6 +9,7 @@ use std::path::Path;
 use std::{env, fs};
 
 mod bullets;
+mod chars;
 mod counting;
 mod fmt_utils;
 mod footnotes;

@@ -1,4 +1,5 @@
 use super::prelude::*;
+use crate::chars::NO_BREAK_SPACE;
 use crate::prefix::Prefix;
 use crate::render::block;
 use crate::style::StyledStr;
@@ -19,7 +20,7 @@ pub(super) fn footnote_def(
 ) -> io::Result<()> {
     let number = state.get_footnote_number(reference);
     let prefix = Prefix::continued(StyledStr::new(
-        format!("{}", Superscript(number)),
+        format!("{}{NO_BREAK_SPACE}", Superscript(number)),
         Style::new().bold(),
     ));
 
