@@ -29,8 +29,7 @@ use rule::*;
 use table::*;
 
 // TODO: these lifetimes are horrible, make them clearer
-type EventsOwned<'b, 'c> =
-    Lookaheadable<Event<'b>, TextMergeStream<'b, &'c mut dyn Iterator<Item = Event<'b>>>>;
+type EventsOwned<'b, 'c> = Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
 type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
 
 pub fn render<'a, 'e, W>(
@@ -64,7 +63,7 @@ pub fn default_parser_options() -> pulldown_cmark::Options {
 }
 
 fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> EventsOwned<'b, 'c> {
-    Lookaheadable::new(TextMergeStream::new(events))
+    Lookaheadable::new(events)
 }
 
 fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
