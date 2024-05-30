@@ -9,6 +9,12 @@ pub(crate) struct DisplayWidth<T> {
     width: OnceCell<usize>,
 }
 
+impl<T> DisplayWidth<T> {
+    pub(crate) fn value(&self) -> &T {
+        &self.value
+    }
+}
+
 impl<T> UnicodeWidthStr for DisplayWidth<T>
 where
     T: Deref<Target = str>,

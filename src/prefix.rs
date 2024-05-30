@@ -1,17 +1,17 @@
+use crate::style::StyledStr;
 use crate::textwrap::DisplayWidth;
-use std::borrow::{Borrow, Cow};
 use std::iter::Sum;
 use std::ops::Add;
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default)]
 pub(crate) struct Prefix {
-    first: Option<Cow<'static, str>>,
-    rest: DisplayWidth<Cow<'static, str>>,
+    first: Option<StyledStr<'static>>,
+    rest: DisplayWidth<StyledStr<'static>>,
 }
 
 impl Prefix {
-    pub(crate) fn uniform(value: impl Into<Cow<'static, str>>) -> Self {
+    pub(crate) fn uniform(value: impl Into<StyledStr<'static>>) -> Self {
         Self {
             first: None,
             rest: DisplayWidth::from(value.into()),
@@ -21,14 +21,10 @@ impl Prefix {
     /// A prefix where the first line is special
     /// and the rest is indented with spaces to line up with the first line.
     // TODO: better name
-    pub(crate) fn continued(value: impl Into<Cow<'static, str>>) -> Self {
+    pub(crate) fn continued(value: impl Into<StyledStr<'static>>) -> Self {
         let value = value.into();
-        Self::uniform(" ".repeat(value.width())).with_first_special(value)
-    }
-
-    pub(crate) fn with_first_special(mut self, value: impl Into<Cow<'static, str>>) -> Self {
-        self.first = Some(value.into());
-        self
+        let repeated = " ".repeat(value.0.width());
+        Self::uniform(StyledStr(repeated.into(), value.1)).with_first_special(value)
     }
 
     pub(crate) fn measure(&self) -> PrefixMeasurement {
@@ -39,12 +35,17 @@ impl Prefix {
         )
     }
 
-    pub(crate) fn take_next(&mut self) -> Cow<'_, str> {
+    pub(crate) fn take_next(&mut self) -> StyledStr<'_> {
         if let Some(first) = self.first.take() {
             first
         } else {
-            Cow::Borrowed(self.rest.borrow())
+            self.rest.value().borrowed()
         }
+    }
+
+    fn with_first_special(mut self, value: impl Into<StyledStr<'static>>) -> Self {
+        self.first = Some(value.into());
+        self
     }
 }
 

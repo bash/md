@@ -1,6 +1,7 @@
 use super::prelude::*;
 use crate::prefix::Prefix;
 use crate::render::block;
+use crate::style::StyledStr;
 use fmtastic::Superscript;
 
 // Yes this is a quite bad implementation, but footnotes are *soooo* annoying:
@@ -17,10 +18,9 @@ pub(super) fn footnote_def(
     w: &mut Writer,
 ) -> io::Result<()> {
     let number = state.get_footnote_number(reference);
-    let prefix = Prefix::continued(format!(
-        "{}{}{Reset} ",
+    let prefix = Prefix::continued(StyledStr::new(
+        format!("{}", Superscript(number)),
         Style::new().bold(),
-        Superscript(number)
     ));
 
     // TODO: collapse multiple footnote defs following each other into one logical "section".

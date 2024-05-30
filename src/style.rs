@@ -1,5 +1,8 @@
-use anstyle::Style;
-use std::mem;
+use anstyle::{Reset, Style};
+use pulldown_cmark::CowStr;
+use std::borrow::Borrow;
+use std::ops::Deref;
+use std::{fmt, mem};
 
 #[derive(Debug)]
 pub(crate) struct StyleStack {
@@ -29,6 +32,59 @@ impl StyleStack {
         } else if cfg!(debug_assertions) {
             panic!("stack empty");
         }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct StyledStr<'a>(pub(crate) CowStr<'a>, pub(crate) Style);
+
+impl<'a> StyledStr<'a> {
+    pub(crate) fn new(s: impl Into<CowStr<'a>>, style: Style) -> Self {
+        Self(s.into(), style)
+    }
+}
+
+impl StyledStr<'_> {
+    pub(crate) fn borrowed(&self) -> StyledStr<'_> {
+        StyledStr(CowStr::Borrowed(self.0.borrow()), self.1)
+    }
+}
+
+impl Default for StyledStr<'_> {
+    fn default() -> Self {
+        Self::new("", Default::default())
+    }
+}
+
+impl Deref for StyledStr<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> From<&'a str> for StyledStr<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::new(value, Style::default())
+    }
+}
+
+impl<'a> From<String> for StyledStr<'a> {
+    fn from(value: String) -> Self {
+        Self::new(value, Style::default())
+    }
+}
+
+impl<'a> From<CowStr<'a>> for StyledStr<'a> {
+    fn from(value: CowStr<'a>) -> Self {
+        Self(value, Style::default())
+    }
+}
+
+impl fmt::Display for StyledStr<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", self.1, self.0, Reset)
     }
 }
 

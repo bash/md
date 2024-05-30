@@ -33,7 +33,7 @@ pub(super) fn block_quote(
         },
     )?;
     if let Some(author) = quote_author(events, state) {
-        let prefix = Prefix::uniform("    ").with_first_special("  ― ");
+        let prefix = Prefix::continued("  ― ");
         w.block::<io::Result<_>>(
             |b| b.prefix(prefix).styled(|s| s.italic()),
             |w| w.fragment_writer(state).write_all(author),

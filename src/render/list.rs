@@ -4,6 +4,7 @@ use crate::render::block;
 use crate::render::fragment::into_fragments;
 use crate::render::fragment::try_into_fragments;
 use crate::render::try_block;
+use crate::style::StyledStr;
 use fmtastic::BallotBox;
 use unicode_width::UnicodeWidthStr as _;
 
@@ -49,8 +50,7 @@ fn prefix(list_type: &ListStyleType) -> Prefix {
         ListStyleType::Bulleted(_) | ListStyleType::Numbered(_) => Style::new().bold(),
         ListStyleType::TaskList(_) => Style::new(),
     };
-    // TODO: can't use continued here because of style and reset :/
-    Prefix::uniform(" ".repeat(first.width())).with_first_special(format!("{style}{first}{Reset}"))
+    Prefix::continued(StyledStr::new(first, style))
 }
 
 fn list_style_type_from_item(events: Events) -> Option<ListStyleType> {
