@@ -185,7 +185,10 @@ fn yield_<'a, 's, P, E>(
 
     buffer.drain().try_for_each(|chunk| f(chunk.into()))?;
 
-    f(Chunk::Text(s))?;
+    // This is not strictly needed but simplifies our tests...
+    if !s.is_empty() {
+        f(Chunk::Text(s))?;
+    }
 
     state.used_width += total_width;
 
