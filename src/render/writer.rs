@@ -1,9 +1,10 @@
 use super::state::State;
 use crate::fmt_utils::NoDebug;
 use crate::fragment::{FragmentWriter, WritePrefixFn};
-use crate::prefix::{Prefix, PrefixMeasurement};
+use crate::prefix::Prefix;
 use anstyle::{Reset, Style};
 use std::{io, iter, mem};
+use unicode_width::UnicodeWidthStr as _;
 
 #[derive(Debug)]
 pub(super) struct Writer<'w> {
@@ -64,11 +65,7 @@ impl<'w> Writer<'w> {
 
     pub(super) fn reserved_columns(&self) -> usize {
         // TODO: caching
-        self.stack
-            .iter()
-            .map(|b| b.prefix.measure())
-            .sum::<PrefixMeasurement>()
-            .first()
+        self.stack.iter().map(|b| b.prefix.width()).sum::<usize>()
     }
 
     pub(super) fn write_block_start(&mut self) -> io::Result<()> {
