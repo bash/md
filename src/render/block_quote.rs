@@ -1,12 +1,11 @@
 use self::classification::{classify, Kind};
-use super::{block, Events, State};
+use super::prelude::*;
+use super::{block, State};
 use crate::fragment::Fragment;
 use crate::prefix::Prefix;
 use crate::render::fragment::try_into_fragments;
-use anstyle::{Reset, Style};
-use pulldown_cmark::{BlockQuoteKind, Event, Tag, TagEnd};
+use pulldown_cmark::BlockQuoteKind;
 use smallvec::{Array, SmallVec};
-use std::io;
 
 mod classification;
 
@@ -14,19 +13,20 @@ pub(super) fn block_quote(
     kind: Option<BlockQuoteKind>,
     events: Events,
     state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    w.write_block_start()?;
 
     let kind = classify(events, kind);
 
-    state.block::<io::Result<_>>(
+    w.block::<io::Result<_>>(
         |b| b.prefix(prefix(kind)),
-        |state| {
-            write_title(kind, state)?;
+        |w| {
+            write_title(kind, state, w)?;
 
             take! {
                 for event in events; until Event::End(TagEnd::BlockQuote) => {
-                    block(event, events, state)?;
+                    block(event, events, state, w)?;
                 }
             }
             Ok(())
@@ -34,19 +34,19 @@ pub(super) fn block_quote(
     )?;
     if let Some(author) = quote_author(events) {
         let prefix = Prefix::uniform("    ").with_first_special("  ― ");
-        state.block::<io::Result<_>>(
+        w.block::<io::Result<_>>(
             |b| b.prefix(prefix).styled(|s| s.italic()),
-            |state| state.fragment_writer().write_all(author),
+            |w| w.fragment_writer(state).write_all(author),
         )?;
     }
     Ok(())
 }
 
-fn write_title(kind: Option<Kind>, state: &mut State) -> io::Result<()> {
+fn write_title(kind: Option<Kind>, state: &mut State, w: &mut Writer) -> io::Result<()> {
     if let Some(kind) = kind {
         if let Some(title) = kind.title(state.options().symbol_repertoire) {
-            state.write_prefix()?;
-            writeln!(state.writer(), "{}{title}{Reset}", kind.style().bold())?;
+            w.write_prefix()?;
+            writeln!(w, "{}{title}{Reset}", kind.style().bold())?;
         }
     }
     Ok(())

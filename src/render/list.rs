@@ -1,14 +1,10 @@
-use super::{Events, State};
+use super::prelude::*;
 use crate::prefix::Prefix;
 use crate::render::block;
 use crate::render::fragment::into_fragments;
 use crate::render::fragment::try_into_fragments;
 use crate::render::try_block;
-use anstyle::Reset;
-use anstyle::Style;
 use fmtastic::BallotBox;
-use pulldown_cmark::{Event, Tag, TagEnd};
-use std::io;
 use unicode_width::UnicodeWidthStr as _;
 
 // TODO: refactor
@@ -17,14 +13,15 @@ pub(super) fn list(
     first_item_number: Option<u64>,
     mut events: Events,
     state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    w.write_block_start()?;
 
-    let mut list_type = list_style_type(first_item_number, state);
+    let mut list_type = list_style_type(first_item_number, state, w);
     take! {
         for event in events; until Event::End(TagEnd::List(..)) => {
             if let Event::Start(Tag::Item) = event {
-                item(list_type.clone(), &mut events, state)?;
+                item(list_type.clone(), &mut events, state, w)?;
                 list_type.increment();
             } else {
                 unreachable!();
@@ -35,10 +32,10 @@ pub(super) fn list(
     Ok(())
 }
 
-fn list_style_type(first_item_number: Option<u64>, state: &mut State) -> ListStyleType {
+fn list_style_type(first_item_number: Option<u64>, state: &mut State, w: &Writer) -> ListStyleType {
     match first_item_number {
         Some(n) => ListStyleType::Numbered(n),
-        None => ListStyleType::Bulleted(state.bullet().to_owned()),
+        None => ListStyleType::Bulleted(state.bullet(w).to_owned()),
     }
 }
 
@@ -66,17 +63,22 @@ fn list_style_type_from_item(events: Events) -> Option<ListStyleType> {
     }
 }
 
-fn item<'a>(list_type: ListStyleType, events: Events, state: &mut State) -> io::Result<()> {
+fn item<'a>(
+    list_type: ListStyleType,
+    events: Events,
+    state: &mut State,
+    w: &mut Writer,
+) -> io::Result<()> {
     let list_type = list_style_type_from_item(events).unwrap_or(list_type);
-    state.block(
+    w.block(
         |b| b.prefix(prefix(&list_type)).list(),
-        |state| {
+        |w| {
             let mut list_state = Some(ListItemState::Inlines(None));
 
             while let Some(s) = list_state.take() {
                 list_state = match s {
-                    ListItemState::Inlines(event) => list_item_inlines(event, events, state)?,
-                    ListItemState::Blocks(event) => list_item_blocks(event, events, state)?,
+                    ListItemState::Inlines(event) => list_item_inlines(event, events, state, w)?,
+                    ListItemState::Blocks(event) => list_item_blocks(event, events, state, w)?,
                 };
             }
 
@@ -89,8 +91,9 @@ fn list_item_inlines<'a>(
     first_event: Option<Event<'a>>,
     events: Events<'_, 'a, '_>,
     state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<Option<ListItemState<'a>>> {
-    let mut writer = state.fragment_writer();
+    let mut writer = w.fragment_writer(state);
 
     if let Some(event) = first_event {
         writer.write_iter(into_fragments(event))?;
@@ -116,12 +119,13 @@ fn list_item_blocks<'a>(
     first_event: Event<'a>,
     events: Events<'_, 'a, '_>,
     state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<Option<ListItemState<'a>>> {
-    block(first_event, events, state)?;
+    block(first_event, events, state, w)?;
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            if let Some(rejected_event) = try_block(event, events, state)? {
+            if let Some(rejected_event) = try_block(event, events, state, w)? {
                 return Ok(Some(ListItemState::Inlines(Some(rejected_event))))
             }
         }

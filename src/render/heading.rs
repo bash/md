@@ -1,21 +1,25 @@
-use super::{Events, State};
+use super::prelude::*;
 use crate::prefix::Prefix;
 use crate::render::fragment::into_fragments;
-use anstyle::{AnsiColor, Style};
-use pulldown_cmark::{Event, HeadingLevel, TagEnd};
+use anstyle::AnsiColor::Green;
+use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;
-use std::io;
 
-pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) -> io::Result<()> {
+pub(super) fn heading(
+    level: HeadingLevel,
+    events: Events,
+    state: &mut State,
+    w: &mut Writer,
+) -> io::Result<()> {
     state.section_counter_mut().update(level);
-    state.write_block_start()?;
+    w.write_block_start()?;
 
     let prefix = Prefix::continued(numbering(state.section_counter().value()));
 
-    state.block(
+    w.block(
         |b| b.styled(|s| heading_style(s, level)).prefix(prefix),
-        |state| {
-            let mut writer = state.fragment_writer();
+        |w| {
+            let mut writer = w.fragment_writer(&state);
 
             take! {
                 for event in events; until Event::End(TagEnd::Heading(..)) => {
@@ -30,12 +34,9 @@ pub(super) fn heading(level: HeadingLevel, events: Events, state: &mut State) ->
 
 fn heading_style(style: Style, level: HeadingLevel) -> Style {
     match level {
-        HeadingLevel::H1 => style
-            .fg_color(Some(AnsiColor::Green.into()))
-            .bold()
-            .underline(),
-        HeadingLevel::H2 => style.fg_color(Some(AnsiColor::Green.into())).bold(),
-        _ => style.fg_color(Some(AnsiColor::Green.into())),
+        HeadingLevel::H1 => style.fg_color(Some(Green.into())).bold().underline(),
+        HeadingLevel::H2 => style.fg_color(Some(Green.into())).bold(),
+        _ => style.fg_color(Some(Green.into())),
     }
 }
 

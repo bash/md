@@ -1,9 +1,8 @@
-use super::State;
+use super::prelude::*;
 use crate::fmt_utils::Repeat;
-use std::io;
 
-pub(super) fn rule(state: &mut State) -> io::Result<()> {
-    state.write_block_start()?;
+pub(super) fn rule(state: &mut State, w: &mut Writer) -> io::Result<()> {
+    w.write_block_start()?;
 
     // let decoration = "∗ ∗ ∗";
     // let padding_size = state
@@ -17,7 +16,7 @@ pub(super) fn rule(state: &mut State) -> io::Result<()> {
     //     pad = Repeat(padding_size, " "),
     // )
 
-    let columns = state.available_columns().saturating_sub(2);
-    state.write_prefix()?;
-    writeln!(state.writer(), "◈{}◈", Repeat(columns, "─"))
+    let columns = state.available_columns(w).saturating_sub(2);
+    w.write_prefix()?;
+    writeln!(w, "◈{}◈", Repeat(columns, "─"))
 }

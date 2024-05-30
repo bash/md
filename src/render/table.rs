@@ -1,22 +1,17 @@
-use super::{Events, State};
-use anstyle::{AnsiColor, Reset};
-use pulldown_cmark::{Alignment, Event, TagEnd};
-use std::io;
+use super::prelude::*;
+use anstyle::AnsiColor::Red;
+use pulldown_cmark::Alignment;
 
 pub(super) fn table(
     _alignment: Vec<Alignment>,
     events: Events,
-    state: &mut State,
+    _state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<()> {
-    state.write_block_start()?;
+    w.write_block_start()?;
 
-    state.write_prefix()?;
-    writeln!(
-        state.writer(),
-        "{}[TODO: table]{}",
-        AnsiColor::Red.on_default().invert(),
-        Reset
-    )?;
+    w.write_prefix()?;
+    writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
 
     take! { for event in events; until Event::End(TagEnd::Table) => { } }
 

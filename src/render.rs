@@ -1,23 +1,21 @@
+use self::prelude::*;
 use crate::lookahead::Lookaheadable;
 use crate::options::Options;
-use pulldown_cmark::{Event, Tag, TagEnd, TextMergeStream};
-use std::io::{self};
 
 #[macro_use]
 mod macros;
 
-mod fragment;
-mod state;
-use state::State;
-
 mod block_quote;
 mod code_block;
 mod footnote_def;
+mod fragment;
 mod heading;
 mod list;
 mod paragraph;
 mod rule;
+mod state;
 mod table;
+mod writer;
 
 use block_quote::*;
 use code_block::*;
@@ -27,6 +25,16 @@ use list::*;
 use paragraph::*;
 use rule::*;
 use table::*;
+
+mod prelude {
+    pub(super) use super::state::State;
+    pub(super) use super::writer::Writer;
+    pub(super) use super::Events;
+    pub(super) use anstyle::{Reset, Style};
+    pub(super) use pulldown_cmark::{Event, Tag, TagEnd};
+    pub(super) use std::io;
+    pub(super) use std::io::Write as _;
+}
 
 // TODO: these lifetimes are horrible, make them clearer
 type EventsOwned<'b, 'c> = Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
@@ -41,10 +49,11 @@ where
     W: io::Write,
 {
     let mut events = wrap_events(input);
-    let mut state = State::new(output, options);
+    let mut state = State::new(options);
+    let mut writer = Writer::new(output);
 
     while let Some(event) = events.next() {
-        block(event, &mut events, &mut state)?;
+        block(event, &mut events, &mut state, &mut writer)?;
     }
 
     Ok(())
@@ -66,8 +75,8 @@ fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> Events
     Lookaheadable::new(events)
 }
 
-fn block(event: Event, events: Events, state: &mut State) -> io::Result<()> {
-    if let Some(rejected) = try_block(event, events, state)? {
+fn block(event: Event, events: Events, state: &mut State, w: &mut Writer) -> io::Result<()> {
+    if let Some(rejected) = try_block(event, events, state, w)? {
         panic!("Unexpected event {:?} in block context", rejected);
     }
     Ok(())
@@ -77,20 +86,21 @@ fn try_block<'a>(
     event: Event<'a>,
     events: Events,
     state: &mut State,
+    w: &mut Writer,
 ) -> io::Result<Option<Event<'a>>> {
     match event {
-        Event::Start(Tag::Paragraph) => paragraph(events, state)?,
-        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state)?,
-        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state)?,
-        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state)?,
+        Event::Start(Tag::Paragraph) => paragraph(events, state, w)?,
+        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state, w)?,
+        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state, w)?,
+        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state, w)?,
         Event::Start(Tag::HtmlBlock) => html_block(events)?,
-        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state)?,
+        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state, w)?,
         Event::Start(Tag::FootnoteDefinition(reference)) => {
-            footnote_def(&reference, events, state)?
+            footnote_def(&reference, events, state, w)?
         }
-        Event::Start(Tag::Table(alignment)) => table(alignment, events, state)?,
+        Event::Start(Tag::Table(alignment)) => table(alignment, events, state, w)?,
         Event::Start(Tag::MetadataBlock(_)) => metadata_block(events)?,
-        Event::Rule => rule(state)?,
+        Event::Rule => rule(state, w)?,
         event => return Ok(Some(event)),
     };
     Ok(None)
