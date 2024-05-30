@@ -96,12 +96,12 @@ fn list_item_inlines<'a>(
     let mut writer = w.fragment_writer(state);
 
     if let Some(event) = first_event {
-        writer.write_iter(into_fragments(event))?;
+        writer.write_iter(into_fragments(event, state))?;
     }
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            match try_into_fragments(event) {
+            match try_into_fragments(event, state) {
                 Ok(fragments) => writer.write_iter(fragments)?,
                 Err(rejected_event) => {
                     writer.end()?;

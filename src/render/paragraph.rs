@@ -8,7 +8,7 @@ pub(super) fn paragraph(events: Events, state: &mut State, w: &mut Writer) -> io
 
     take! {
         for event in events; until Event::End(TagEnd::Paragraph) => {
-            writer.write_iter(into_fragments(event))?;
+            writer.write_iter(into_fragments(event, state))?;
         }
     }
 

@@ -23,7 +23,7 @@ pub(super) fn heading(
 
             take! {
                 for event in events; until Event::End(TagEnd::Heading(..)) => {
-                    writer.write_iter(into_fragments(event))?;
+                    writer.write_iter(into_fragments(event, state))?;
                 }
             }
 

@@ -185,8 +185,10 @@ fn fragment<F>(fragment: Fragment<'_>, ctx: &mut WriterState<'_, F>) -> io::Resu
             // This must handle the case where the link was not pushed
             // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
             // Sending a "link reset" when no link is open is perfectly fine.
-            ctx.link = None;
-            write!(w, "{CloseHyperlink}")
+            if ctx.link.take().is_some() {
+                write!(w, "{CloseHyperlink}")?;
+            }
+            Ok(())
         }
     }
 }

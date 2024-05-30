@@ -32,7 +32,7 @@ pub(super) fn block_quote(
             Ok(())
         },
     )?;
-    if let Some(author) = quote_author(events) {
+    if let Some(author) = quote_author(events, state) {
         let prefix = Prefix::uniform("    ").with_first_special("  ― ");
         w.block::<io::Result<_>>(
             |b| b.prefix(prefix).styled(|s| s.italic()),
@@ -57,7 +57,10 @@ fn prefix(kind: Option<Kind>) -> Prefix {
     Prefix::uniform(format!("{style}┃{Reset} "))
 }
 
-fn quote_author<'a>(events: Events<'_, 'a, '_>) -> Option<impl IntoIterator<Item = Fragment<'a>>> {
+fn quote_author<'a>(
+    events: Events<'_, 'a, '_>,
+    s: &mut State,
+) -> Option<impl IntoIterator<Item = Fragment<'a>>> {
     enum PeekState {
         Initial,
         List,
@@ -74,7 +77,7 @@ fn quote_author<'a>(events: Events<'_, 'a, '_>) -> Option<impl IntoIterator<Item
             (List, Event::Start(Tag::Item)) => Item,
             (Item, Event::End(TagEnd::Item)) => ItemEnd,
             (Item, event) => {
-                if try_push_fragments(&mut fragments, event) {
+                if try_push_fragments(&mut fragments, event, s) {
                     Item
                 } else {
                     return None;
@@ -93,6 +96,9 @@ fn quote_author<'a>(events: Events<'_, 'a, '_>) -> Option<impl IntoIterator<Item
 fn try_push_fragments<'a, A: Array<Item = Fragment<'a>>>(
     buf: &mut SmallVec<A>,
     event: Event<'a>,
+    state: &mut State,
 ) -> bool {
-    try_into_fragments(event).map(|f| buf.extend(f)).is_ok()
+    try_into_fragments(event, state)
+        .map(|f| buf.extend(f))
+        .is_ok()
 }

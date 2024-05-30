@@ -14,18 +14,16 @@ macro_rules! fragments {
     }
 }
 
-pub(super) fn into_fragments<'a>(event: Event<'a>) -> Fragments<'a> {
-    try_into_fragments(event).unwrap_or_else(|event| panic!("Unhandled event {event:#?}"))
+pub(super) fn into_fragments<'a>(event: Event<'a>, state: &mut State) -> Fragments<'a> {
+    try_into_fragments(event, state).unwrap_or_else(|event| panic!("Unhandled event {event:#?}"))
 }
 
 // TODO: double spaces are usually not rendered in HTML, we should also filter that.
-pub(super) fn try_into_fragments<'a>(event: Event<'a>) -> Result<Fragments<'a>, Event<'a>> {
+pub(super) fn try_into_fragments<'a>(
+    event: Event<'a>,
+    state: &mut State,
+) -> Result<Fragments<'a>, Event<'a>> {
     match event {
-        // TODO: get access to state
-        // Event::Start(Tag::Link { .. }) if !state.options().hyperlinks => {}
-        // Event::End(TagEnd::Link) if !state.options().hyperlinks => {}
-        // Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, state)),
-        Event::FootnoteReference(_) => Ok(Fragments::default()),
         Event::Text(text) => Ok(fragments![text]),
         Event::Code(c) => Ok(code(c)),
         Event::InlineMath(math) => Ok(code(math)),
@@ -43,12 +41,13 @@ pub(super) fn try_into_fragments<'a>(event: Event<'a>) -> Result<Fragments<'a>, 
             dest_url,
             title,
             id,
-        }) => Ok(link(link_type, &dest_url, &title, &id)),
+        }) => Ok(link(link_type, &dest_url, &title, &id, state)),
         Event::End(TagEnd::Link) => Ok(fragments![Fragment::UnsetLink]),
         Event::SoftBreak => Ok(fragments![Fragment::SoftBreak]),
         Event::HardBreak => Ok(fragments![Fragment::HardBreak]),
         Event::InlineHtml(html) if is_br_tag(&html) => Ok(fragments![Fragment::HardBreak]),
         Event::InlineHtml(_html) => Ok(Fragments::default()),
+        Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, state)),
         // `Event::TaskListMarker` is handled by the list item writer so no need to handle it here.
         // All other events are "rejected".
         event => Err(event),
@@ -85,13 +84,21 @@ fn image_end<'a>() -> Fragments<'a> {
     fragments![Fragment::PopStyle]
 }
 
-fn link<'a>(_link_type: LinkType, dest_url: &str, _title: &str, _id: &str) -> Fragments<'a> {
-    // TODO: file links, test email
-    if let Ok(url) = Url::parse(dest_url) {
-        fragments![Fragment::SetLink(url)]
-    } else {
-        Fragments::default()
+fn link<'a>(
+    _link_type: LinkType,
+    dest_url: &str,
+    _title: &str,
+    _id: &str,
+    state: &State,
+) -> Fragments<'a> {
+    if state.options().hyperlinks {
+        // TODO: file links, test email
+        if let Ok(url) = Url::parse(dest_url) {
+            return fragments![Fragment::SetLink(url)];
+        }
     }
+
+    Fragments::default()
 }
 
 fn footnote_reference<'a>(reference: &str, state: &mut State) -> Fragments<'a> {
