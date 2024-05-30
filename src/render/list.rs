@@ -11,7 +11,7 @@ use unicode_width::UnicodeWidthStr as _;
 
 pub(super) fn list(
     first_item_number: Option<u64>,
-    mut events: Events,
+    events: Events,
     state: &mut State,
     w: &mut Writer,
 ) -> io::Result<()> {
@@ -21,7 +21,7 @@ pub(super) fn list(
     take! {
         for event in events; until Event::End(TagEnd::List(..)) => {
             if let Event::Start(Tag::Item) = event {
-                item(list_type.clone(), &mut events, state, w)?;
+                item(list_type.clone(), events, state, w)?;
                 list_type.increment();
             } else {
                 unreachable!();

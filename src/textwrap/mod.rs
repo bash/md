@@ -150,7 +150,7 @@ impl<'a, P> ChunkLayouter<'a, P> {
     }
 }
 
-fn slice<'c, 'a, Idx>(s: &'c CowStr<'a>, idx: Idx) -> CowStr<'a>
+fn slice<'a, Idx>(s: &CowStr<'a>, idx: Idx) -> CowStr<'a>
 where
     str: Index<Idx, Output = str>,
 {

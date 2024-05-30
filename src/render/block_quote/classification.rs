@@ -72,9 +72,9 @@ fn classify_from_text(events: Events) -> Option<BlockQuoteKind> {
     use PeekState::*;
 
     let mut state = Initial;
-    let mut events = events.lookahead();
+    let events = events.lookahead();
 
-    while let Some(event) = events.next() {
+    for event in events {
         state = match (state, &event) {
             (Initial, Event::Start(Tag::Paragraph)) => Paragraph,
             (Paragraph, Event::Start(Tag::Emphasis | Tag::Strong) | Event::HardBreak) => Paragraph,
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn minimal() {
         for (symbol, kind) in kinds() {
-            assert_eq!(Some(*kind), classify(&format!("{symbol}")));
+            assert_eq!(Some(*kind), classify(&symbol.to_string()));
         }
     }
 
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn counter_examples() {
-        assert_eq!(None, classify(&format!("Note")));
+        assert_eq!(None, classify(&"Note".to_string()));
         for (symbol, _) in kinds() {
             assert_eq!(None, classify(&format!("- {symbol} List")));
             assert_eq!(None, classify(&format!("~~{symbol}~~")));

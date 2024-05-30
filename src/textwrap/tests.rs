@@ -140,12 +140,18 @@ fn breaks_long_lines_between_words() {
     assert_eq!(expected, layout(raw_chunks));
 }
 
-fn layout<'a>(raw_chunks: Vec<RawChunk<'a, Passthrough>>) -> Vec<Chunk<'a, Passthrough>> {
+fn layout(raw_chunks: Vec<RawChunk<'_, Passthrough>>) -> Vec<Chunk<'_, Passthrough>> {
     let mut chunks = Vec::new();
     let mut layouter = ChunkLayouter::new(20);
     for c in raw_chunks {
-        _ = layouter.chunk::<()>(c, |c| Ok(chunks.push(c.into_static())));
+        _ = layouter.chunk::<()>(c, |c| {
+            chunks.push(c.into_static());
+            Ok(())
+        });
     }
-    _ = layouter.end::<()>(|c| Ok(chunks.push(c.into_static())));
+    _ = layouter.end::<()>(|c| {
+        chunks.push(c.into_static());
+        Ok(())
+    });
     chunks
 }

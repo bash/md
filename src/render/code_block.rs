@@ -33,7 +33,7 @@ pub(super) fn code_block(
     let highlighted = highlight(
         &code,
         &Options {
-            available_columns: state.available_columns(&w),
+            available_columns: state.available_columns(w),
             language,
         },
     );

@@ -40,8 +40,8 @@ mod prelude {
 type EventsOwned<'b, 'c> = Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
 type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
 
-pub fn render<'a, 'e, W>(
-    input: &'a mut dyn Iterator<Item = Event<'e>>,
+pub fn render<W>(
+    input: &mut dyn Iterator<Item = Event<'_>>,
     output: &mut W,
     options: Options,
 ) -> io::Result<()>

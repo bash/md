@@ -53,7 +53,7 @@ fn write_title(kind: Option<Kind>, state: &mut State, w: &mut Writer) -> io::Res
 }
 
 fn prefix(kind: Option<Kind>) -> Prefix {
-    let style = kind.map(|k| k.style()).unwrap_or(Style::new());
+    let style = kind.map(|k| k.style()).unwrap_or_default();
     Prefix::uniform(format!("{style}┃{Reset} "))
 }
 

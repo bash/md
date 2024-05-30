@@ -82,7 +82,7 @@ impl Pager {
             .env("LESS", less_prompt_env_var(title));
 
         match command.spawn() {
-            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
             Err(e) => Err(e),
             Ok(mut child) => {
                 let stdin = child.stdin.take().expect("stdin is always piped");

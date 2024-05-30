@@ -25,7 +25,7 @@ impl Output {
 
     fn paged_from_env(title: &str, paging: PagingChoice) -> io::Result<Option<Self>> {
         if paging.should_enable() {
-            let pager = Pager::from_env().unwrap_or_else(|| Pager::less_from_env());
+            let pager = Pager::from_env().unwrap_or_else(Pager::less_from_env);
             let Some((child, stdin)) = pager.spawn(title)? else {
                 return Ok(None);
             };

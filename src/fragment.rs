@@ -152,7 +152,7 @@ where
 
 fn line_end<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()> {
     write!(ctx.writer, "{}", Reset)?;
-    if let Some(_) = ctx.link.as_ref() {
+    if ctx.link.as_ref().is_some() {
         write!(ctx.writer, "{CloseHyperlink}")?;
     }
     writeln!(ctx.writer)

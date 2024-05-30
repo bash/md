@@ -26,7 +26,7 @@ impl<'w> Writer<'w> {
         b: impl for<'r, 'b> FnOnce(&'r mut BlockBuilder<'b>) -> &'r mut BlockBuilder<'b>,
         f: impl FnOnce(&mut Self) -> T,
     ) -> T {
-        let mut builder = BlockBuilder::new(&self);
+        let mut builder = BlockBuilder::new(self);
         b(&mut builder);
         self.stack.push(builder.build());
         let result = f(self);

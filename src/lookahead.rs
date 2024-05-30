@@ -14,7 +14,7 @@ impl<T, I> Lookaheadable<T, I> {
         }
     }
 
-    pub(crate) fn lookahead<'a>(&'a mut self) -> Lookahead<'a, T, I> {
+    pub(crate) fn lookahead(&mut self) -> Lookahead<'_, T, I> {
         Lookahead {
             inner: self,
             buffer: VecDeque::new(),
@@ -61,7 +61,7 @@ where
 impl<'a, T, I> Lookahead<'a, T, I> {
     pub(crate) fn commit(mut self) -> impl Iterator<Item = T> {
         let buffer = mem::take(&mut self.buffer);
-        buffer.into_iter().filter_map(|i| i)
+        buffer.into_iter().flatten()
     }
 }
 

@@ -16,7 +16,7 @@ pub(super) trait LinebreaksExt {
 
 impl LinebreaksExt for Linebreaks {
     fn fragments<'a>(&'a mut self, s: &'a str) -> impl Iterator<Item = Fragment> + 'a {
-        let mut breaks = self.chunk(&s);
+        let mut breaks = self.chunk(s);
         let mut start = 0;
         iter::from_fn(move || match breaks.next() {
             Some((index, opportunity)) => {
@@ -39,7 +39,7 @@ impl LinebreaksExt for Linebreaks {
 fn trailing_newline_len(s: &str) -> usize {
     if s.ends_with("\r\n") {
         2
-    } else if s.ends_with("\n") {
+    } else if s.ends_with('\n') {
         1
     } else {
         0
