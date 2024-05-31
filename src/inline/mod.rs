@@ -1,4 +1,3 @@
-use crate::textwrap::RawChunk;
 use anstyle::Style;
 use pulldown_cmark::CowStr;
 use url::Url;
@@ -15,17 +14,6 @@ pub(crate) enum Inline<'a> {
     PopStyle,
     SetLink(Url),
     UnsetLink,
-}
-
-impl<'a> From<Inline<'a>> for RawChunk<'a, Inline<'a>> {
-    fn from(value: Inline<'a>) -> Self {
-        match value {
-            Inline::Text(text) => RawChunk::Text(text),
-            Inline::SoftBreak => RawChunk::soft_break(),
-            Inline::HardBreak => RawChunk::hard_break(),
-            other => RawChunk::Passthrough(other),
-        }
-    }
 }
 
 impl<'a> From<CowStr<'a>> for Inline<'a> {

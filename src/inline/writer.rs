@@ -12,7 +12,7 @@ use url::Url;
 /// This is useful when we want to render across multiple lines
 /// when each line has a prefix with its own styling (e.g. blockquote, list).
 pub(crate) struct InlineWriter<'a, 'w, F> {
-    chunk_layouter: ChunkLayouter<'a, Inline<'a>>,
+    chunk_layouter: ChunkLayouter<'a, PassthroughInline>,
     state: WriterState<'w, F>,
 }
 
@@ -85,14 +85,14 @@ where
     }
 }
 
-fn write_chunk<F>(chunk: Chunk<Inline<'_>>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
+fn write_chunk<F>(chunk: Chunk<PassthroughInline>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
 where
     F: WritePrefixFn,
 {
     match chunk {
         Chunk::LineStart => line_start(ctx),
         Chunk::Text(text) => write!(ctx.writer, "{text}"),
-        Chunk::Passthrough(i) => inline(i, ctx),
+        Chunk::Passthrough(i) => passthrough_inline(i, ctx),
         Chunk::LineEnd => line_end(ctx),
     }
 }
@@ -117,30 +117,32 @@ fn line_end<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()> {
     writeln!(ctx.writer)
 }
 
-fn inline<F>(inline: Inline<'_>, ctx: &mut WriterState<'_, F>) -> io::Result<()> {
+fn passthrough_inline<F>(
+    inline: PassthroughInline,
+    ctx: &mut WriterState<'_, F>,
+) -> io::Result<()> {
+    use PassthroughInline::*;
+
     let w = &mut *ctx.writer;
     let style_stack = &mut ctx.style_stack;
     match inline {
-        Inline::Text(_) | Inline::SoftBreak | Inline::HardBreak => {
-            unreachable!("these should not be passthrough")
-        }
-        Inline::PushStyle(s) => {
+        PushStyle(s) => {
             style_stack.push(s.on_top_of(&style_stack.head()));
             write!(w, "{}", style_stack.head())
         }
-        Inline::PopStyle => {
+        PopStyle => {
             style_stack.pop();
             write!(w, "{Reset}{}", style_stack.head())
         }
-        Inline::SetLink(url) => {
-            if ctx.link.is_some() {
-                panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
+        SetLink(url) => {
+            if ctx.link.is_none() {
+                ctx.link = Some(url.clone());
+                ctx.link_id += 1;
+                write!(w, "{}", Hyperlink::new(url, ctx.link_id))?;
             }
-            ctx.link = Some(url.clone());
-            ctx.link_id += 1;
-            write!(w, "{}", Hyperlink::new(url, ctx.link_id))
+            Ok(())
         }
-        Inline::UnsetLink => {
+        UnsetLink => {
             // This must handle the case where the link was not pushed
             // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
             // Sending a "link reset" when no link is open is perfectly fine.
@@ -148,6 +150,30 @@ fn inline<F>(inline: Inline<'_>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
                 write!(w, "{CloseHyperlink}")?;
             }
             Ok(())
+        }
+    }
+}
+
+/// The subset of [`Inline`]s that get passed through
+/// text wrapping unchanged.
+#[derive(Debug)]
+enum PassthroughInline {
+    PushStyle(Style),
+    PopStyle,
+    SetLink(Url),
+    UnsetLink,
+}
+
+impl<'a> From<Inline<'a>> for RawChunk<'a, PassthroughInline> {
+    fn from(value: Inline<'a>) -> Self {
+        match value {
+            Inline::Text(text) => RawChunk::Text(text),
+            Inline::SoftBreak => RawChunk::soft_break(),
+            Inline::HardBreak => RawChunk::hard_break(),
+            Inline::PushStyle(style) => RawChunk::Passthrough(PassthroughInline::PushStyle(style)),
+            Inline::PopStyle => RawChunk::Passthrough(PassthroughInline::PopStyle),
+            Inline::SetLink(url) => RawChunk::Passthrough(PassthroughInline::SetLink(url)),
+            Inline::UnsetLink => RawChunk::Passthrough(PassthroughInline::UnsetLink),
         }
     }
 }
