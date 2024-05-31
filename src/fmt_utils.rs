@@ -12,6 +12,7 @@ where
     }
 }
 
+#[derive(Default)]
 pub(crate) struct NoDebug<T>(pub(crate) T);
 
 impl<T> From<T> for NoDebug<T> {

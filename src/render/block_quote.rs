@@ -1,51 +1,65 @@
 use self::classification::{classify, Kind};
-use super::prelude::*;
+use super::context::BlockContext;
 use super::{block, State};
+use super::{prelude::*, BlockRenderer};
 use crate::inline::Inline;
 use crate::prefix::Prefix;
+use crate::render::context::BlockKind;
 use crate::render::inline::try_into_inlines;
 use pulldown_cmark::BlockQuoteKind;
 use smallvec::{Array, SmallVec};
 
 mod classification;
 
-pub(super) fn block_quote(
-    kind: Option<BlockQuoteKind>,
-    events: Events,
-    state: &mut State,
-    w: &mut Writer,
-) -> io::Result<()> {
-    w.write_block_start()?;
-
-    let kind = classify(events, kind);
-
-    w.block::<io::Result<_>>(
-        |b| b.prefix(prefix(kind)),
-        |w| {
-            write_title(kind, state, w)?;
-
-            take! {
-                for event in events; until Event::End(TagEnd::BlockQuote) => {
-                    block(event, events, state, w)?;
-                }
-            }
-            Ok(())
-        },
-    )?;
-    if let Some(author) = quote_author(events, state) {
-        let prefix = Prefix::continued("  ― ");
-        w.block::<io::Result<_>>(
-            |b| b.prefix(prefix).styled(|s| s.italic()),
-            |w| w.inline_writer(state).write_all(author),
-        )?;
-    }
-    Ok(())
+pub(super) struct BlockQuote {
+    pub(super) kind: Option<BlockQuoteKind>,
 }
 
-fn write_title(kind: Option<Kind>, state: &mut State, w: &mut Writer) -> io::Result<()> {
+impl BlockRenderer for BlockQuote {
+    fn kind(&self) -> BlockKind {
+        BlockKind::BlockQuote
+    }
+
+    fn render(
+        self,
+        events: Events,
+        state: &mut State,
+        w: &mut Writer,
+        b: BlockContext,
+    ) -> io::Result<()> {
+        let kind = classify(events, self.kind);
+        let b = b.nested(|b| b.prefixed(prefix(kind)));
+        write_title(kind, state, w, &b)?;
+        take! {
+            for event in events; until Event::End(TagEnd::BlockQuote) => {
+                block(event, events, state, w, b.inherited())?;
+            }
+        }
+
+        if let Some(author) = quote_author(events, state) {
+            let b = b.nested(|b| {
+                b.prefixed(Prefix::continued("  ― "))
+                    .styled(Style::new().italic())
+            });
+
+            w.inline_writer(state, &b).write_all(author)?;
+        }
+
+        b.set_previous_block(BlockKind::BlockQuote);
+
+        Ok(())
+    }
+}
+
+fn write_title(
+    kind: Option<Kind>,
+    state: &mut State,
+    w: &mut Writer,
+    b: &BlockContext,
+) -> io::Result<()> {
     if let Some(kind) = kind {
         if let Some(title) = kind.title(state.options().symbol_repertoire) {
-            w.write_prefix()?;
+            w.write_prefix(&b)?;
             writeln!(w, "{}{title}{Reset}", kind.style().bold())?;
         }
     }

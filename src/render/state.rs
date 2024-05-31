@@ -1,4 +1,4 @@
-use super::writer::Writer;
+use super::context::BlockContext;
 use crate::bullets::Bullets;
 use crate::counting::SectionCounter;
 use crate::footnotes::FootnoteCounter;
@@ -29,12 +29,13 @@ impl State {
         &self.options
     }
 
-    pub(super) fn available_columns(&self, w: &Writer) -> usize {
-        (self.options.columns as usize) - w.reserved_columns()
+    // TODO: rename to `available_width`
+    pub(super) fn available_columns(&self, b: &BlockContext) -> usize {
+        (self.options.columns as usize) - b.prefix_width()
     }
 
-    pub(super) fn text_columns(&self, w: &Writer) -> usize {
-        min(self.available_columns(w), self.options.text_max_columns)
+    pub(super) fn text_columns(&self, b: &BlockContext) -> usize {
+        min(self.available_columns(b), self.options.text_max_columns)
     }
 
     pub(super) fn section_counter(&self) -> &SectionCounter {
@@ -49,7 +50,7 @@ impl State {
         &mut self.section_counter
     }
 
-    pub(super) fn bullet(&self, w: &Writer) -> &str {
-        self.bullets.nth(w.nested_list_count())
+    pub(super) fn bullet(&self, b: &BlockContext) -> &str {
+        self.bullets.nth(b.list_depth())
     }
 }

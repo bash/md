@@ -1,16 +1,29 @@
-use super::prelude::*;
+use super::context::BlockKind;
+use super::{prelude::*, BlockRenderer};
 use crate::render::inline::into_inlines;
 
-pub(super) fn paragraph(events: Events, state: &mut State, w: &mut Writer) -> io::Result<()> {
-    w.write_block_start()?;
+pub(super) struct Paragraph;
 
-    let mut writer = w.inline_writer(state);
-
-    take! {
-        for event in events; until Event::End(TagEnd::Paragraph) => {
-            writer.write_iter(into_inlines(event, state))?;
-        }
+impl BlockRenderer for Paragraph {
+    fn kind(&self) -> BlockKind {
+        BlockKind::Paragraph
     }
 
-    writer.end()
+    fn render(
+        self,
+        events: Events,
+        state: &mut State,
+        w: &mut Writer,
+        b: super::context::BlockContext,
+    ) -> io::Result<()> {
+        let mut writer = w.inline_writer(state, &b);
+
+        take! {
+            for event in events; until Event::End(TagEnd::Paragraph) => {
+                writer.write_iter(into_inlines(event, state))?;
+            }
+        }
+
+        writer.end()
+    }
 }

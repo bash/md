@@ -7,6 +7,7 @@ mod macros;
 
 mod block_quote;
 mod code_block;
+mod context;
 mod footnote_def;
 mod heading;
 mod inline;
@@ -19,8 +20,10 @@ mod writer;
 
 use block_quote::*;
 use code_block::*;
+use context::{BlockContext, BlockContextData, BlockKind};
 use footnote_def::*;
 use heading::*;
+use io::Write;
 use list::*;
 use paragraph::*;
 use rule::*;
@@ -48,9 +51,16 @@ where
     let mut events = wrap_events(&mut events);
     let mut state = State::new(options);
     let mut writer = Writer::new(&mut output);
+    let block_ctx = BlockContext::Bottom(BlockContextData::default());
 
     while let Some(event) = events.next() {
-        block(event, &mut events, &mut state, &mut writer)?;
+        block(
+            event,
+            &mut events,
+            &mut state,
+            &mut writer,
+            block_ctx.inherited(),
+        )?;
     }
 
     Ok(())
@@ -72,11 +82,33 @@ fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> Events
     Lookaheadable::new(events)
 }
 
-fn block(event: Event, events: Events, state: &mut State, w: &mut Writer) -> io::Result<()> {
-    if let Some(rejected) = try_block(event, events, state, w)? {
+fn block(
+    event: Event,
+    events: Events,
+    state: &mut State,
+    w: &mut Writer,
+    b: BlockContext,
+) -> io::Result<()> {
+    if let Some(rejected) = try_block(event, events, state, w, b)? {
         panic!("Unexpected event {:?} in block context", rejected);
     }
     Ok(())
+}
+
+trait BlockRenderer {
+    fn looks_for_end_tag(&self) -> bool {
+        true
+    }
+
+    fn kind(&self) -> BlockKind;
+
+    fn render(
+        self,
+        events: Events,
+        state: &mut State,
+        w: &mut Writer,
+        b: BlockContext,
+    ) -> io::Result<()>;
 }
 
 fn try_block<'a>(
@@ -84,23 +116,57 @@ fn try_block<'a>(
     events: Events,
     state: &mut State,
     w: &mut Writer,
+    b: BlockContext,
 ) -> io::Result<Option<Event<'a>>> {
     match event {
-        Event::Start(Tag::Paragraph) => paragraph(events, state, w)?,
-        Event::Start(Tag::Heading { level, .. }) => heading(level, events, state, w)?,
-        Event::Start(Tag::BlockQuote(kind)) => block_quote(kind, events, state, w)?,
-        Event::Start(Tag::CodeBlock(kind)) => code_block(kind, events, state, w)?,
-        Event::Start(Tag::HtmlBlock) => html_block(events)?,
-        Event::Start(Tag::List(first_item_number)) => list(first_item_number, events, state, w)?,
-        Event::Start(Tag::FootnoteDefinition(reference)) => {
-            footnote_def(&reference, events, state, w)?
+        Event::Start(Tag::Paragraph) => render_block(Paragraph, events, state, w, b)?,
+        Event::Start(Tag::Heading { level, .. }) => {
+            render_block(Heading { level }, events, state, w, b)?
         }
-        Event::Start(Tag::Table(alignment)) => table(alignment, events, state, w)?,
+        Event::Start(Tag::BlockQuote(kind)) => {
+            render_block(BlockQuote { kind }, events, state, w, b)?
+        }
+        Event::Start(Tag::CodeBlock(kind)) => {
+            render_block(CodeBlock { kind }, events, state, w, b)?
+        }
+        Event::Start(Tag::HtmlBlock) => html_block(events)?,
+        Event::Start(Tag::List(first_item_number)) => {
+            render_block(List { first_item_number }, events, state, w, b)?
+        }
+        Event::Start(Tag::FootnoteDefinition(reference)) => {
+            render_block(FootnoteDef { reference }, events, state, w, b)?
+        }
+        Event::Start(Tag::Table(alignments)) => {
+            render_block(Table { alignments }, events, state, w, b)?
+        }
         Event::Start(Tag::MetadataBlock(_)) => metadata_block(events)?,
-        Event::Rule => rule(state, w)?,
+        Event::Rule => render_block(Rule, events, state, w, b)?,
         event => return Ok(Some(event)),
-    };
+    }
+
     Ok(None)
+}
+
+fn render_block<H: BlockRenderer>(
+    handler: H,
+    events: Events,
+    state: &mut State,
+    w: &mut Writer,
+    b: BlockContext,
+) -> io::Result<()> {
+    if !is_blank(&handler, events) {
+        w.write_block_start(&b)?;
+    }
+    let kind = handler.kind();
+    b.set_current_block(kind);
+    handler.render(events, state, w, b.inherited())?;
+    b.set_previous_block(kind);
+    Ok(())
+}
+
+fn is_blank(handler: &impl BlockRenderer, events: Events) -> bool {
+    let mut events = events.lookahead();
+    handler.looks_for_end_tag() && matches!(events.next(), None | Some(Event::End(_)))
 }
 
 fn metadata_block(events: Events) -> io::Result<()> {

@@ -1,42 +1,54 @@
-use super::prelude::*;
+use super::context::BlockKind;
+use super::{prelude::*, BlockRenderer};
 use crate::prefix::Prefix;
 use crate::render::inline::into_inlines;
+use crate::style::StyledStr;
 use anstyle::AnsiColor::Green;
 use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;
 
-pub(super) fn heading(
-    level: HeadingLevel,
-    events: Events,
-    state: &mut State,
-    w: &mut Writer,
-) -> io::Result<()> {
-    state.section_counter_mut().update(level);
-    w.write_block_start()?;
-
-    let prefix = Prefix::continued(numbering(state.section_counter().value()));
-
-    w.block(
-        |b| b.styled(|s| heading_style(s, level)).prefix(prefix),
-        |w| {
-            let mut writer = w.inline_writer(state);
-
-            take! {
-                for event in events; until Event::End(TagEnd::Heading(..)) => {
-                    writer.write_iter(into_inlines(event, state))?;
-                }
-            }
-
-            writer.end()
-        },
-    )
+pub(super) struct Heading {
+    pub(super) level: HeadingLevel,
 }
 
-fn heading_style(style: Style, level: HeadingLevel) -> Style {
+impl BlockRenderer for Heading {
+    fn kind(&self) -> BlockKind {
+        BlockKind::Heading(self.level)
+    }
+
+    fn render(
+        self,
+        events: Events,
+        state: &mut State,
+        w: &mut Writer,
+        b: super::context::BlockContext,
+    ) -> io::Result<()> {
+        state.section_counter_mut().update(self.level);
+
+        let style = heading_style(self.level);
+        let prefix = Prefix::continued(StyledStr::new(
+            numbering(state.section_counter().value()),
+            style,
+        ));
+        let b = b.nested(|b| b.styled(style).prefixed(prefix));
+
+        let mut writer = w.inline_writer(state, &b);
+
+        take! {
+            for event in events; until Event::End(TagEnd::Heading(..)) => {
+                writer.write_iter(into_inlines(event, state))?;
+            }
+        }
+
+        writer.end()
+    }
+}
+
+fn heading_style(level: HeadingLevel) -> Style {
     match level {
-        HeadingLevel::H1 => style.fg_color(Some(Green.into())).bold().underline(),
-        HeadingLevel::H2 => style.fg_color(Some(Green.into())).bold(),
-        _ => style.fg_color(Some(Green.into())),
+        HeadingLevel::H1 => Green.on_default().bold().underline(),
+        HeadingLevel::H2 => Green.on_default().bold(),
+        _ => Green.on_default(),
     }
 }
 

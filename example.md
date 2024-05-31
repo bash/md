@@ -28,6 +28,10 @@ Duis ut diam quam nulla porttitor massa id neque. Pharetra convallis posuere mor
 print('Hello World')
 ```
 
+### Empty Block
+```js
+```
+
 ## Math
 ### Display
 
@@ -39,6 +43,9 @@ Some inline math: $e = mc^2$
 ## Quote
 > Don't believe everything you read on the internet.
 - Nikola Tesla
+
+### Empty
+>
 
 ## Admonitions
 > [!TIP]

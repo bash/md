@@ -1,19 +1,29 @@
-use super::prelude::*;
+use super::context::BlockKind;
+use super::{prelude::*, BlockRenderer};
 use anstyle::AnsiColor::Red;
 use pulldown_cmark::Alignment;
 
-pub(super) fn table(
-    _alignment: Vec<Alignment>,
-    events: Events,
-    _state: &mut State,
-    w: &mut Writer,
-) -> io::Result<()> {
-    w.write_block_start()?;
+pub(super) struct Table {
+    pub(super) alignments: Vec<Alignment>,
+}
 
-    w.write_prefix()?;
-    writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
+impl BlockRenderer for Table {
+    fn kind(&self) -> BlockKind {
+        BlockKind::Table
+    }
 
-    take! { for event in events; until Event::End(TagEnd::Table) => { } }
+    fn render(
+        self,
+        events: Events,
+        _state: &mut State,
+        w: &mut Writer,
+        b: super::context::BlockContext,
+    ) -> io::Result<()> {
+        w.write_prefix(&b)?;
+        writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
 
-    Ok(())
+        take! { for event in events; until Event::End(TagEnd::Table) => { } }
+
+        Ok(())
+    }
 }
