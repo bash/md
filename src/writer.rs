@@ -1,24 +1,24 @@
-use anstyle::Style;
-
 use crate::context::Context;
 use crate::fmt_utils::NoDebug;
 use crate::inline::{InlineWriter, WritePrefixFn};
 use crate::prefix::PrefixChain;
+use anstyle::Style;
 use std::io;
 
+/// Wrapper around an [`io::Write`] with some convenience on top.
 #[derive(Debug)]
-pub(super) struct Writer<'w> {
+pub(crate) struct Writer<'w> {
     output: NoDebug<&'w mut dyn io::Write>,
 }
 
 impl<'w> Writer<'w> {
-    pub(super) fn new(output: &'w mut dyn io::Write) -> Self {
+    pub(crate) fn new(output: &'w mut dyn io::Write) -> Self {
         Self {
             output: NoDebug(output),
         }
     }
 
-    pub(super) fn write_prefix(&mut self, ctx: &Context) -> io::Result<()> {
+    pub(crate) fn write_prefix(&mut self, ctx: &Context) -> io::Result<()> {
         write_prefix(ctx.prefix_chain(), ctx.style(), &mut *self.output)
     }
 
@@ -27,7 +27,9 @@ impl<'w> Writer<'w> {
         writeln!(self.output)
     }
 
-    pub(super) fn inline_writer<'a, 'p>(
+    /// Creates a temporary [`InlineWriter`] around this writer.
+    /// The returned writer is used to write [`crate::inline::Inline`]s to the output.
+    pub(crate) fn inline_writer<'a, 'p>(
         &mut self,
         ctx: &'p Context<'p, '_, '_>,
     ) -> InlineWriter<'a, '_, impl WritePrefixFn + 'p> {
@@ -41,7 +43,8 @@ impl<'w> Writer<'w> {
         )
     }
 
-    pub(super) fn write_block_start(&mut self, b: &Context) -> io::Result<()> {
+    // TODO: Make this an actual margin control thing
+    pub(crate) fn write_block_start(&mut self, b: &Context) -> io::Result<()> {
         if b.previous_block().is_some() {
             self.write_blank_line(b)?;
         }

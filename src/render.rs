@@ -11,7 +11,6 @@ mod list;
 mod paragraph;
 mod rule;
 mod table;
-mod writer;
 
 use block_quote::*;
 use code_block::*;
@@ -22,10 +21,11 @@ use paragraph::*;
 use rule::*;
 use table::*;
 
+// TODO: get rid of this
 mod prelude {
-    pub(super) use super::writer::Writer;
     pub(super) use super::Events;
     pub(super) use crate::context::{BlockKind, Context};
+    pub(super) use crate::writer::Writer;
     pub(super) use anstyle::{Reset, Style};
     pub(super) use pulldown_cmark::{Event, Tag, TagEnd};
     pub(super) use std::io;

@@ -21,6 +21,7 @@ mod render;
 mod style;
 mod syntax_highlighting;
 mod textwrap;
+mod writer;
 
 pub use options::*;
 pub use render::*;
