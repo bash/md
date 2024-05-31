@@ -1,6 +1,5 @@
-use std::cell::RefCell;
-
 use pulldown_cmark::HeadingLevel;
+use std::cell::RefCell;
 
 #[derive(Debug, Default)]
 pub(crate) struct Counters {

@@ -1,14 +1,13 @@
-use crate::fmt_utils::NoDebug;
 use crate::style::StyledStr;
 use crate::textwrap::DisplayWidth;
 use anstyle::Style;
-use std::cell::Cell;
+use std::cell::RefCell;
 use std::fmt::{self, Debug};
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default)]
 pub(crate) struct Prefix {
-    first: NoDebug<Cell<Option<StyledStr<'static>>>>,
+    first: RefCell<Option<StyledStr<'static>>>,
     rest: DisplayWidth<StyledStr<'static>>,
 }
 
@@ -25,7 +24,7 @@ impl UnicodeWidthStr for Prefix {
 impl Prefix {
     pub(crate) fn uniform(value: impl Into<StyledStr<'static>>) -> Self {
         Self {
-            first: NoDebug(Cell::new(None)),
+            first: RefCell::new(None),
             rest: DisplayWidth::from(value.into()),
         }
     }
@@ -47,7 +46,7 @@ impl Prefix {
     }
 
     fn with_first_special(mut self, value: impl Into<StyledStr<'static>>) -> Self {
-        self.first = NoDebug(Cell::new(Some(value.into())));
+        self.first = RefCell::new(Some(value.into()));
         self
     }
 }

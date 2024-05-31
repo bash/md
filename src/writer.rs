@@ -1,30 +1,24 @@
 use crate::context::Context;
-use crate::fmt_utils::NoDebug;
 use crate::inline::{InlineWriter, WritePrefixFn};
 use crate::prefix::PrefixChain;
 use anstyle::Style;
-use std::io;
+use std::io::{self, Write};
 
-/// Wrapper around an [`io::Write`] with some convenience on top.
-#[derive(Debug)]
-pub(crate) struct Writer<'w> {
-    output: NoDebug<&'w mut dyn io::Write>,
-}
+/// Wrapper around an [`Write`] with some convenience on top.
+pub(crate) struct Writer<'w>(&'w mut dyn Write);
 
 impl<'w> Writer<'w> {
-    pub(crate) fn new(output: &'w mut dyn io::Write) -> Self {
-        Self {
-            output: NoDebug(output),
-        }
+    pub(crate) fn new(inner: &'w mut dyn Write) -> Self {
+        Self(inner)
     }
 
     pub(crate) fn write_prefix(&mut self, ctx: &Context) -> io::Result<()> {
-        write_prefix(ctx.prefix_chain(), ctx.style(), &mut *self.output)
+        write_prefix(ctx.prefix_chain(), ctx.style(), self)
     }
 
     pub(super) fn write_blank_line(&mut self, ctx: &Context) -> io::Result<()> {
         self.write_prefix(ctx)?;
-        writeln!(self.output)
+        writeln!(self)
     }
 
     /// Creates a temporary [`InlineWriter`] around this writer.
@@ -35,12 +29,9 @@ impl<'w> Writer<'w> {
     ) -> InlineWriter<'a, '_, impl WritePrefixFn + 'p> {
         let style = ctx.style();
         let prefix = ctx.prefix_chain();
-        InlineWriter::new(
-            ctx.style(),
-            ctx.available_width(),
-            &mut *self.output,
-            move |w| write_prefix(prefix, style, w),
-        )
+        InlineWriter::new(ctx.style(), ctx.available_width(), self, move |w| {
+            write_prefix(prefix, style, w)
+        })
     }
 
     // TODO: Make this an actual margin control thing
@@ -52,28 +43,28 @@ impl<'w> Writer<'w> {
     }
 }
 
-impl io::Write for Writer<'_> {
+impl Write for Writer<'_> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.output.write(buf)
+        self.0.write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.output.flush()
+        self.0.flush()
     }
 
     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-        self.output.write_all(buf)
+        self.0.write_all(buf)
     }
 
     fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()> {
-        self.output.write_fmt(fmt)
+        self.0.write_fmt(fmt)
     }
 
     fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
-        self.output.write_vectored(bufs)
+        self.0.write_vectored(bufs)
     }
 }
 
-fn write_prefix(prefix: &PrefixChain<'_>, style: Style, w: &mut dyn io::Write) -> io::Result<()> {
+fn write_prefix(prefix: &PrefixChain<'_>, style: Style, w: &mut dyn Write) -> io::Result<()> {
     write!(w, "{}", prefix.display_next(style))
 }
