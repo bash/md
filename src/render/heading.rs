@@ -1,5 +1,6 @@
 use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
+use crate::counting::SectionCounter;
 use crate::inline::into_inlines;
 use crate::prefix::Prefix;
 use anstyle::AnsiColor::Green;
@@ -22,10 +23,10 @@ impl BlockRenderer for Heading {
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {
-        state.section_counter_mut().update(self.level);
+        state.counters().update_section(self.level);
 
         let style = heading_style(self.level);
-        let prefix = Prefix::continued(numbering(state.section_counter().value()));
+        let prefix = Prefix::continued(numbering(state.counters().section()));
         let b = b.child(prefix).styled(style);
 
         let writer = w.inline_writer(state, &b);
@@ -49,14 +50,14 @@ fn heading_style(level: HeadingLevel) -> Style {
 // that detects changelog files by name (any or no extension):
 // * changelog, CHANGELOG, RELEASE_NOTES, releasenotes, RELEASENOTES
 // others?
-fn numbering(counters: &[usize]) -> String {
+fn numbering(counters: SectionCounter) -> String {
     let mut output = String::new();
-    let counters = &counters[1..];
+    let numbers = &counters.as_slice()[1..];
 
     // No numbering for sections with leading zeroes.
-    if !counters.is_empty() && !counters.starts_with(&[0]) {
-        for c in counters {
-            write!(output, "{c}.").unwrap(); // TODO
+    if !numbers.is_empty() && !numbers.starts_with(&[0]) {
+        for n in numbers {
+            write!(output, "{n}.").unwrap(); // TODO
         }
         write!(output, " ").unwrap(); // TODO
     }

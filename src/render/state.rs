@@ -1,6 +1,6 @@
 use super::context::BlockContext;
 use crate::bullets::Bullets;
-use crate::counting::SectionCounter;
+use crate::counting::Counters;
 use crate::footnotes::Footnotes;
 use crate::options::Options;
 use std::cmp::min;
@@ -9,7 +9,7 @@ use unicode_width::UnicodeWidthStr as _;
 #[derive(Debug)]
 pub(crate) struct State<'e> {
     options: Options,
-    section_counter: SectionCounter,
+    counters: Counters,
     footnotes: Footnotes<'e>,
     bullets: Bullets,
 }
@@ -19,7 +19,7 @@ impl State<'_> {
         Self {
             bullets: Bullets::default_for(options.symbol_repertoire),
             options,
-            section_counter: SectionCounter::default(),
+            counters: Counters::default(),
             footnotes: Footnotes::default(),
         }
     }
@@ -43,12 +43,8 @@ impl<'e> State<'e> {
         min(self.available_columns(b), self.options.text_max_columns)
     }
 
-    pub(crate) fn section_counter(&self) -> &SectionCounter {
-        &self.section_counter
-    }
-
-    pub(crate) fn section_counter_mut(&mut self) -> &mut SectionCounter {
-        &mut self.section_counter
+    pub(crate) fn counters(&self) -> &Counters {
+        &self.counters
     }
 
     pub(crate) fn bullet(&self, b: &BlockContext) -> &str {
