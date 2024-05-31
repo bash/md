@@ -1,6 +1,6 @@
 use super::state::State;
 use crate::fmt_utils::NoDebug;
-use crate::fragment::{FragmentWriter, WritePrefixFn};
+use crate::inline::{InlineWriter, WritePrefixFn};
 use crate::prefix::Prefix;
 use anstyle::{Reset, Style};
 use std::{io, iter, mem};
@@ -51,11 +51,11 @@ impl<'w> Writer<'w> {
         writeln!(self.output)
     }
 
-    pub(super) fn fragment_writer<'i, 's>(
+    pub(super) fn inline_writer<'i, 's>(
         &'s mut self,
         state: &State,
-    ) -> FragmentWriter<'i, 's, impl WritePrefixFn + 's> {
-        FragmentWriter::new(
+    ) -> InlineWriter<'i, 's, impl WritePrefixFn + 's> {
+        InlineWriter::new(
             self.style(),
             state.text_columns(self),
             &mut *self.output,

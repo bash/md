@@ -1,12 +1,10 @@
 use super::prelude::*;
 use crate::prefix::Prefix;
 use crate::render::block;
-use crate::render::fragment::into_fragments;
-use crate::render::fragment::try_into_fragments;
+use crate::render::inline::{into_inlines, try_into_inlines};
 use crate::render::try_block;
 use crate::style::StyledStr;
 use fmtastic::BallotBox;
-use unicode_width::UnicodeWidthStr as _;
 
 // TODO: refactor
 
@@ -93,16 +91,16 @@ fn list_item_inlines<'a>(
     state: &mut State,
     w: &mut Writer,
 ) -> io::Result<Option<ListItemState<'a>>> {
-    let mut writer = w.fragment_writer(state);
+    let mut writer = w.inline_writer(state);
 
     if let Some(event) = first_event {
-        writer.write_iter(into_fragments(event, state))?;
+        writer.write_iter(into_inlines(event, state))?;
     }
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            match try_into_fragments(event, state) {
-                Ok(fragments) => writer.write_iter(fragments)?,
+            match try_into_inlines(event, state) {
+                Ok(inlines) => writer.write_iter(inlines)?,
                 Err(rejected_event) => {
                     writer.end()?;
                     return Ok(Some(ListItemState::Blocks(rejected_event)));

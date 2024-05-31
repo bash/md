@@ -7,9 +7,8 @@ use std::io;
 use trait_set::trait_set;
 use url::Url;
 
-/// TODO: rename to `Inline`.
 #[derive(Debug)]
-pub(crate) enum Fragment<'a> {
+pub(crate) enum Inline<'a> {
     Text(CowStr<'a>),
     SoftBreak,
     HardBreak,
@@ -19,41 +18,41 @@ pub(crate) enum Fragment<'a> {
     UnsetLink,
 }
 
-impl<'a> From<Fragment<'a>> for RawChunk<'a, Fragment<'a>> {
-    fn from(value: Fragment<'a>) -> Self {
+impl<'a> From<Inline<'a>> for RawChunk<'a, Inline<'a>> {
+    fn from(value: Inline<'a>) -> Self {
         match value {
-            Fragment::Text(text) => RawChunk::Text(text),
-            Fragment::SoftBreak => RawChunk::soft_break(),
-            Fragment::HardBreak => RawChunk::hard_break(),
+            Inline::Text(text) => RawChunk::Text(text),
+            Inline::SoftBreak => RawChunk::soft_break(),
+            Inline::HardBreak => RawChunk::hard_break(),
             other => RawChunk::Passthrough(other),
         }
     }
 }
 
-impl<'a> From<CowStr<'a>> for Fragment<'a> {
+impl<'a> From<CowStr<'a>> for Inline<'a> {
     fn from(value: CowStr<'a>) -> Self {
-        Fragment::Text(value)
+        Inline::Text(value)
     }
 }
 
-impl<'a> From<&'a str> for Fragment<'a> {
+impl<'a> From<&'a str> for Inline<'a> {
     fn from(value: &'a str) -> Self {
-        Fragment::Text(CowStr::from(value))
+        Inline::Text(CowStr::from(value))
     }
 }
 
-impl From<Style> for Fragment<'_> {
+impl From<Style> for Inline<'_> {
     fn from(value: Style) -> Self {
-        Fragment::PushStyle(value)
+        Inline::PushStyle(value)
     }
 }
 
-/// Writes a fragment and tracks the last used style.
+/// Writes an [`Inline`] and tracks the last used style.
 ///
 /// This is useful when we want to render across multiple lines
 /// when each line has a prefix with its own styling (e.g. blockquote, list).
-pub(crate) struct FragmentWriter<'a, 'w, F> {
-    chunk_layouter: ChunkLayouter<'a, Fragment<'a>>,
+pub(crate) struct InlineWriter<'a, 'w, F> {
+    chunk_layouter: ChunkLayouter<'a, Inline<'a>>,
     state: WriterState<'w, F>,
 }
 
@@ -72,7 +71,7 @@ struct WriterState<'w, F> {
     link_id: usize,
 }
 
-impl<'a, 'w, F> FragmentWriter<'a, 'w, F>
+impl<'a, 'w, F> InlineWriter<'a, 'w, F>
 where
     F: WritePrefixFn,
 {
@@ -95,12 +94,12 @@ where
     }
 }
 
-impl<'a, 'w, F> FragmentWriter<'a, 'w, F>
+impl<'a, 'w, F> InlineWriter<'a, 'w, F>
 where
     F: WritePrefixFn,
 {
-    pub(crate) fn write(&mut self, fragment: impl Into<Fragment<'a>>) -> io::Result<()> {
-        let raw_chunk = RawChunk::from(fragment.into());
+    pub(crate) fn write(&mut self, inline: impl Into<Inline<'a>>) -> io::Result<()> {
+        let raw_chunk = RawChunk::from(inline.into());
         self.chunk_layouter
             .chunk(raw_chunk, |chunk| write_chunk(chunk, &mut self.state))
     }
@@ -112,28 +111,28 @@ where
 
     pub(crate) fn write_iter(
         &mut self,
-        fragments: impl IntoIterator<Item = Fragment<'a>>,
+        inlines: impl IntoIterator<Item = Inline<'a>>,
     ) -> io::Result<()> {
-        fragments.into_iter().try_for_each(|f| self.write(f))
+        inlines.into_iter().try_for_each(|i| self.write(i))
     }
 
     pub(crate) fn write_all(
         mut self,
-        fragments: impl IntoIterator<Item = Fragment<'a>>,
+        inlines: impl IntoIterator<Item = Inline<'a>>,
     ) -> io::Result<()> {
-        self.write_iter(fragments)?;
+        self.write_iter(inlines)?;
         self.end()
     }
 }
 
-fn write_chunk<F>(chunk: Chunk<Fragment<'_>>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
+fn write_chunk<F>(chunk: Chunk<Inline<'_>>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
 where
     F: WritePrefixFn,
 {
     match chunk {
         Chunk::LineStart => line_start(ctx),
         Chunk::Text(text) => write!(ctx.writer, "{text}"),
-        Chunk::Passthrough(f) => fragment(f, ctx),
+        Chunk::Passthrough(i) => inline(i, ctx),
         Chunk::LineEnd => line_end(ctx),
     }
 }
@@ -158,22 +157,22 @@ fn line_end<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()> {
     writeln!(ctx.writer)
 }
 
-fn fragment<F>(fragment: Fragment<'_>, ctx: &mut WriterState<'_, F>) -> io::Result<()> {
+fn inline<F>(inline: Inline<'_>, ctx: &mut WriterState<'_, F>) -> io::Result<()> {
     let w = &mut *ctx.writer;
     let style_stack = &mut ctx.style_stack;
-    match fragment {
-        Fragment::Text(_) | Fragment::SoftBreak | Fragment::HardBreak => {
+    match inline {
+        Inline::Text(_) | Inline::SoftBreak | Inline::HardBreak => {
             unreachable!("these should not be passthrough")
         }
-        Fragment::PushStyle(s) => {
+        Inline::PushStyle(s) => {
             style_stack.push(s.on_top_of(&style_stack.head()));
             write!(w, "{}", style_stack.head())
         }
-        Fragment::PopStyle => {
+        Inline::PopStyle => {
             style_stack.pop();
             write!(w, "{Reset}{}", style_stack.head())
         }
-        Fragment::SetLink(url) => {
+        Inline::SetLink(url) => {
             if ctx.link.is_some() {
                 panic!("BUG: nested links"); // TODO: does pulldown-cmark support that?
             }
@@ -181,7 +180,7 @@ fn fragment<F>(fragment: Fragment<'_>, ctx: &mut WriterState<'_, F>) -> io::Resu
             ctx.link_id += 1;
             write!(w, "{}", Hyperlink::new(url, ctx.link_id))
         }
-        Fragment::UnsetLink => {
+        Inline::UnsetLink => {
             // This must handle the case where the link was not pushed
             // but is popped as not all `Tag::Link`s result in links but all `TagEnd::Link`s do.
             // Sending a "link reset" when no link is open is perfectly fine.

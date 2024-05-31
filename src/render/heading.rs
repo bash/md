@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::prefix::Prefix;
-use crate::render::fragment::into_fragments;
+use crate::render::inline::into_inlines;
 use anstyle::AnsiColor::Green;
 use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;
@@ -19,11 +19,11 @@ pub(super) fn heading(
     w.block(
         |b| b.styled(|s| heading_style(s, level)).prefix(prefix),
         |w| {
-            let mut writer = w.fragment_writer(state);
+            let mut writer = w.inline_writer(state);
 
             take! {
                 for event in events; until Event::End(TagEnd::Heading(..)) => {
-                    writer.write_iter(into_fragments(event, state))?;
+                    writer.write_iter(into_inlines(event, state))?;
                 }
             }
 

@@ -1,9 +1,9 @@
 use self::classification::{classify, Kind};
 use super::prelude::*;
 use super::{block, State};
-use crate::fragment::Fragment;
+use crate::inline::Inline;
 use crate::prefix::Prefix;
-use crate::render::fragment::try_into_fragments;
+use crate::render::inline::try_into_inlines;
 use pulldown_cmark::BlockQuoteKind;
 use smallvec::{Array, SmallVec};
 
@@ -36,7 +36,7 @@ pub(super) fn block_quote(
         let prefix = Prefix::continued("  ― ");
         w.block::<io::Result<_>>(
             |b| b.prefix(prefix).styled(|s| s.italic()),
-            |w| w.fragment_writer(state).write_all(author),
+            |w| w.inline_writer(state).write_all(author),
         )?;
     }
     Ok(())
@@ -60,7 +60,7 @@ fn prefix(kind: Option<Kind>) -> Prefix {
 fn quote_author<'a>(
     events: Events<'_, 'a, '_>,
     s: &mut State,
-) -> Option<impl IntoIterator<Item = Fragment<'a>>> {
+) -> Option<impl IntoIterator<Item = Inline<'a>>> {
     enum PeekState {
         Initial,
         List,
@@ -70,14 +70,14 @@ fn quote_author<'a>(
     use PeekState::*;
     let mut state = Initial;
     let mut events = events.lookahead();
-    let mut fragments = SmallVec::<[_; 8]>::default();
+    let mut inlines = SmallVec::<[_; 8]>::default();
     while let Some(event) = events.next() {
         state = match (state, event) {
             (Initial, Event::Start(Tag::List(None))) => List,
             (List, Event::Start(Tag::Item)) => Item,
             (Item, Event::End(TagEnd::Item)) => ItemEnd,
             (Item, event) => {
-                if try_push_fragments(&mut fragments, event, s) {
+                if try_push_inlines(&mut inlines, event, s) {
                     Item
                 } else {
                     return None;
@@ -85,7 +85,7 @@ fn quote_author<'a>(
             }
             (ItemEnd, Event::End(TagEnd::List(_))) => {
                 _ = events.commit();
-                return Some(fragments);
+                return Some(inlines);
             }
             _unexpected => return None,
         };
@@ -93,12 +93,12 @@ fn quote_author<'a>(
     None
 }
 
-fn try_push_fragments<'a, A: Array<Item = Fragment<'a>>>(
+fn try_push_inlines<'a, A: Array<Item = Inline<'a>>>(
     buf: &mut SmallVec<A>,
     event: Event<'a>,
     state: &mut State,
 ) -> bool {
-    try_into_fragments(event, state)
-        .map(|f| buf.extend(f))
+    try_into_inlines(event, state)
+        .map(|inline| buf.extend(inline))
         .is_ok()
 }
