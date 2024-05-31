@@ -14,6 +14,17 @@ pub struct Options {
     /// Absolute URL that will be used as base for resolving
     /// relative links found in the document.
     pub base_url: Option<Url>,
+    pub footnote_definition_placement: FootnoteDefinitionPlacement,
+}
+
+/// Where to place footnote definitions.
+#[derive(Debug, Copy, Clone, Default)]
+pub enum FootnoteDefinitionPlacement {
+    /// Place all footnote definitions at the end of the document.
+    #[default]
+    EndOfDocument,
+    /// Place the footnote definitions as they appear in the source.
+    InPlace,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
@@ -52,6 +63,7 @@ impl Options {
             symbol_repertoire: SymbolRepertoire::unicode(true),
             hyperlinks: true,
             base_url: None,
+            footnote_definition_placement: FootnoteDefinitionPlacement::default(),
         }
     }
 }
