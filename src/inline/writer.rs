@@ -1,5 +1,5 @@
+use super::hyperlink::{CloseHyperlink, Hyperlink};
 use super::Inline;
-use crate::hyperlink::{CloseHyperlink, Hyperlink};
 use crate::style::{StyleExt as _, StyleStack};
 use crate::textwrap::{Chunk, ChunkLayouter, RawChunk};
 use anstyle::{Reset, Style};
@@ -25,9 +25,6 @@ struct WriterState<'w, F> {
     write_prefix: F,
     style_stack: StyleStack,
     link: Option<Url>,
-    // The `id=` parameter helps the terminal connect links
-    // that are broken up into multiple pieces (e.g. when we break the line)
-    // https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
     link_id: usize,
 }
 

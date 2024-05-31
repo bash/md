@@ -2,6 +2,7 @@ use anstyle::Style;
 use pulldown_cmark::CowStr;
 use url::Url;
 
+mod hyperlink;
 mod writer;
 pub(crate) use writer::*;
 

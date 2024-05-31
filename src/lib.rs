@@ -9,7 +9,6 @@ mod counting;
 
 mod fmt_utils;
 mod footnotes;
-mod hyperlink;
 mod inline;
 mod lookahead;
 mod options;
