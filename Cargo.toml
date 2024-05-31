@@ -1,5 +1,5 @@
 [package]
-name = "md"
+name = "matte"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,7 +10,7 @@ anstyle.workspace = true
 terminal_size.workspace = true
 url.workspace = true
 bat.workspace = true
-md-language-names = { path = "crates/md-language-names" }
+matte-language-names = { path = "crates/matte-language-names" }
 shell-words = "1.1.0"
 thiserror = "1.0.61"
 unicode-linebreak-chunked = { git = "https://github.com/bash/unicode-linebreak-chunked.git", branch = "tables" }
@@ -28,4 +28,4 @@ url = "2.5.0"
 bat = { version = "0.24.0", default-features = false, features = ["regex-onig"] }
 
 [workspace]
-members = ["crates/md-language-names"]
+members = ["crates/matte-language-names"]

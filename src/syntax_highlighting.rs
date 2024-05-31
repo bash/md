@@ -4,7 +4,7 @@ use bat::config::Config as BatConfig;
 use bat::controller::Controller as BatController;
 use bat::input::Input;
 use bat::WrappingMode;
-use md_language_names::lookup_bat_language;
+use matte_language_names::lookup_bat_language;
 use std::borrow::Cow;
 
 // TODO: can we detect if bat supports a given language
