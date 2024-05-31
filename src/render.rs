@@ -40,17 +40,14 @@ mod prelude {
 type EventsOwned<'b, 'c> = Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
 type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
 
-pub fn render<W>(
-    input: &mut dyn Iterator<Item = Event<'_>>,
-    output: &mut W,
-    options: Options,
-) -> io::Result<()>
+pub fn render<'e, I, W>(mut events: I, mut output: W, options: Options) -> io::Result<()>
 where
+    I: Iterator<Item = Event<'e>>,
     W: io::Write,
 {
-    let mut events = wrap_events(input);
+    let mut events = wrap_events(&mut events);
     let mut state = State::new(options);
-    let mut writer = Writer::new(output);
+    let mut writer = Writer::new(&mut output);
 
     while let Some(event) = events.next() {
         block(event, &mut events, &mut state, &mut writer)?;
