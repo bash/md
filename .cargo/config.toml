@@ -1,2 +1,2 @@
 [alias]
-matte = ["run", "--features", "cli"]
+md = ["run", "--features", "cli"]
