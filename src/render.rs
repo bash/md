@@ -95,6 +95,10 @@ trait BlockRenderer {
         true
     }
 
+    fn is_blank(&self, _state: &State) -> bool {
+        false
+    }
+
     fn kind(&self) -> BlockKind;
 
     fn render<'e>(
@@ -149,7 +153,7 @@ fn render_block<'e, H: BlockRenderer>(
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<()> {
-    if !is_blank(&handler, events) {
+    if !is_blank(&handler, events, state) {
         w.write_block_start(b)?;
     }
     let kind = handler.kind();
@@ -159,9 +163,10 @@ fn render_block<'e, H: BlockRenderer>(
     Ok(())
 }
 
-fn is_blank(handler: &impl BlockRenderer, events: Events) -> bool {
+fn is_blank(handler: &impl BlockRenderer, events: Events, state: &State) -> bool {
     let mut events = events.lookahead();
-    handler.looks_for_end_tag() && matches!(events.next(), None | Some(Event::End(_)))
+    handler.is_blank(state)
+        || (handler.looks_for_end_tag() && matches!(events.next(), None | Some(Event::End(_))))
 }
 
 fn metadata_block(events: Events) -> io::Result<()> {

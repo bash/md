@@ -1,6 +1,7 @@
 use crate::fmt_utils::NoDebug;
 use crate::style::StyledStr;
 use crate::textwrap::DisplayWidth;
+use anstyle::Style;
 use std::cell::Cell;
 use std::fmt::{self, Debug};
 use unicode_width::UnicodeWidthStr;
@@ -83,8 +84,8 @@ impl<'a> PrefixChain<'a> {
         }
     }
 
-    pub(crate) fn display_next(&'a self) -> DisplayPrefixChain<'a> {
-        DisplayPrefixChain(self)
+    pub(crate) fn display_next(&'a self, fallback: Style) -> DisplayPrefixChain<'a> {
+        DisplayPrefixChain(self, fallback)
     }
 }
 
@@ -103,16 +104,18 @@ impl UnicodeWidthStr for PrefixChain<'_> {
     }
 }
 
-pub(crate) struct DisplayPrefixChain<'a>(&'a PrefixChain<'a>);
+pub(crate) struct DisplayPrefixChain<'a>(&'a PrefixChain<'a>, Style);
 
 impl fmt::Display for DisplayPrefixChain<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.0 {
             PrefixChain::Start(None) => Ok(()),
-            PrefixChain::Start(Some(prefix)) => write!(f, "{}", prefix.take_next()),
+            PrefixChain::Start(Some(prefix)) => {
+                write!(f, "{}", prefix.take_next().on_top_of(self.1))
+            }
             PrefixChain::Link(chain, prefix, _) => {
-                write!(f, "{}", chain.display_next())?;
-                write!(f, "{}", prefix.take_next())
+                write!(f, "{}", chain.display_next(self.1))?;
+                write!(f, "{}", prefix.take_next().on_top_of(self.1))
             }
             PrefixChain::Borrowed(chain) => chain.fmt(f),
         }

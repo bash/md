@@ -69,5 +69,5 @@ impl io::Write for Writer<'_> {
 }
 
 fn write_prefix(block: &BlockContext, w: &mut dyn io::Write) -> io::Result<()> {
-    write!(w, "{}", block.prefix_chain().display_next())
+    write!(w, "{}", block.prefix_chain().display_next(block.style()))
 }

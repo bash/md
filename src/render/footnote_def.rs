@@ -14,7 +14,11 @@ pub(super) struct FootnoteDef<'a> {
 
 impl BlockRenderer for FootnoteDef<'_> {
     fn kind(&self) -> BlockKind {
-        BlockKind::BlockQuote
+        BlockKind::FootnoteDefinition
+    }
+
+    fn is_blank(&self, state: &State) -> bool {
+        !matches!(state.options().footnote_definition_placement, InPlace)
     }
 
     // Yes this is a quite bad implementation, but footnotes are *soooo* annoying:
@@ -59,16 +63,21 @@ pub(super) fn render_collected_footnotes<'e>(
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<()> {
-    write_divider(w, b)?;
+    let footnotes = state.footnotes().take();
 
-    for footnote in state.footnotes().take() {
-        let mut events = footnote.events.into_iter();
-        let mut events = wrap_events(&mut events);
-        while let Some(event) = events.next() {
-            let b = b
-                .child(prefix(footnote.number))
-                .styled(Style::new().dimmed());
-            block(event, &mut events, state, w, &b)?
+    if !footnotes.is_empty() {
+        w.write_blank_line(b)?;
+        write_divider(w, b)?;
+
+        for footnote in footnotes {
+            let mut events = footnote.events.into_iter();
+            let mut events = wrap_events(&mut events);
+            while let Some(event) = events.next() {
+                let b = b
+                    .child(prefix(footnote.number))
+                    .styled(Style::new().dimmed());
+                block(event, &mut events, state, w, &b)?
+            }
         }
     }
 

@@ -9,7 +9,7 @@ pub(super) struct CodeBlock<'a> {
 
 impl BlockRenderer for CodeBlock<'_> {
     fn kind(&self) -> BlockKind {
-        BlockKind::BlockQuote
+        BlockKind::CodeBlock
     }
 
     fn render<'e>(

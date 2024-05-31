@@ -5,6 +5,10 @@ use crate::fmt_utils::Repeat;
 pub(super) struct Rule;
 
 impl BlockRenderer for Rule {
+    fn looks_for_end_tag(&self) -> bool {
+        false
+    }
+
     fn kind(&self) -> BlockKind {
         BlockKind::Rule
     }

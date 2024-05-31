@@ -2,7 +2,6 @@ use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::prefix::Prefix;
 use crate::render::inline::into_inlines;
-use crate::style::StyledStr;
 use anstyle::AnsiColor::Green;
 use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;
@@ -26,10 +25,7 @@ impl BlockRenderer for Heading {
         state.section_counter_mut().update(self.level);
 
         let style = heading_style(self.level);
-        let prefix = Prefix::continued(StyledStr::new(
-            numbering(state.section_counter().value()),
-            style,
-        ));
+        let prefix = Prefix::continued(numbering(state.section_counter().value()));
         let b = b.child(prefix).styled(style);
 
         let mut writer = w.inline_writer(state, &b);
