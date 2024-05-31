@@ -56,6 +56,8 @@ where
         block(event, &mut events, &mut state, &mut writer, &block_ctx)?;
     }
 
+    render_collected_footnotes(&mut state, &mut writer, &block_ctx)?;
+
     Ok(())
 }
 
@@ -75,10 +77,10 @@ fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> Events
     Lookaheadable::new(events)
 }
 
-fn block(
-    event: Event,
-    events: Events,
-    state: &mut State,
+fn block<'e>(
+    event: Event<'e>,
+    events: Events<'_, 'e, '_>,
+    state: &mut State<'e>,
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<()> {
@@ -95,22 +97,22 @@ trait BlockRenderer {
 
     fn kind(&self) -> BlockKind;
 
-    fn render(
+    fn render<'e>(
         self,
-        events: Events,
-        state: &mut State,
+        events: Events<'_, 'e, '_>,
+        state: &mut State<'e>,
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()>;
 }
 
-fn try_block<'a>(
-    event: Event<'a>,
-    events: Events,
-    state: &mut State,
+fn try_block<'e>(
+    event: Event<'e>,
+    events: Events<'_, 'e, '_>,
+    state: &mut State<'e>,
     w: &mut Writer,
     b: &BlockContext,
-) -> io::Result<Option<Event<'a>>> {
+) -> io::Result<Option<Event<'e>>> {
     match event {
         Event::Start(Tag::Paragraph) => render_block(Paragraph, events, state, w, b)?,
         Event::Start(Tag::Heading { level, .. }) => {
@@ -140,10 +142,10 @@ fn try_block<'a>(
     Ok(None)
 }
 
-fn render_block<H: BlockRenderer>(
+fn render_block<'e, H: BlockRenderer>(
     handler: H,
-    events: Events,
-    state: &mut State,
+    events: Events<'_, 'e, '_>,
+    state: &mut State<'e>,
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<()> {

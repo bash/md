@@ -109,7 +109,7 @@ fn parse_url(url: &str, state: &State) -> Option<Url> {
 }
 
 fn footnote_reference<'a>(reference: &str, state: &mut State) -> Inlines<'a> {
-    let text = format!("{}", Superscript(state.get_footnote_number(reference)));
+    let text = format!("{}", Superscript(state.footnotes().get_number(reference)));
     inlines![
         AnsiColor::Green.on_default(),
         CowStr::from(text),

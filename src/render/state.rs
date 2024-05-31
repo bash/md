@@ -1,33 +1,37 @@
 use super::context::BlockContext;
 use crate::bullets::Bullets;
 use crate::counting::SectionCounter;
-use crate::footnotes::FootnoteCounter;
+use crate::footnotes::Footnotes;
 use crate::options::Options;
 use std::cmp::min;
 use unicode_width::UnicodeWidthStr as _;
 
 #[derive(Debug)]
-pub(super) struct State {
+pub(super) struct State<'e> {
     options: Options,
     section_counter: SectionCounter,
-    footnote_counter: FootnoteCounter,
+    footnotes: Footnotes<'e>,
     bullets: Bullets,
 }
 
-impl State {
+impl State<'_> {
     pub(super) fn new(options: Options) -> Self {
         Self {
             bullets: Bullets::default_for(options.symbol_repertoire),
             options,
             section_counter: SectionCounter::default(),
-            footnote_counter: FootnoteCounter::new(),
+            footnotes: Footnotes::default(),
         }
     }
 }
 
-impl State {
+impl<'e> State<'e> {
     pub(super) fn options(&self) -> &Options {
         &self.options
+    }
+
+    pub(super) fn footnotes(&self) -> &Footnotes<'e> {
+        &self.footnotes
     }
 
     // TODO: rename to `available_width`
@@ -41,10 +45,6 @@ impl State {
 
     pub(super) fn section_counter(&self) -> &SectionCounter {
         &self.section_counter
-    }
-
-    pub(super) fn get_footnote_number(&mut self, reference: &str) -> usize {
-        self.footnote_counter.get_number(reference)
     }
 
     pub(super) fn section_counter_mut(&mut self) -> &mut SectionCounter {

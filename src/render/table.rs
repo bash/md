@@ -12,10 +12,10 @@ impl BlockRenderer for Table {
         BlockKind::Table
     }
 
-    fn render(
+    fn render<'e>(
         self,
-        events: Events,
-        _state: &mut State,
+        events: Events<'_, 'e, '_>,
+        _state: &mut State<'e>,
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {

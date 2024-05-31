@@ -12,10 +12,10 @@ impl BlockRenderer for CodeBlock<'_> {
         BlockKind::BlockQuote
     }
 
-    fn render(
+    fn render<'e>(
         self,
-        events: Events,
-        state: &mut State,
+        events: Events<'_, 'e, '_>,
+        state: &mut State<'e>,
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {

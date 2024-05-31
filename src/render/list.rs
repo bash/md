@@ -18,10 +18,10 @@ impl BlockRenderer for List {
         BlockKind::List
     }
 
-    fn render(
+    fn render<'e>(
         self,
-        events: Events,
-        state: &mut State,
+        events: Events<'_, 'e, '_>,
+        state: &mut State<'e>,
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {
@@ -75,10 +75,10 @@ fn list_style_type_from_item(events: Events) -> Option<ListStyleType> {
     }
 }
 
-fn item(
+fn item<'e>(
     list_type: ListStyleType,
-    events: Events,
-    state: &mut State,
+    events: Events<'_, 'e, '_>,
+    state: &mut State<'e>,
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<()> {
@@ -125,13 +125,13 @@ fn list_item_inlines<'a>(
     Ok(None)
 }
 
-fn list_item_blocks<'a>(
-    first_event: Event<'a>,
-    events: Events<'_, 'a, '_>,
-    state: &mut State,
+fn list_item_blocks<'e>(
+    first_event: Event<'e>,
+    events: Events<'_, 'e, '_>,
+    state: &mut State<'e>,
     w: &mut Writer,
     b: &BlockContext,
-) -> io::Result<Option<ListItemState<'a>>> {
+) -> io::Result<Option<ListItemState<'e>>> {
     block(first_event, events, state, w, b)?;
 
     take! {
