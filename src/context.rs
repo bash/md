@@ -72,7 +72,7 @@ impl<'a, 'e, 's> Context<'a, 'e, 's> {
     }
 
     pub(crate) fn styled(mut self, style: Style) -> Self {
-        self.style = style.on_top_of(&self.style);
+        self.style = style.on_top_of(self.style);
         self
     }
 

@@ -40,7 +40,7 @@ pub(crate) struct StyledStr<'a>(pub(crate) CowStr<'a>, pub(crate) Style);
 
 impl<'a> StyledStr<'a> {
     pub(crate) fn on_top_of(self, fallback: Style) -> Self {
-        Self(self.0, self.1.on_top_of(&fallback))
+        Self(self.0, self.1.on_top_of(fallback))
     }
 }
 
@@ -95,12 +95,11 @@ impl fmt::Display for StyledStr<'_> {
 }
 
 pub(crate) trait StyleExt {
-    // TODO: take style by value (it's copy)
-    fn on_top_of(&self, fallback: &Style) -> Style;
+    fn on_top_of(&self, fallback: Style) -> Style;
 }
 
 impl StyleExt for Style {
-    fn on_top_of(&self, fallback: &Style) -> Style {
+    fn on_top_of(&self, fallback: Style) -> Style {
         Style::new()
             .effects(self.get_effects() | fallback.get_effects())
             .fg_color(self.get_fg_color().or_else(|| fallback.get_fg_color()))
