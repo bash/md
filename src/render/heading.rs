@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::counting::SectionCounter;
 use crate::inline::into_inlines;
@@ -19,20 +18,19 @@ impl BlockRenderer for Heading {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
-        state.counters().update_section(self.level);
+        ctx.counters().update_section(self.level);
 
         let style = heading_style(self.level);
-        let prefix = Prefix::continued(numbering(state.counters().section()));
-        let b = b.child(prefix).styled(style);
+        let prefix = Prefix::continued(numbering(ctx.counters().section()));
+        let ctx = ctx.block(prefix).styled(style);
 
-        let writer = w.inline_writer(state, &b);
+        let writer = w.inline_writer(&ctx);
         writer.write_all(
             terminated!(events, Event::End(TagEnd::Heading(..)))
-                .flat_map(|event| into_inlines(event, state)),
+                .flat_map(|event| into_inlines(event, &ctx)),
         )
     }
 }

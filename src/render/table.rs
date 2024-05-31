@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use anstyle::AnsiColor::Red;
 use pulldown_cmark::Alignment;
@@ -15,11 +14,10 @@ impl BlockRenderer for Table {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        _state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
-        w.write_prefix(b)?;
+        w.write_prefix(ctx)?;
         writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
 
         terminated!(events, Event::End(TagEnd::Table)).for_each(|_event| {});

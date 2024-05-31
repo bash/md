@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::inline::{into_inlines, try_into_inlines};
 use crate::prefix::Prefix;
@@ -21,17 +20,16 @@ impl BlockRenderer for List {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
-        let mut list_type = list_style_type(self.first_item_number, state, b);
+        let mut list_type = list_style_type(self.first_item_number, ctx);
 
         terminated_for! {
             for event in terminated!(events, Event::End(TagEnd::List(..))) {
                 reachable! {
                     let Event::Start(Tag::Item) = event {
-                        item(list_type.clone(), events, state, w, b)?;
+                        item(list_type.clone(), events, ctx, w)?;
                         list_type.increment();
                     }
                 }
@@ -42,14 +40,10 @@ impl BlockRenderer for List {
     }
 }
 
-fn list_style_type(
-    first_item_number: Option<u64>,
-    state: &mut State,
-    b: &BlockContext,
-) -> ListStyleType {
+fn list_style_type(first_item_number: Option<u64>, ctx: &Context) -> ListStyleType {
     match first_item_number {
         Some(n) => ListStyleType::Numbered(n),
-        None => ListStyleType::Bulleted(state.bullet(b).to_owned()),
+        None => ListStyleType::Bulleted(ctx.bullet().to_owned()),
     }
 }
 
@@ -79,40 +73,38 @@ fn list_style_type_from_item(events: Events) -> Option<ListStyleType> {
 fn item<'e>(
     list_type: ListStyleType,
     events: Events<'_, 'e, '_>,
-    state: &mut State<'e>,
+    ctx: &Context<'_, 'e, '_>,
     w: &mut Writer,
-    b: &BlockContext,
 ) -> io::Result<()> {
     let list_type = list_style_type_from_item(events).unwrap_or(list_type);
-    let b: BlockContext = b.child(prefix(&list_type)).list_depth_incremented();
+    let ctx = ctx.block(prefix(&list_type)).list_depth_incremented();
     let mut list_state = Some(ListItemState::Inlines(None));
 
     while let Some(s) = list_state.take() {
         list_state = match s {
-            ListItemState::Inlines(event) => list_item_inlines(event, events, state, w, &b)?,
-            ListItemState::Blocks(event) => list_item_blocks(event, events, state, w, &b)?,
+            ListItemState::Inlines(event) => list_item_inlines(event, events, &ctx, w)?,
+            ListItemState::Blocks(event) => list_item_blocks(event, events, &ctx, w)?,
         };
     }
 
     Ok(())
 }
 
-fn list_item_inlines<'a>(
-    first_event: Option<Event<'a>>,
-    events: Events<'_, 'a, '_>,
-    state: &mut State,
+fn list_item_inlines<'e>(
+    first_event: Option<Event<'e>>,
+    events: Events<'_, 'e, '_>,
+    ctx: &Context<'_, 'e, '_>,
     w: &mut Writer,
-    b: &BlockContext,
-) -> io::Result<Option<ListItemState<'a>>> {
-    let mut writer = w.inline_writer(state, b);
+) -> io::Result<Option<ListItemState<'e>>> {
+    let mut writer = w.inline_writer(ctx);
 
     if let Some(event) = first_event {
-        writer.write_iter(into_inlines(event, state))?;
+        writer.write_iter(into_inlines(event, ctx))?;
     }
 
     terminated_for! {
         for event in terminated!(events, Event::End(TagEnd::Item)) {
-            match try_into_inlines(event, state) {
+            match try_into_inlines(event, ctx) {
                 Ok(inlines) => writer.write_iter(inlines)?,
                 Err(rejected_event) => {
                     writer.end()?;
@@ -129,15 +121,14 @@ fn list_item_inlines<'a>(
 fn list_item_blocks<'e>(
     first_event: Event<'e>,
     events: Events<'_, 'e, '_>,
-    state: &mut State<'e>,
+    ctx: &Context<'_, 'e, '_>,
     w: &mut Writer,
-    b: &BlockContext,
 ) -> io::Result<Option<ListItemState<'e>>> {
-    block(first_event, events, state, w, b)?;
+    block(first_event, events, ctx, w)?;
 
     terminated_for! {
         for event in terminated!(events, Event::End(TagEnd::Item)) {
-            if let Some(rejected_event) = try_block(event, events, state, w, b)? {
+            if let Some(rejected_event) = try_block(event, events, ctx, w)? {
                 return Ok(Some(ListItemState::Inlines(Some(rejected_event))))
             }
         }

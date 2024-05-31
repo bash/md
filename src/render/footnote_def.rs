@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, wrap_events, BlockRenderer};
 use crate::chars::NO_BREAK_SPACE;
 use crate::prefix::Prefix;
@@ -17,7 +16,7 @@ impl BlockRenderer for FootnoteDef<'_> {
         BlockKind::FootnoteDefinition
     }
 
-    fn is_blank(&self, state: &State) -> bool {
+    fn is_blank(&self, state: &Context) -> bool {
         !matches!(state.options().footnote_definition_placement, InPlace)
     }
 
@@ -31,26 +30,25 @@ impl BlockRenderer for FootnoteDef<'_> {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
         // TODO: collapse multiple footnote defs following each other into one logical "section".
         // TODO: write prefix and writeln is getting awfully repetitive...
-        if let InPlace = state.options().footnote_definition_placement {
-            write_divider(w, b)?;
+        if let InPlace = ctx.options().footnote_definition_placement {
+            write_divider(w, ctx)?;
         }
 
         // TODO: dimmed only has an effect on dark backgrounds,
         // we should have a solution for light themes too...
-        let number = state.footnotes().get_number(&self.reference);
-        let b = b.child(prefix(number)).styled(Style::new().dimmed());
+        let number = ctx.footnotes().get_number(&self.reference);
+        let ctx = ctx.block(prefix(number)).styled(Style::new().dimmed());
 
         terminated_for! {
             for event in terminated!(events, Event::End(TagEnd::FootnoteDefinition)) {
-                match state.options().footnote_definition_placement {
-                    EndOfDocument => state.footnotes().push(&self.reference, event),
-                    InPlace => block(event, events, state, w, &b)?,
+                match ctx.options().footnote_definition_placement {
+                    EndOfDocument => ctx.footnotes().push(&self.reference, event),
+                    InPlace => block(event, events, &ctx, w)?,
                 }
             }
         }
@@ -58,25 +56,21 @@ impl BlockRenderer for FootnoteDef<'_> {
     }
 }
 
-pub(super) fn render_collected_footnotes<'e>(
-    state: &mut State<'e>,
-    w: &mut Writer,
-    b: &BlockContext,
-) -> io::Result<()> {
-    let footnotes = state.footnotes().take();
+pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut Writer) -> io::Result<()> {
+    let footnotes = ctx.footnotes().take();
 
     if !footnotes.is_empty() {
-        w.write_blank_line(b)?;
-        write_divider(w, b)?;
+        w.write_blank_line(ctx)?;
+        write_divider(w, ctx)?;
 
         for footnote in footnotes {
             let mut events = footnote.events.into_iter();
             let mut events = wrap_events(&mut events);
             while let Some(event) = events.next() {
-                let b = b
-                    .child(prefix(footnote.number))
+                let ctx = ctx
+                    .block(prefix(footnote.number))
                     .styled(Style::new().dimmed());
-                block(event, &mut events, state, w, &b)?
+                block(event, &mut events, &ctx, w)?
             }
         }
     }
@@ -84,8 +78,8 @@ pub(super) fn render_collected_footnotes<'e>(
     Ok(())
 }
 
-fn write_divider(w: &mut Writer, b: &BlockContext) -> io::Result<()> {
-    w.write_prefix(b)?;
+fn write_divider(w: &mut Writer, ctx: &Context) -> io::Result<()> {
+    w.write_prefix(ctx)?;
     writeln!(w, "──────")
 }
 

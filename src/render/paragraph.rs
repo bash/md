@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::inline::into_inlines;
 
@@ -12,14 +11,13 @@ impl BlockRenderer for Paragraph {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
-        let writer = w.inline_writer(state, b);
+        let writer = w.inline_writer(ctx);
         writer.write_all(
             terminated!(events, Event::End(TagEnd::Paragraph))
-                .flat_map(|event| into_inlines(event, state)),
+                .flat_map(|event| into_inlines(event, ctx)),
         )
     }
 }

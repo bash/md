@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::syntax_highlighting::{highlight, Options};
 use pulldown_cmark::CodeBlockKind;
@@ -15,9 +14,8 @@ impl BlockRenderer for CodeBlock<'_> {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
         // TODO: yes, yes we could use a buffer that only buffers until the next line...
         let mut code = String::new();
@@ -38,7 +36,7 @@ impl BlockRenderer for CodeBlock<'_> {
         let highlighted = highlight(
             &code,
             &Options {
-                available_columns: state.available_columns(b),
+                available_columns: ctx.available_columns(),
                 language,
             },
         );
@@ -47,7 +45,7 @@ impl BlockRenderer for CodeBlock<'_> {
         // BoxWidget::write(&highlighted, state, Style::new().dimmed())
 
         for line in highlighted.lines() {
-            w.write_prefix(b)?;
+            w.write_prefix(ctx)?;
             writeln!(w, "{line}")?;
         }
         Ok(())

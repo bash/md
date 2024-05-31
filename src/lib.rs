@@ -9,8 +9,8 @@ mod macros;
 
 mod bullets;
 mod chars;
+mod context;
 mod counting;
-
 mod fmt_utils;
 mod footnotes;
 mod inline;

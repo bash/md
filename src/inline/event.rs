@@ -1,6 +1,6 @@
 use crate::chars::NO_BREAK_SPACE;
+use crate::context::Context;
 use crate::inline::Inline;
-use crate::render::State;
 use anstyle::{AnsiColor, Style};
 use fmtastic::Superscript;
 use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
@@ -15,14 +15,14 @@ macro_rules! inlines {
     }
 }
 
-pub(crate) fn into_inlines<'a>(event: Event<'a>, state: &mut State) -> Inlines<'a> {
-    try_into_inlines(event, state).unwrap_or_else(|event| panic!("Unhandled event {event:#?}"))
+pub(crate) fn into_inlines<'a>(event: Event<'a>, ctx: &Context<'_, 'a, '_>) -> Inlines<'a> {
+    try_into_inlines(event, ctx).unwrap_or_else(|event| panic!("Unhandled event {event:#?}"))
 }
 
 // TODO: double spaces are usually not rendered in HTML, we should also filter that.
 pub(crate) fn try_into_inlines<'a>(
     event: Event<'a>,
-    state: &mut State,
+    ctx: &Context<'_, '_, '_>,
 ) -> Result<Inlines<'a>, Event<'a>> {
     match event {
         Event::Text(text) => Ok(inlines![text]),
@@ -42,13 +42,13 @@ pub(crate) fn try_into_inlines<'a>(
             dest_url,
             title,
             id,
-        }) => Ok(link(link_type, &dest_url, &title, &id, state)),
+        }) => Ok(link(link_type, &dest_url, &title, &id, ctx)),
         Event::End(TagEnd::Link) => Ok(inlines![Inline::UnsetLink]),
         Event::SoftBreak => Ok(inlines![Inline::SoftBreak]),
         Event::HardBreak => Ok(inlines![Inline::HardBreak]),
         Event::InlineHtml(html) if is_br_tag(&html) => Ok(inlines![Inline::HardBreak]),
         Event::InlineHtml(_html) => Ok(Inlines::default()),
-        Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, state)),
+        Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, ctx)),
         Event::TaskListMarker(_) => {
             unreachable!("TaskListMarker is handled by list rendering")
         }
@@ -86,10 +86,10 @@ fn link<'a>(
     dest_url: &str,
     _title: &str,
     _id: &str,
-    state: &State,
+    ctx: &Context,
 ) -> Inlines<'a> {
-    if state.options().hyperlinks {
-        if let Some(url) = parse_url(dest_url, state) {
+    if ctx.options().hyperlinks {
+        if let Some(url) = parse_url(dest_url, ctx) {
             return inlines![Inline::SetLink(url)];
         }
     }
@@ -97,18 +97,17 @@ fn link<'a>(
     Inlines::default()
 }
 
-fn parse_url(url: &str, state: &State) -> Option<Url> {
+fn parse_url(url: &str, ctx: &Context) -> Option<Url> {
     Url::parse(url).ok().or_else(|| {
-        state
-            .options()
+        ctx.options()
             .base_url
             .as_ref()
             .and_then(|b| b.join(url).ok())
     })
 }
 
-fn footnote_reference<'a>(reference: &str, state: &mut State) -> Inlines<'a> {
-    let text = format!("{}", Superscript(state.footnotes().get_number(reference)));
+fn footnote_reference<'a>(reference: &str, ctx: &Context) -> Inlines<'a> {
+    let text = format!("{}", Superscript(ctx.footnotes().get_number(reference)));
     inlines![
         AnsiColor::Green.on_default(),
         CowStr::from(text),

@@ -65,7 +65,7 @@ impl Default for PrefixChain<'_> {
     }
 }
 
-impl<'a> PrefixChain<'a> {
+impl<'a: 'b, 'b> PrefixChain<'a> {
     pub(crate) fn link(&'a self, prefix: Prefix) -> PrefixChain<'a> {
         let width = self.width() + prefix.width();
         match self {
@@ -76,7 +76,7 @@ impl<'a> PrefixChain<'a> {
         }
     }
 
-    pub(crate) fn reborrow(&'a self) -> PrefixChain<'a> {
+    pub(crate) fn reborrow(&'b self) -> PrefixChain<'b> {
         if let PrefixChain::Borrowed(inner) = self {
             PrefixChain::Borrowed(inner)
         } else {

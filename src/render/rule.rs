@@ -1,4 +1,3 @@
-use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::fmt_utils::Repeat;
 
@@ -16,9 +15,8 @@ impl BlockRenderer for Rule {
     fn render<'e>(
         self,
         _events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
         // let decoration = "∗ ∗ ∗";
         // let padding_size = state
@@ -32,8 +30,8 @@ impl BlockRenderer for Rule {
         //     pad = Repeat(padding_size, " "),
         // )
 
-        let columns = state.available_columns(b).saturating_sub(2);
-        w.write_prefix(b)?;
+        let columns = ctx.available_columns().saturating_sub(2);
+        w.write_prefix(ctx)?;
         writeln!(w, "◈{}◈", Repeat(columns, "─"))
     }
 }

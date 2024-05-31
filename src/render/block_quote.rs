@@ -1,11 +1,9 @@
 use self::classification::{classify, Kind};
-use super::context::BlockContext;
-use super::{block, State};
+use super::block;
 use super::{prelude::*, BlockRenderer};
 use crate::inline::try_into_inlines;
 use crate::inline::Inline;
 use crate::prefix::Prefix;
-use crate::render::context::BlockKind;
 use pulldown_cmark::BlockQuoteKind;
 use smallvec::{Array, SmallVec};
 
@@ -23,42 +21,33 @@ impl BlockRenderer for BlockQuote {
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
-        state: &mut State<'e>,
+        ctx: &Context<'_, 'e, '_>,
         w: &mut Writer,
-        b: &BlockContext,
     ) -> io::Result<()> {
         let kind = classify(events, self.kind);
-        let b = b.child(prefix(kind));
-        write_title(kind, state, w, &b)?;
-
+        let ctx = ctx.block(prefix(kind));
+        write_title(kind, &ctx, w)?;
         terminated_for! {
             for event in terminated!(events, Event::End(TagEnd::BlockQuote)) {
-                block(event, events, state, w, &b)?;
+                block(event, events, &ctx, w)?;
             }
         }
 
-        if let Some(author) = quote_author(events, state) {
-            let b = b
-                .child(Prefix::continued("  ― "))
+        if let Some(author) = quote_author(events, &ctx) {
+            let ctx = ctx
+                .block(Prefix::continued("  ― "))
                 .styled(Style::new().italic());
-            w.inline_writer(state, &b).write_all(author)?;
+            w.inline_writer(&ctx).write_all(author)?;
         }
-
-        b.set_previous_block(BlockKind::BlockQuote);
 
         Ok(())
     }
 }
 
-fn write_title(
-    kind: Option<Kind>,
-    state: &mut State,
-    w: &mut Writer,
-    b: &BlockContext,
-) -> io::Result<()> {
+fn write_title(kind: Option<Kind>, ctx: &Context, w: &mut Writer) -> io::Result<()> {
     if let Some(kind) = kind {
-        if let Some(title) = kind.title(state.options().symbol_repertoire) {
-            w.write_prefix(b)?;
+        if let Some(title) = kind.title(ctx.options().symbol_repertoire) {
+            w.write_prefix(ctx)?;
             writeln!(w, "{}{title}{Reset}", kind.style().bold())?;
         }
     }
@@ -70,10 +59,10 @@ fn prefix(kind: Option<Kind>) -> Prefix {
     Prefix::uniform(format!("{style}┃{Reset} "))
 }
 
-fn quote_author<'a>(
-    events: Events<'_, 'a, '_>,
-    s: &mut State,
-) -> Option<impl IntoIterator<Item = Inline<'a>>> {
+fn quote_author<'e>(
+    events: Events<'_, 'e, '_>,
+    ctx: &Context<'_, 'e, '_>,
+) -> Option<impl IntoIterator<Item = Inline<'e>>> {
     enum PeekState {
         Initial,
         List,
@@ -90,7 +79,7 @@ fn quote_author<'a>(
             (List, Event::Start(Tag::Item)) => Item,
             (Item, Event::End(TagEnd::Item)) => ItemEnd,
             (Item, event) => {
-                if try_push_inlines(&mut inlines, event, s) {
+                if try_push_inlines(&mut inlines, event, ctx) {
                     Item
                 } else {
                     return None;
@@ -106,12 +95,12 @@ fn quote_author<'a>(
     None
 }
 
-fn try_push_inlines<'a, A: Array<Item = Inline<'a>>>(
+fn try_push_inlines<'e, A: Array<Item = Inline<'e>>>(
     buf: &mut SmallVec<A>,
-    event: Event<'a>,
-    state: &mut State,
+    event: Event<'e>,
+    ctx: &Context<'_, 'e, '_>,
 ) -> bool {
-    try_into_inlines(event, state)
+    try_into_inlines(event, ctx)
         .map(|inline| buf.extend(inline))
         .is_ok()
 }
