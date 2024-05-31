@@ -1,33 +1,17 @@
 use anstyle::{Reset, Style};
-use file_uri::{current_dir, file_in_current_dir};
-use options::Options;
+use matte::file_uri::{current_dir, file_in_current_dir};
+use matte::{default_parser_options, render, Options};
 use output::Output;
 use paging::PagingChoice;
 use pulldown_cmark::Parser;
-use render::default_parser_options;
 use std::io::{stdin, ErrorKind, IsTerminal, Read};
 use std::path::Path;
 use std::{env, fs};
 use url::Url;
 
-mod bullets;
-mod chars;
-mod counting;
-mod file_uri;
-mod fmt_utils;
-mod footnotes;
-mod hyperlink;
-mod inline;
-mod lookahead;
-mod options;
 mod output;
 mod pager;
 mod paging;
-mod prefix;
-mod render;
-mod style;
-mod syntax_highlighting;
-mod textwrap;
 
 // TODO: nonprintables
 // TODO: trim trailing whitespace (ah I think that's why I had to add - 1 somehwere)
@@ -49,7 +33,7 @@ fn main() {
         .columns
         .saturating_sub(output.decoration_width() as u16); // TODO: integers
 
-    match render::render(&mut parser, &mut output, options) {
+    match render(&mut parser, &mut output, options) {
         Ok(_) => {}
         Err(e) if e.kind() == ErrorKind::BrokenPipe => {}
         Err(e) => panic!("{e:?}"),

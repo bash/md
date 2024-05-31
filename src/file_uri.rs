@@ -4,14 +4,14 @@ use std::{env, error, fmt, io};
 use url::Url;
 
 /// Gets a file URI pointing to the current directory.
-pub(crate) fn current_dir() -> Result<Url, Error> {
+pub fn current_dir() -> Result<Url, Error> {
     let current_dir = env::current_dir()?;
     let mut url = Url::from_directory_path(current_dir).expect("current dir is absolute");
     set_current_host(&mut url)?;
     return Ok(url);
 }
 
-pub(crate) fn file_in_current_dir(file_path: impl AsRef<Path>) -> Result<Url, Error> {
+pub fn file_in_current_dir(file_path: impl AsRef<Path>) -> Result<Url, Error> {
     let file_path = file_path.as_ref();
     let mut url = if file_path.is_absolute() {
         Url::from_file_path(file_path).expect("file path is absolute")
@@ -37,7 +37,7 @@ fn set_current_host(url: &mut Url) -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub(crate) enum Error {
+pub enum Error {
     Io(io::Error),
     Parse(url::ParseError),
     Unicode(OsString),

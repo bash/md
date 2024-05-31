@@ -58,7 +58,7 @@ impl Options {
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
-pub enum SymbolRepertoireImpl {
+enum SymbolRepertoireImpl {
     #[default]
     UnicodeWithEmoji,
     Unicode,

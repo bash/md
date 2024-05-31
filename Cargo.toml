@@ -3,15 +3,25 @@ name = "matte"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+cli = [
+    "dep:terminal_size",
+    "dep:shell-words"
+]
+
+[[bin]]
+name = "matte"
+required-features = ["cli"]
+
 [dependencies]
 pulldown-cmark.workspace = true
 fmtastic.workspace = true
 anstyle.workspace = true
-terminal_size.workspace = true
+terminal_size = { workspace = true, optional = true }
 url.workspace = true
 bat.workspace = true
 matte-language-names = { path = "crates/matte-language-names" }
-shell-words = "1.1.0"
+shell-words = { version = "1.1.0", optional = true }
 thiserror = "1.0.61"
 unicode-linebreak-chunked = { git = "https://github.com/bash/unicode-linebreak-chunked.git", branch = "tables" }
 trait-set = "0.3.0"
