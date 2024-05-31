@@ -93,7 +93,7 @@ fn classify_from_text(events: Events) -> Option<BlockQuoteKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::{default_parser_options, wrap_events};
+    use crate::render::{supported_parser_options, wrap_events};
     use pulldown_cmark::Parser;
 
     #[test]
@@ -149,7 +149,7 @@ mod tests {
     }
 
     fn classify(markdown: &str) -> Option<BlockQuoteKind> {
-        let mut parser = Parser::new_ext(markdown, default_parser_options());
+        let mut parser = Parser::new_ext(markdown, supported_parser_options());
         let mut events = wrap_events(&mut parser);
         classify_from_text(&mut events)
     }

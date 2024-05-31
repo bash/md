@@ -1,5 +1,9 @@
 //! `>_` Matte—Your friendly neighbourhood **ma**rkdown **te**rminal renderer.
 
+// Re-exports of crates that we use in our public API.
+pub use pulldown_cmark;
+pub use url;
+
 #[macro_use]
 mod macros;
 
@@ -21,7 +25,3 @@ mod textwrap;
 pub use options::*;
 pub use render::*;
 pub mod file_uri;
-
-// Re-exports of crates that we use in our public API.
-pub use pulldown_cmark;
-pub use url;

@@ -36,8 +36,9 @@ mod prelude {
 }
 
 // TODO: these lifetimes are horrible, make them clearer
-type EventsOwned<'b, 'c> = Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
-type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
+pub(crate) type EventsOwned<'b, 'c> =
+    Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
+pub(crate) type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
 
 pub fn render<'e, I, W>(mut events: I, mut output: W, options: Options) -> io::Result<()>
 where
@@ -58,19 +59,23 @@ where
     Ok(())
 }
 
-pub fn default_parser_options() -> pulldown_cmark::Options {
+/// Parser options supported by [`render`].
+/// All of these are enabled by default when running `matte`.
+pub const fn supported_parser_options() -> pulldown_cmark::Options {
     use pulldown_cmark::Options;
     Options::ENABLE_FOOTNOTES
-        | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_TABLES
-        | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS
-        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
-        | Options::ENABLE_STRIKETHROUGH
-        | Options::ENABLE_MATH
-        | Options::ENABLE_GFM // Enables admonitions i.e. [!NOTE], ...
+        .union(Options::ENABLE_TASKLISTS)
+        .union(Options::ENABLE_TABLES)
+        .union(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS)
+        .union(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS)
+        .union(Options::ENABLE_STRIKETHROUGH)
+        .union(Options::ENABLE_MATH)
+        .union(Options::ENABLE_GFM) // Enables admonitions i.e. [!NOTE], ...
 }
 
-fn wrap_events<'b, 'c>(events: &'c mut dyn Iterator<Item = Event<'b>>) -> EventsOwned<'b, 'c> {
+pub(crate) fn wrap_events<'b, 'c>(
+    events: &'c mut dyn Iterator<Item = Event<'b>>,
+) -> EventsOwned<'b, 'c> {
     Lookaheadable::new(events)
 }
 

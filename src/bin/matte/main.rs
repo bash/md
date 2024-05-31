@@ -1,6 +1,6 @@
 use anstyle::{Reset, Style};
 use matte::file_uri::{current_dir, file_in_current_dir};
-use matte::{default_parser_options, render, Options};
+use matte::{render, supported_parser_options, Options};
 use output::Output;
 use paging::PagingChoice;
 use pulldown_cmark::Parser;
@@ -23,7 +23,7 @@ fn main() {
         .map(|(width, _)| width.0)
         .unwrap_or(180);
     let input = read_input();
-    let mut parser = Parser::new_ext(&input.markdown, default_parser_options());
+    let mut parser = Parser::new_ext(&input.markdown, supported_parser_options());
 
     let mut output = Output::from_env(&input.file_name, PagingChoice::Auto).unwrap();
     let mut options = Options::plain_text(width);
