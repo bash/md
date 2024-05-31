@@ -35,7 +35,7 @@ impl<'w> Writer<'w> {
         let prefix = ctx.prefix_chain();
         InlineWriter::new(
             ctx.style(),
-            ctx.text_columns(),
+            ctx.available_width(),
             &mut *self.output,
             move |w| write_prefix(prefix, style, w),
         )

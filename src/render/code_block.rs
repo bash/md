@@ -36,7 +36,7 @@ impl BlockRenderer for CodeBlock<'_> {
         let highlighted = highlight(
             &code,
             &Options {
-                available_columns: ctx.available_columns(),
+                available_columns: ctx.available_width(),
                 language,
             },
         );

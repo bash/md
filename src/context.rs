@@ -115,13 +115,12 @@ impl<'a, 'e> Context<'a, 'e, '_> {
         &self.state.footnotes
     }
 
-    // TODO: rename to `available_width`
-    pub(crate) fn available_columns(&self) -> usize {
+    pub(crate) fn available_width(&self) -> usize {
         (self.options().columns as usize) - self.prefix.width()
     }
 
-    pub(crate) fn text_columns(&self) -> usize {
-        min(self.available_columns(), self.options().text_max_columns)
+    pub(crate) fn text_width(&self) -> usize {
+        min(self.available_width(), self.options().text_max_columns)
     }
 
     pub(crate) fn counters(&self) -> &Counters {

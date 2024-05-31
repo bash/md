@@ -30,7 +30,7 @@ impl BlockRenderer for Rule {
         //     pad = Repeat(padding_size, " "),
         // )
 
-        let columns = ctx.available_columns().saturating_sub(2);
+        let columns = ctx.available_width().saturating_sub(2);
         w.write_prefix(ctx)?;
         writeln!(w, "◈{}◈", Repeat(columns, "─"))
     }
