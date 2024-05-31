@@ -1,7 +1,7 @@
 use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
+use crate::inline::into_inlines;
 use crate::prefix::Prefix;
-use crate::render::inline::into_inlines;
 use anstyle::AnsiColor::Green;
 use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;

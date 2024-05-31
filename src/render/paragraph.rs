@@ -1,6 +1,6 @@
 use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
-use crate::render::inline::into_inlines;
+use crate::inline::into_inlines;
 
 pub(super) struct Paragraph;
 

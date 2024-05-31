@@ -2,10 +2,10 @@ use self::classification::{classify, Kind};
 use super::context::BlockContext;
 use super::{block, State};
 use super::{prelude::*, BlockRenderer};
+use crate::inline::try_into_inlines;
 use crate::inline::Inline;
 use crate::prefix::Prefix;
 use crate::render::context::BlockKind;
-use crate::render::inline::try_into_inlines;
 use pulldown_cmark::BlockQuoteKind;
 use smallvec::{Array, SmallVec};
 

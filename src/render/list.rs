@@ -1,8 +1,8 @@
 use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
+use crate::inline::{into_inlines, try_into_inlines};
 use crate::prefix::Prefix;
 use crate::render::block;
-use crate::render::inline::{into_inlines, try_into_inlines};
 use crate::render::try_block;
 use crate::style::StyledStr;
 use fmtastic::BallotBox;

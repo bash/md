@@ -15,6 +15,8 @@ mod state;
 mod table;
 mod writer;
 
+pub(crate) use state::State;
+
 use block_quote::*;
 use code_block::*;
 use context::{BlockContext, BlockKind};
