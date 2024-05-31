@@ -69,9 +69,5 @@ impl io::Write for Writer<'_> {
 }
 
 fn write_prefix(block: &BlockContext, w: &mut dyn io::Write) -> io::Result<()> {
-    if let Some(parent) = block.parent() {
-        write_prefix(parent, w)?;
-    }
-
-    write!(w, "{}", block.take_prefix())
+    write!(w, "{}", block.prefix_chain().display_next())
 }

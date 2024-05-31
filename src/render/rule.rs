@@ -1,4 +1,4 @@
-use super::context::BlockKind;
+use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::fmt_utils::Repeat;
 
@@ -14,7 +14,7 @@ impl BlockRenderer for Rule {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: super::context::BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         // let decoration = "∗ ∗ ∗";
         // let padding_size = state

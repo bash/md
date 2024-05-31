@@ -4,6 +4,7 @@ use crate::counting::SectionCounter;
 use crate::footnotes::FootnoteCounter;
 use crate::options::Options;
 use std::cmp::min;
+use unicode_width::UnicodeWidthStr as _;
 
 #[derive(Debug)]
 pub(super) struct State {
@@ -31,7 +32,7 @@ impl State {
 
     // TODO: rename to `available_width`
     pub(super) fn available_columns(&self, b: &BlockContext) -> usize {
-        (self.options.columns as usize) - b.prefix_width()
+        (self.options.columns as usize) - b.prefix_chain().width()
     }
 
     pub(super) fn text_columns(&self, b: &BlockContext) -> usize {

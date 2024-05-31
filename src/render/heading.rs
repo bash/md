@@ -1,4 +1,4 @@
-use super::context::BlockKind;
+use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::prefix::Prefix;
 use crate::render::inline::into_inlines;
@@ -21,7 +21,7 @@ impl BlockRenderer for Heading {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: super::context::BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         state.section_counter_mut().update(self.level);
 
@@ -30,7 +30,7 @@ impl BlockRenderer for Heading {
             numbering(state.section_counter().value()),
             style,
         ));
-        let b = b.nested(|b| b.styled(style).prefixed(prefix));
+        let b = b.child(prefix).styled(style);
 
         let mut writer = w.inline_writer(state, &b);
 

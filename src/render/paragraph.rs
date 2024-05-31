@@ -1,4 +1,4 @@
-use super::context::BlockKind;
+use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use crate::render::inline::into_inlines;
 
@@ -14,7 +14,7 @@ impl BlockRenderer for Paragraph {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: super::context::BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         let mut writer = w.inline_writer(state, &b);
 

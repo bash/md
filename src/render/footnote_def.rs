@@ -28,7 +28,7 @@ impl BlockRenderer for FootnoteDef<'_> {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         let number = state.get_footnote_number(&self.reference);
         let prefix = Prefix::continued(StyledStr::new(
@@ -43,11 +43,11 @@ impl BlockRenderer for FootnoteDef<'_> {
 
         // TODO: dimmed only has an effect on dark backgrounds,
         // we should have a solution for light themes too...
-        let b = b.nested(|b| b.prefixed(prefix).styled(Style::new().dimmed()));
+        let b = b.child(prefix).styled(Style::new().dimmed());
 
         take! {
             for event in events; until Event::End(TagEnd::FootnoteDefinition) => {
-                block(event, events, state, w, b.inherited())?;
+                block(event, events, state, w, &b)?;
             }
         }
         Ok(())

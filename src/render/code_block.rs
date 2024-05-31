@@ -17,7 +17,7 @@ impl BlockRenderer for CodeBlock<'_> {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         // TODO: yes, yes we could use a buffer that only buffers until the next line...
         let mut code = String::new();

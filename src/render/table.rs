@@ -1,4 +1,4 @@
-use super::context::BlockKind;
+use super::context::{BlockContext, BlockKind};
 use super::{prelude::*, BlockRenderer};
 use anstyle::AnsiColor::Red;
 use pulldown_cmark::Alignment;
@@ -17,7 +17,7 @@ impl BlockRenderer for Table {
         events: Events,
         _state: &mut State,
         w: &mut Writer,
-        b: super::context::BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         w.write_prefix(&b)?;
         writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;

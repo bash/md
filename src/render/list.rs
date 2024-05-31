@@ -23,13 +23,13 @@ impl BlockRenderer for List {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         let mut list_type = list_style_type(self.first_item_number, state, &b);
         take! {
             for event in events; until Event::End(TagEnd::List(..)) => {
                 if let Event::Start(Tag::Item) = event {
-                    item(list_type.clone(), events, state, w, b.inherited())?;
+                    item(list_type.clone(), events, state, w, b)?;
                     list_type.increment();
                 } else {
                     unreachable!();
@@ -80,17 +80,16 @@ fn item(
     events: Events,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<()> {
     let list_type = list_style_type_from_item(events).unwrap_or(list_type);
-    let b = b.nested(|b| b.prefixed(prefix(&list_type)).list_depth_incremented());
+    let b: BlockContext = b.child(prefix(&list_type)).list_depth_incremented();
     let mut list_state = Some(ListItemState::Inlines(None));
 
     while let Some(s) = list_state.take() {
-        let b = b.inherited();
         list_state = match s {
-            ListItemState::Inlines(event) => list_item_inlines(event, events, state, w, b)?,
-            ListItemState::Blocks(event) => list_item_blocks(event, events, state, w, b)?,
+            ListItemState::Inlines(event) => list_item_inlines(event, events, state, w, &b)?,
+            ListItemState::Blocks(event) => list_item_blocks(event, events, state, w, &b)?,
         };
     }
 
@@ -102,7 +101,7 @@ fn list_item_inlines<'a>(
     events: Events<'_, 'a, '_>,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<Option<ListItemState<'a>>> {
     let mut writer = w.inline_writer(state, &b);
 
@@ -131,13 +130,13 @@ fn list_item_blocks<'a>(
     events: Events<'_, 'a, '_>,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<Option<ListItemState<'a>>> {
-    block(first_event, events, state, w, b.inherited())?;
+    block(first_event, events, state, w, b)?;
 
     take! {
         for event in events; until Event::End(TagEnd::Item) => {
-            if let Some(rejected_event) = try_block(event, events, state, w, b.inherited())? {
+            if let Some(rejected_event) = try_block(event, events, state, w, b)? {
                 return Ok(Some(ListItemState::Inlines(Some(rejected_event))))
             }
         }

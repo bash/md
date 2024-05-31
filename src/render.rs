@@ -20,10 +20,9 @@ mod writer;
 
 use block_quote::*;
 use code_block::*;
-use context::{BlockContext, BlockContextData, BlockKind};
+use context::{BlockContext, BlockKind};
 use footnote_def::*;
 use heading::*;
-use io::Write;
 use list::*;
 use paragraph::*;
 use rule::*;
@@ -51,16 +50,10 @@ where
     let mut events = wrap_events(&mut events);
     let mut state = State::new(options);
     let mut writer = Writer::new(&mut output);
-    let block_ctx = BlockContext::Bottom(BlockContextData::default());
+    let block_ctx = BlockContext::default();
 
     while let Some(event) = events.next() {
-        block(
-            event,
-            &mut events,
-            &mut state,
-            &mut writer,
-            block_ctx.inherited(),
-        )?;
+        block(event, &mut events, &mut state, &mut writer, &block_ctx)?;
     }
 
     Ok(())
@@ -87,7 +80,7 @@ fn block(
     events: Events,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<()> {
     if let Some(rejected) = try_block(event, events, state, w, b)? {
         panic!("Unexpected event {:?} in block context", rejected);
@@ -107,7 +100,7 @@ trait BlockRenderer {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()>;
 }
 
@@ -116,7 +109,7 @@ fn try_block<'a>(
     events: Events,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<Option<Event<'a>>> {
     match event {
         Event::Start(Tag::Paragraph) => render_block(Paragraph, events, state, w, b)?,
@@ -152,14 +145,14 @@ fn render_block<H: BlockRenderer>(
     events: Events,
     state: &mut State,
     w: &mut Writer,
-    b: BlockContext,
+    b: &BlockContext,
 ) -> io::Result<()> {
     if !is_blank(&handler, events) {
         w.write_block_start(&b)?;
     }
     let kind = handler.kind();
     b.set_current_block(kind);
-    handler.render(events, state, w, b.inherited())?;
+    handler.render(events, state, w, b)?;
     b.set_previous_block(kind);
     Ok(())
 }

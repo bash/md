@@ -25,23 +25,21 @@ impl BlockRenderer for BlockQuote {
         events: Events,
         state: &mut State,
         w: &mut Writer,
-        b: BlockContext,
+        b: &BlockContext,
     ) -> io::Result<()> {
         let kind = classify(events, self.kind);
-        let b = b.nested(|b| b.prefixed(prefix(kind)));
+        let b = b.child(prefix(kind));
         write_title(kind, state, w, &b)?;
         take! {
             for event in events; until Event::End(TagEnd::BlockQuote) => {
-                block(event, events, state, w, b.inherited())?;
+                block(event, events, state, w, &b)?;
             }
         }
 
         if let Some(author) = quote_author(events, state) {
-            let b = b.nested(|b| {
-                b.prefixed(Prefix::continued("  ― "))
-                    .styled(Style::new().italic())
-            });
-
+            let b = b
+                .child(Prefix::continued("  ― "))
+                .styled(Style::new().italic());
             w.inline_writer(state, &b).write_all(author)?;
         }
 
