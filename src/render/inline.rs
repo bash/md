@@ -26,8 +26,8 @@ pub(super) fn try_into_inlines<'a>(
 ) -> Result<Inlines<'a>, Event<'a>> {
     match event {
         Event::Text(text) => Ok(inlines![text]),
-        Event::Code(c) => Ok(code(c)),
-        Event::InlineMath(math) => Ok(code(math)),
+        Event::Code(c) => Ok(code(c, AnsiColor::Yellow)),
+        Event::InlineMath(math) => Ok(code(math, AnsiColor::Cyan)),
         Event::DisplayMath(_) => Ok(display_math()),
         Event::Start(Tag::Strong) => Ok(inlines![Style::new().bold()]),
         Event::End(TagEnd::Strong) => Ok(inlines![Inline::PopStyle]),
@@ -49,7 +49,9 @@ pub(super) fn try_into_inlines<'a>(
         Event::InlineHtml(html) if is_br_tag(&html) => Ok(inlines![Inline::HardBreak]),
         Event::InlineHtml(_html) => Ok(Inlines::default()),
         Event::FootnoteReference(reference) => Ok(footnote_reference(&reference, state)),
+        //
         // `Event::TaskListMarker` is handled by the list item writer so no need to handle it here.
+        //
         // All other events are "rejected".
         event => Err(event),
     }
@@ -60,12 +62,8 @@ fn is_br_tag(html: &str) -> bool {
     html == "<br>" || html == "<br/>"
 }
 
-fn code(code: CowStr) -> Inlines {
-    inlines![
-        AnsiColor::Cyan.on_default().italic(),
-        code,
-        Inline::PopStyle
-    ]
+fn code(code: CowStr, color: AnsiColor) -> Inlines {
+    inlines![color.on_default().italic(), code, Inline::PopStyle]
 }
 
 fn display_math<'a>() -> Inlines<'a> {
