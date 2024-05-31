@@ -25,7 +25,7 @@ impl BlockRenderer for List {
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {
-        let mut list_type = list_style_type(self.first_item_number, state, &b);
+        let mut list_type = list_style_type(self.first_item_number, state, b);
         take! {
             for event in events; until Event::End(TagEnd::List(..)) => {
                 if let Event::Start(Tag::Item) = event {
@@ -103,7 +103,7 @@ fn list_item_inlines<'a>(
     w: &mut Writer,
     b: &BlockContext,
 ) -> io::Result<Option<ListItemState<'a>>> {
-    let mut writer = w.inline_writer(state, &b);
+    let mut writer = w.inline_writer(state, b);
 
     if let Some(event) = first_event {
         writer.write_iter(into_inlines(event, state))?;

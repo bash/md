@@ -39,12 +39,6 @@ impl StyleStack {
 pub(crate) struct StyledStr<'a>(pub(crate) CowStr<'a>, pub(crate) Style);
 
 impl<'a> StyledStr<'a> {
-    pub(crate) fn on_top_of(self, style: Style) -> Self {
-        Self(self.0, self.1.on_top_of(&style))
-    }
-}
-
-impl<'a> StyledStr<'a> {
     pub(crate) fn new(s: impl Into<CowStr<'a>>, style: Style) -> Self {
         Self(s.into(), style)
     }

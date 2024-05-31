@@ -38,7 +38,7 @@ impl BlockRenderer for FootnoteDef<'_> {
 
         // TODO: collapse multiple footnote defs following each other into one logical "section".
         // TODO: write prefix and writeln is getting awfully repetitive...
-        w.write_prefix(&b)?;
+        w.write_prefix(b)?;
         writeln!(w, "──────")?;
 
         // TODO: dimmed only has an effect on dark backgrounds,

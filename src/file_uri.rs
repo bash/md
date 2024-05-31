@@ -8,7 +8,7 @@ pub fn current_dir() -> Result<Url, Error> {
     let current_dir = env::current_dir()?;
     let mut url = Url::from_directory_path(current_dir).expect("current dir is absolute");
     set_current_host(&mut url)?;
-    return Ok(url);
+    Ok(url)
 }
 
 pub fn file_in_current_dir(file_path: impl AsRef<Path>) -> Result<Url, Error> {
@@ -21,7 +21,7 @@ pub fn file_in_current_dir(file_path: impl AsRef<Path>) -> Result<Url, Error> {
         Url::from_file_path(p).expect("current dir is absolute")
     };
     set_current_host(&mut url)?;
-    return Ok(url);
+    Ok(url)
 }
 
 // Explicitly setting the hostname allows

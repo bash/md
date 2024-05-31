@@ -57,7 +57,7 @@ fn write_title(
 ) -> io::Result<()> {
     if let Some(kind) = kind {
         if let Some(title) = kind.title(state.options().symbol_repertoire) {
-            w.write_prefix(&b)?;
+            w.write_prefix(b)?;
             writeln!(w, "{}{title}{Reset}", kind.style().bold())?;
         }
     }

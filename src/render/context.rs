@@ -14,7 +14,7 @@ pub(super) struct BlockContext<'a> {
 }
 
 impl<'a> BlockContext<'a> {
-    pub(super) fn child<'b>(&'b self, prefix: impl Into<Option<Prefix>>) -> BlockContext<'b> {
+    pub(super) fn child(&self, prefix: impl Into<Option<Prefix>>) -> BlockContext<'_> {
         let prefix = match prefix.into() {
             Some(p) => self.prefix.link(p),
             None => self.prefix.reborrow(),

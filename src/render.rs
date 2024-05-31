@@ -148,7 +148,7 @@ fn render_block<H: BlockRenderer>(
     b: &BlockContext,
 ) -> io::Result<()> {
     if !is_blank(&handler, events) {
-        w.write_block_start(&b)?;
+        w.write_block_start(b)?;
     }
     let kind = handler.kind();
     b.set_current_block(kind);

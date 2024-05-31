@@ -19,7 +19,7 @@ impl BlockRenderer for Table {
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {
-        w.write_prefix(&b)?;
+        w.write_prefix(b)?;
         writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
 
         take! { for event in events; until Event::End(TagEnd::Table) => { } }

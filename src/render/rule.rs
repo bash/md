@@ -28,8 +28,8 @@ impl BlockRenderer for Rule {
         //     pad = Repeat(padding_size, " "),
         // )
 
-        let columns = state.available_columns(&b).saturating_sub(2);
-        w.write_prefix(&b)?;
+        let columns = state.available_columns(b).saturating_sub(2);
+        w.write_prefix(b)?;
         writeln!(w, "◈{}◈", Repeat(columns, "─"))
     }
 }

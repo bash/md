@@ -40,7 +40,7 @@ impl BlockRenderer for CodeBlock<'_> {
         let highlighted = highlight(
             &code,
             &Options {
-                available_columns: state.available_columns(&b),
+                available_columns: state.available_columns(b),
                 language,
             },
         );
@@ -49,7 +49,7 @@ impl BlockRenderer for CodeBlock<'_> {
         // BoxWidget::write(&highlighted, state, Style::new().dimmed())
 
         for line in highlighted.lines() {
-            w.write_prefix(&b)?;
+            w.write_prefix(b)?;
             writeln!(w, "{line}")?;
         }
         Ok(())

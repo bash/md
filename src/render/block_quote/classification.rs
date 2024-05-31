@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn minimal() {
         for (symbol, kind) in kinds() {
-            assert_eq!(Some(*kind), classify(&symbol.to_string()));
+            assert_eq!(Some(*kind), classify(symbol));
         }
     }
 
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn counter_examples() {
-        assert_eq!(None, classify(&"Note".to_string()));
+        assert_eq!(None, classify("Note"));
         for (symbol, _) in kinds() {
             assert_eq!(None, classify(&format!("- {symbol} List")));
             assert_eq!(None, classify(&format!("~~{symbol}~~")));

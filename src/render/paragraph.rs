@@ -16,7 +16,7 @@ impl BlockRenderer for Paragraph {
         w: &mut Writer,
         b: &BlockContext,
     ) -> io::Result<()> {
-        let mut writer = w.inline_writer(state, &b);
+        let mut writer = w.inline_writer(state, b);
 
         take! {
             for event in events; until Event::End(TagEnd::Paragraph) => {
