@@ -30,8 +30,9 @@ impl BlockRenderer for BlockQuote {
         let kind = classify(events, self.kind);
         let b = b.child(prefix(kind));
         write_title(kind, state, w, &b)?;
-        take! {
-            for event in events; until Event::End(TagEnd::BlockQuote) => {
+
+        terminated_for! {
+            for event in terminated!(events, Event::End(TagEnd::BlockQuote)) {
                 block(event, events, state, w, &b)?;
             }
         }

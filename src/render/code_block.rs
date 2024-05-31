@@ -21,13 +21,11 @@ impl BlockRenderer for CodeBlock<'_> {
     ) -> io::Result<()> {
         // TODO: yes, yes we could use a buffer that only buffers until the next line...
         let mut code = String::new();
-        take! {
-            for event in events; until Event::End(TagEnd::CodeBlock) => {
-                if let Event::Text(text) = event {
+
+        for event in terminated!(events, Event::End(TagEnd::CodeBlock)) {
+            reachable! {
+                let Event::Text(text) = event {
                     code.push_str(&text);
-                } else {
-                    // TODO: unreachable
-                    panic!("Unexpected event {:#?}", event)
                 }
             }
         }

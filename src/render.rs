@@ -2,9 +2,6 @@ use self::prelude::*;
 use crate::lookahead::Lookaheadable;
 use crate::options::Options;
 
-#[macro_use]
-mod macros;
-
 mod block_quote;
 mod code_block;
 mod context;
@@ -170,15 +167,11 @@ fn is_blank(handler: &impl BlockRenderer, events: Events, state: &State) -> bool
 }
 
 fn metadata_block(events: Events) -> io::Result<()> {
-    take! {
-        for _event in events; until Event::End(TagEnd::MetadataBlock(..)) => {}
-    }
+    terminated!(events, Event::End(TagEnd::MetadataBlock(..))).for_each(|_event| {});
     Ok(())
 }
 
 fn html_block(events: Events) -> io::Result<()> {
-    take! {
-        for _event in events; until Event::End(TagEnd::HtmlBlock) => {}
-    }
+    terminated!(events, Event::End(TagEnd::HtmlBlock)).for_each(|_event| {});
     Ok(())
 }

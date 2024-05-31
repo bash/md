@@ -28,15 +28,11 @@ impl BlockRenderer for Heading {
         let prefix = Prefix::continued(numbering(state.section_counter().value()));
         let b = b.child(prefix).styled(style);
 
-        let mut writer = w.inline_writer(state, &b);
-
-        take! {
-            for event in events; until Event::End(TagEnd::Heading(..)) => {
-                writer.write_iter(into_inlines(event, state))?;
-            }
-        }
-
-        writer.end()
+        let writer = w.inline_writer(state, &b);
+        writer.write_all(
+            terminated!(events, Event::End(TagEnd::Heading(..)))
+                .flat_map(|event| into_inlines(event, state)),
+        )
     }
 }
 

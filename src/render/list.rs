@@ -26,13 +26,14 @@ impl BlockRenderer for List {
         b: &BlockContext,
     ) -> io::Result<()> {
         let mut list_type = list_style_type(self.first_item_number, state, b);
-        take! {
-            for event in events; until Event::End(TagEnd::List(..)) => {
-                if let Event::Start(Tag::Item) = event {
-                    item(list_type.clone(), events, state, w, b)?;
-                    list_type.increment();
-                } else {
-                    unreachable!();
+
+        terminated_for! {
+            for event in terminated!(events, Event::End(TagEnd::List(..))) {
+                reachable! {
+                    let Event::Start(Tag::Item) = event {
+                        item(list_type.clone(), events, state, w, b)?;
+                        list_type.increment();
+                    }
                 }
             }
         }
@@ -109,8 +110,8 @@ fn list_item_inlines<'a>(
         writer.write_iter(into_inlines(event, state))?;
     }
 
-    take! {
-        for event in events; until Event::End(TagEnd::Item) => {
+    terminated_for! {
+        for event in terminated!(events, Event::End(TagEnd::Item)) {
             match try_into_inlines(event, state) {
                 Ok(inlines) => writer.write_iter(inlines)?,
                 Err(rejected_event) => {
@@ -134,8 +135,8 @@ fn list_item_blocks<'e>(
 ) -> io::Result<Option<ListItemState<'e>>> {
     block(first_event, events, state, w, b)?;
 
-    take! {
-        for event in events; until Event::End(TagEnd::Item) => {
+    terminated_for! {
+        for event in terminated!(events, Event::End(TagEnd::Item)) {
             if let Some(rejected_event) = try_block(event, events, state, w, b)? {
                 return Ok(Some(ListItemState::Inlines(Some(rejected_event))))
             }

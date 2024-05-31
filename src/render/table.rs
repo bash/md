@@ -22,7 +22,7 @@ impl BlockRenderer for Table {
         w.write_prefix(b)?;
         writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;
 
-        take! { for event in events; until Event::End(TagEnd::Table) => { } }
+        terminated!(events, Event::End(TagEnd::Table)).for_each(|_event| {});
 
         Ok(())
     }

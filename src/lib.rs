@@ -1,5 +1,8 @@
 //! `>_` Matte—Your friendly neighbourhood **ma**rkdown **te**rminal renderer.
 
+#[macro_use]
+mod macros;
+
 mod bullets;
 mod chars;
 mod counting;

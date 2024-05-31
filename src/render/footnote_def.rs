@@ -46,8 +46,8 @@ impl BlockRenderer for FootnoteDef<'_> {
         let number = state.footnotes().get_number(&self.reference);
         let b = b.child(prefix(number)).styled(Style::new().dimmed());
 
-        take! {
-            for event in events; until Event::End(TagEnd::FootnoteDefinition) => {
+        terminated_for! {
+            for event in terminated!(events, Event::End(TagEnd::FootnoteDefinition)) {
                 match state.options().footnote_definition_placement {
                     EndOfDocument => state.footnotes().push(&self.reference, event),
                     InPlace => block(event, events, state, w, &b)?,
