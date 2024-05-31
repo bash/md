@@ -1,51 +1,11 @@
+use super::Inline;
 use crate::hyperlink::{CloseHyperlink, Hyperlink};
 use crate::style::{StyleExt as _, StyleStack};
 use crate::textwrap::{Chunk, ChunkLayouter, RawChunk};
 use anstyle::{Reset, Style};
-use pulldown_cmark::CowStr;
 use std::io;
 use trait_set::trait_set;
 use url::Url;
-
-#[derive(Debug)]
-pub(crate) enum Inline<'a> {
-    Text(CowStr<'a>),
-    SoftBreak,
-    HardBreak,
-    PushStyle(Style),
-    PopStyle,
-    SetLink(Url),
-    UnsetLink,
-}
-
-impl<'a> From<Inline<'a>> for RawChunk<'a, Inline<'a>> {
-    fn from(value: Inline<'a>) -> Self {
-        match value {
-            Inline::Text(text) => RawChunk::Text(text),
-            Inline::SoftBreak => RawChunk::soft_break(),
-            Inline::HardBreak => RawChunk::hard_break(),
-            other => RawChunk::Passthrough(other),
-        }
-    }
-}
-
-impl<'a> From<CowStr<'a>> for Inline<'a> {
-    fn from(value: CowStr<'a>) -> Self {
-        Inline::Text(value)
-    }
-}
-
-impl<'a> From<&'a str> for Inline<'a> {
-    fn from(value: &'a str) -> Self {
-        Inline::Text(CowStr::from(value))
-    }
-}
-
-impl From<Style> for Inline<'_> {
-    fn from(value: Style) -> Self {
-        Inline::PushStyle(value)
-    }
-}
 
 /// Writes an [`Inline`] and tracks the last used style.
 ///
