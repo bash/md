@@ -121,15 +121,15 @@ fn passthrough_inline<F>(
     use PassthroughInline::*;
 
     let w = &mut *ctx.writer;
-    let style_stack = &mut ctx.style_stack;
+    let stack = &mut ctx.style_stack;
     match inline {
         PushStyle(s) => {
-            style_stack.push(s.on_top_of(&style_stack.head()));
-            write!(w, "{}", style_stack.head())
+            stack.push(s.on_top_of(stack.head()));
+            write!(w, "{}", stack.head())
         }
         PopStyle => {
-            style_stack.pop();
-            write!(w, "{Reset}{}", style_stack.head())
+            stack.pop();
+            write!(w, "{Reset}{}", stack.head())
         }
         SetLink(url) => {
             if ctx.link.is_none() {
