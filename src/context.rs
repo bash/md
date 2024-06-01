@@ -1,6 +1,6 @@
-use crate::bullets::Bullets;
 use crate::counting::Counters;
 use crate::footnotes::Footnotes;
+use crate::list::Bullets;
 use crate::prefix::{Prefix, PrefixChain};
 use crate::style::StyleExt;
 use crate::Options;

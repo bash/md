@@ -7,7 +7,6 @@ use crate::options::Options;
 mod code_block;
 mod footnote_def;
 mod heading;
-mod list;
 mod paragraph;
 mod rule;
 mod table;
@@ -15,7 +14,6 @@ mod table;
 pub(crate) use code_block::*;
 pub(crate) use footnote_def::*;
 pub(crate) use heading::*;
-pub(crate) use list::*;
 pub(crate) use paragraph::*;
 pub(crate) use rule::*;
 pub(crate) use table::*;
@@ -26,7 +24,7 @@ mod prelude {
     pub(super) use crate::context::{BlockKind, Context};
     pub(super) use crate::writer::Writer;
     pub(super) use anstyle::{Reset, Style};
-    pub(super) use pulldown_cmark::{Event, Tag, TagEnd};
+    pub(super) use pulldown_cmark::{Event, TagEnd};
     pub(super) use std::io;
     pub(super) use std::io::Write as _;
 }

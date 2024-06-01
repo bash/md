@@ -1,8 +1,9 @@
 use crate::block::render_block as render;
 use crate::block_quote::BlockQuote;
 use crate::context::Context;
+use crate::list::List;
 use crate::writer::Writer;
-use crate::{CodeBlock, Events, FootnoteDef, Heading, List, Paragraph, Rule, Table};
+use crate::{CodeBlock, Events, FootnoteDef, Heading, Paragraph, Rule, Table};
 use pulldown_cmark::{Event, Tag, TagEnd};
 use std::io;
 
