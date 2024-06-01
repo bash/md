@@ -1,0 +1,16 @@
+---
+source: tests/snapshot.rs
+expression: rendered
+input_file: tests/snippets/code-block.md
+---
+[1m[4m[32m[0m[1m[4m[32mCode Block[0m
+
+[35mfn[0m [34mmain[0m() {
+    println!([32m"[0m[32mhello world[0m[32m"[0m);
+}
+
+┃[0m [0m[35mfn[0m [34mmain[0m() {
+┃[0m [0m    println!([32m"[0m[32mhello world[0m[32m"[0m);
+┃[0m [0m}
+
+[35mgem[0m[34m [0m[32m"[0m[32mexample[0m[32m"[0m
