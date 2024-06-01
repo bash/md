@@ -1,17 +1,17 @@
-use super::{prelude::*, wrap_events, BlockRenderer};
+use super::{prelude::*, wrap_events};
+use crate::block::{render_block_from_event, Block};
 use crate::chars::NO_BREAK_SPACE;
 use crate::prefix::Prefix;
-use crate::render::block;
 use crate::style::StyledStr;
 use crate::FootnoteDefinitionPlacement::*;
 use fmtastic::Superscript;
 use pulldown_cmark::CowStr;
 
-pub(super) struct FootnoteDef<'a> {
-    pub(super) reference: CowStr<'a>,
+pub(crate) struct FootnoteDef<'a> {
+    pub(crate) reference: CowStr<'a>,
 }
 
-impl BlockRenderer for FootnoteDef<'_> {
+impl Block for FootnoteDef<'_> {
     fn kind(&self) -> BlockKind {
         BlockKind::FootnoteDefinition
     }
@@ -48,7 +48,7 @@ impl BlockRenderer for FootnoteDef<'_> {
             for event in terminated!(events, Event::End(TagEnd::FootnoteDefinition)) {
                 match ctx.options().footnote_definition_placement {
                     EndOfDocument => ctx.footnotes().push(&self.reference, event),
-                    InPlace => block(event, events, &ctx, w)?,
+                    InPlace => render_block_from_event(event, events, &ctx, w)?,
                 }
             }
         }
@@ -70,7 +70,7 @@ pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut Writer) -> io::R
                 let ctx = ctx
                     .block(prefix(footnote.number))
                     .styled(Style::new().dimmed());
-                block(event, &mut events, &ctx, w)?
+                render_block_from_event(event, &mut events, &ctx, w)?
             }
         }
     }

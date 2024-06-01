@@ -1,6 +1,7 @@
 use self::classification::{classify, Kind};
-use super::block;
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::render_block_from_event;
+use crate::block::Block;
 use crate::inline::try_into_inlines;
 use crate::inline::Inline;
 use crate::prefix::Prefix;
@@ -9,11 +10,11 @@ use smallvec::{Array, SmallVec};
 
 mod classification;
 
-pub(super) struct BlockQuote {
-    pub(super) kind: Option<BlockQuoteKind>,
+pub(crate) struct BlockQuote {
+    pub(crate) kind: Option<BlockQuoteKind>,
 }
 
-impl BlockRenderer for BlockQuote {
+impl Block for BlockQuote {
     fn kind(&self) -> BlockKind {
         BlockKind::BlockQuote
     }
@@ -29,7 +30,7 @@ impl BlockRenderer for BlockQuote {
         write_title(kind, &ctx, w)?;
         terminated_for! {
             for event in terminated!(events, Event::End(TagEnd::BlockQuote)) {
-                block(event, events, &ctx, w)?;
+                render_block_from_event(event, events, &ctx, w)?;
             }
         }
 

@@ -1,9 +1,10 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::Block;
 use crate::inline::into_inlines;
 
-pub(super) struct Paragraph;
+pub(crate) struct Paragraph;
 
-impl BlockRenderer for Paragraph {
+impl Block for Paragraph {
     fn kind(&self) -> BlockKind {
         BlockKind::Paragraph
     }

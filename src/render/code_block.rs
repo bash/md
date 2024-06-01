@@ -1,12 +1,13 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::Block;
 use crate::syntax_highlighting::{highlight, Options};
 use pulldown_cmark::CodeBlockKind;
 
-pub(super) struct CodeBlock<'a> {
-    pub(super) kind: CodeBlockKind<'a>,
+pub(crate) struct CodeBlock<'a> {
+    pub(crate) kind: CodeBlockKind<'a>,
 }
 
-impl BlockRenderer for CodeBlock<'_> {
+impl Block for CodeBlock<'_> {
     fn kind(&self) -> BlockKind {
         BlockKind::CodeBlock
     }

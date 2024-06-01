@@ -1,13 +1,10 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::Block;
 use crate::fmt_utils::Repeat;
 
-pub(super) struct Rule;
+pub(crate) struct Rule;
 
-impl BlockRenderer for Rule {
-    fn looks_for_end_tag(&self) -> bool {
-        false
-    }
-
+impl Block for Rule {
     fn kind(&self) -> BlockKind {
         BlockKind::Rule
     }

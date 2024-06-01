@@ -1,18 +1,17 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::{render_block_from_event, try_render_block_from_event, Block};
 use crate::inline::{into_inlines, try_into_inlines};
 use crate::prefix::Prefix;
-use crate::render::block;
-use crate::render::try_block;
 use crate::style::StyledStr;
 use fmtastic::BallotBox;
 
 // TODO: refactor
 
-pub(super) struct List {
-    pub(super) first_item_number: Option<u64>,
+pub(crate) struct List {
+    pub(crate) first_item_number: Option<u64>,
 }
 
-impl BlockRenderer for List {
+impl Block for List {
     fn kind(&self) -> BlockKind {
         BlockKind::List
     }
@@ -124,11 +123,11 @@ fn list_item_blocks<'e>(
     ctx: &Context<'_, 'e, '_>,
     w: &mut Writer,
 ) -> io::Result<Option<ListItemState<'e>>> {
-    block(first_event, events, ctx, w)?;
+    render_block_from_event(first_event, events, ctx, w)?;
 
     terminated_for! {
         for event in terminated!(events, Event::End(TagEnd::Item)) {
-            if let Some(rejected_event) = try_block(event, events, ctx, w)? {
+            if let Some(rejected_event) = try_render_block_from_event(event, events, ctx, w)? {
                 return Ok(Some(ListItemState::Inlines(Some(rejected_event))))
             }
         }

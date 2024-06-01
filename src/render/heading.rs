@@ -1,4 +1,5 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::Block;
 use crate::counting::SectionCounter;
 use crate::inline::into_inlines;
 use crate::prefix::Prefix;
@@ -6,11 +7,11 @@ use anstyle::AnsiColor::Green;
 use pulldown_cmark::HeadingLevel;
 use std::fmt::Write as _;
 
-pub(super) struct Heading {
-    pub(super) level: HeadingLevel,
+pub(crate) struct Heading {
+    pub(crate) level: HeadingLevel,
 }
 
-impl BlockRenderer for Heading {
+impl Block for Heading {
     fn kind(&self) -> BlockKind {
         BlockKind::Heading(self.level)
     }

@@ -1,12 +1,13 @@
-use super::{prelude::*, BlockRenderer};
+use super::prelude::*;
+use crate::block::Block;
 use anstyle::AnsiColor::Red;
 use pulldown_cmark::Alignment;
 
-pub(super) struct Table {
-    pub(super) alignments: Vec<Alignment>,
+pub(crate) struct Table {
+    pub(crate) alignments: Vec<Alignment>,
 }
 
-impl BlockRenderer for Table {
+impl Block for Table {
     fn kind(&self) -> BlockKind {
         BlockKind::Table
     }

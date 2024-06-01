@@ -7,6 +7,7 @@ pub use url;
 #[macro_use]
 mod macros;
 
+mod block;
 mod bullets;
 mod chars;
 mod context;
