@@ -1,11 +1,17 @@
-use crate::context::{BlockKind, Context};
-use crate::writer::Writer;
-use crate::Events;
-use pulldown_cmark::Event;
-use std::io;
+use prelude::*;
 
 mod event;
 pub(crate) use event::*;
+
+/// Useful imports when implementing a [`Block`]
+pub(crate) mod prelude {
+    pub(crate) use super::Block;
+    pub(crate) use crate::context::{BlockKind, Context};
+    pub(crate) use crate::writer::Writer;
+    pub(crate) use crate::Events;
+    pub(crate) use pulldown_cmark::{Event, Tag, TagEnd};
+    pub(crate) use std::io::{self, Write as _};
+}
 
 pub(crate) fn render_block<'e, B: Block>(
     block: B,

@@ -4,7 +4,6 @@ use crate::context::State;
 use crate::lookahead::Lookaheadable;
 use crate::options::Options;
 
-mod block_quote;
 mod code_block;
 mod footnote_def;
 mod heading;
@@ -13,7 +12,6 @@ mod paragraph;
 mod rule;
 mod table;
 
-pub(crate) use block_quote::*;
 pub(crate) use code_block::*;
 pub(crate) use footnote_def::*;
 pub(crate) use heading::*;

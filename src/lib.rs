@@ -8,6 +8,7 @@ pub use url;
 mod macros;
 
 mod block;
+mod block_quote;
 mod bullets;
 mod chars;
 mod context;

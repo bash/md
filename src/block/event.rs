@@ -1,6 +1,6 @@
 use crate::block::render_block as render;
+use crate::block_quote::BlockQuote;
 use crate::context::Context;
-use crate::render::BlockQuote;
 use crate::writer::Writer;
 use crate::{CodeBlock, Events, FootnoteDef, Heading, List, Paragraph, Rule, Table};
 use pulldown_cmark::{Event, Tag, TagEnd};
