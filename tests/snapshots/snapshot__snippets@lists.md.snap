@@ -1,0 +1,80 @@
+---
+source: tests/snapshot.rs
+expression: rendered
+input_file: tests/snippets/lists.md
+---
+[1m[4m[32m[0m[1m[4m[32mLists[0m
+
+[1m[32m1. [0m[1m[32mBlock Quote Followed by List[0m
+
+┃[0m [0mBlock quote[0m
+
+[1m• [0mFoo[0m
+[1m• [0mBar[0m
+[1m• [0mBaz[0m
+
+[1m[32m2. [0m[1m[32mOrdered List[0m
+
+[1m1. [0mLorem ipsum dolor sit amet, [0m
+[1m   [0mconsectetur adipiscing elit, sed do [0m
+[1m   [0meiusmod tempor incididunt ut labore [0m
+[1m   [0met dolore magna aliqua. Ut enim ad [0m
+[1m   [0mminim veniam, quis nostrud [0m
+[1m   [0mexercitation ullamco laboris nisi ut [0m
+[1m   [0maliquip ex ea commodo consequat.[0m
+[1m2. [0mDuis aute irure dolor in [0m
+[1m   [0mreprehenderit in voluptate velit [0m
+[1m   [0messe cillum dolore eu fugiat nulla [0m
+[1m   [0mpariatur.[0m
+[1m   [0m[1m1. [0mNested[0m
+[1m   [0m[1m2. [0mThings[0m
+[1m3. [0mExcepteur sint occaecat cupidatat [0m
+[1m   [0mnon proident, sunt in culpa qui [0m
+[1m   [0mofficia deserunt mollit anim id est [0m
+[1m   [0mlaborum.[0m
+
+[1m[32m3. [0m[1m[32mUnordered List[0m
+
+[1m• [0mFoo[0m
+[1m• [0mBar[0m
+[1m• [0mBaz[0m
+
+[1m[32m4. [0m[1m[32mList Formatting[0m
+
+[1m1. [0m[1mBold Text[0m[0m
+[1m2. [0mCode Block[0m
+[1m   [0mconsole[35m.[0m[36mlog[0m([32m'[0m[32mhello world[0m[32m'[0m)
+[1m   [0mwith text after code block[0m
+[1m3. [0mSublist with text before[0m
+[1m   [0m[1m◦ [0mfoo[0m
+[1m   [0m[1m◦ [0mbar[0m
+[1m   [0m[1m◦ [0mbaz and text after[0m
+
+[1m[32m5. [0m[1m[32mQuoted List[0m
+
+┃[0m [0m[1m1. [0mWow[0m
+┃[0m [0m[1m2. [0mWhat[0m
+┃[0m [0m[1m3. [0mA[0m
+┃[0m [0m[1m4. [0mQuote[0m
+
+[1m[32m6. [0m[1m[32mDeeply Nested List[0m
+
+[1m1. [0mWow[0m
+[1m   [0m[1m1. [0mMuch[0m
+[1m   [0m[1m   [0m[1m1. [0mNesting[0m
+[1m   [0m[1m   [0m[1m   [0m[1m1. [0mSuch[0m
+[1m   [0m[1m   [0m[1m   [0m[1m   [0m[1m1. [0mDeep[0m
+[1m   [0m[1m   [0m[1m   [0m[1m   [0m[1m   [0m[1m1. [0mList[0m
+
+[1m• [0mWow[0m
+[1m  [0m[1m◦ [0mMuch[0m
+[1m  [0m[1m  [0m[1m▪ [0mNesting[0m
+[1m  [0m[1m  [0m[1m  [0m[1m‣ [0mSuch[0m
+[1m  [0m[1m  [0m[1m  [0m[1m  [0m[1m• [0mDeep[0m
+[1m  [0m[1m  [0m[1m  [0m[1m  [0m[1m  [0m[1m◦ [0mList[0m
+
+[1m[32m7. [0m[1m[32mTasks[0m
+
+☐ [0mbuy groceries[0m
+☒ [0mclean kitchen[0m
+☒ [0mfix bathroom lights[0m
