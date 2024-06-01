@@ -56,24 +56,21 @@ impl<'a, 'e, 's> Context<'a, 'e, 's> {
     pub(crate) fn block<'b: 'a>(
         &'b self,
         prefix: impl Into<Option<Prefix>>,
+        style: impl Into<Style>,
     ) -> Context<'b, 'e, 's> {
+        let style = style.into().on_top_of(self.style);
         let prefix = match prefix.into() {
-            Some(p) => self.prefix.link(p),
+            Some(p) => self.prefix.link(p, style),
             None => self.prefix.reborrow(),
         };
         Self {
             prefix,
-            style: self.style,
+            style,
             previous_block: Cell::default(),
             current_block: Cell::default(),
             list_depth: self.list_depth,
             state: self.state,
         }
-    }
-
-    pub(crate) fn styled(mut self, style: Style) -> Self {
-        self.style = style.on_top_of(self.style);
-        self
     }
 
     pub(crate) fn list_depth_incremented(mut self) -> Self {

@@ -26,7 +26,7 @@ impl Block for Heading {
 
         let style = heading_style(self.level);
         let prefix = Prefix::continued(numbering(ctx.counters().section()));
-        let ctx = ctx.block(prefix).styled(style);
+        let ctx = ctx.block(prefix, style);
 
         let writer = w.inline_writer(&ctx);
         writer.write_all(

@@ -1,7 +1,6 @@
 use crate::context::Context;
 use crate::inline::{InlineWriter, WritePrefixFn};
 use crate::prefix::PrefixChain;
-use anstyle::Style;
 use std::io::{self, Write};
 
 /// Wrapper around an [`Write`] with some convenience on top.
@@ -13,7 +12,7 @@ impl<'w> Writer<'w> {
     }
 
     pub(crate) fn write_prefix(&mut self, ctx: &Context) -> io::Result<()> {
-        write_prefix(ctx.prefix_chain(), ctx.style(), self)
+        write_prefix(ctx.prefix_chain(), self)
     }
 
     pub(super) fn write_blank_line(&mut self, ctx: &Context) -> io::Result<()> {
@@ -27,10 +26,9 @@ impl<'w> Writer<'w> {
         &mut self,
         ctx: &'p Context<'p, '_, '_>,
     ) -> InlineWriter<'a, '_, impl WritePrefixFn + 'p> {
-        let style = ctx.style();
         let prefix = ctx.prefix_chain();
         InlineWriter::new(ctx.style(), ctx.available_width(), self, move |w| {
-            write_prefix(prefix, style, w)
+            write_prefix(prefix, w)
         })
     }
 
@@ -65,6 +63,6 @@ impl Write for Writer<'_> {
     }
 }
 
-fn write_prefix(prefix: &PrefixChain<'_>, style: Style, w: &mut dyn Write) -> io::Result<()> {
-    write!(w, "{}", prefix.display_next(style))
+fn write_prefix(prefix: &PrefixChain<'_>, w: &mut dyn Write) -> io::Result<()> {
+    write!(w, "{}", prefix.display_next())
 }

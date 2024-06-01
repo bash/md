@@ -33,7 +33,7 @@ input_file: tests/snippets/nesting.md
 ┃[0m [0m┃[0m [0m┃[0m [0mut tristique et egestas quis ipsum. Arcu vitae elementum curabitur vitae nunc sed velit dignissim [0m
 ┃[0m [0m┃[0m [0m┃[0m [0msodales. Feugiat pretium nibh ipsum consequat nisl. Neque gravida in fermentum et sollicitudin ac.[0m
 
-[1m[32m┃[0m [0m[1m[32m1. [0m[1m[32mCode Block inside Quote[0m
+┃[0m [0m[1m[32m1. [0m[1m[32mCode Block inside Quote[0m
 ┃[0m [0m
 ┃[0m [0m[35mfn[0m [34mmain[0m() {
 ┃[0m [0m    println!([32m"[0m[32mhello world[0m[32m"[0m);

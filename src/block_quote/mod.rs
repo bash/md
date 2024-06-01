@@ -42,7 +42,7 @@ fn write_block_quote<'e>(
     w: &mut Writer,
 ) -> io::Result<()> {
     let kind = classify(events, kind);
-    let ctx = ctx.block(prefix(kind));
+    let ctx = ctx.block(prefix(kind), Style::default());
 
     write_title(kind, &ctx, w)?;
 
@@ -79,6 +79,6 @@ fn write_author<'a>(
     // https://english.stackexchange.com/a/59320
     // It's also how wikipedia displays block quotes with
     // an author: https://en.wikipedia.org/wiki/Template:Blockquote
-    let ctx = ctx.block(Prefix::continued("    ― ")).styled(Style::new());
+    let ctx = ctx.block(Prefix::continued("    ― "), Style::new());
     w.inline_writer(&ctx).write_all(inlines)
 }

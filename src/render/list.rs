@@ -76,7 +76,9 @@ fn item<'e>(
     w: &mut Writer,
 ) -> io::Result<()> {
     let list_type = list_style_type_from_item(events).unwrap_or(list_type);
-    let ctx = ctx.block(prefix(&list_type)).list_depth_incremented();
+    let ctx = ctx
+        .block(prefix(&list_type), Style::default())
+        .list_depth_incremented();
     let mut list_state = Some(ListItemState::Inlines(None));
 
     while let Some(s) = list_state.take() {

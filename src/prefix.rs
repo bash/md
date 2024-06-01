@@ -1,4 +1,4 @@
-use crate::style::StyledStr;
+use crate::style::{StyleExt as _, StyledStr};
 use crate::textwrap::DisplayWidth;
 use anstyle::Style;
 use std::cell::RefCell;
@@ -53,25 +53,26 @@ impl Prefix {
 
 #[derive(Debug)]
 pub(crate) enum PrefixChain<'a> {
-    Start(Option<Prefix>),
-    Link(&'a PrefixChain<'a>, Prefix, usize),
+    Start(Option<Prefix>, Style),
+    Link(&'a PrefixChain<'a>, Prefix, Style, usize),
     Borrowed(&'a PrefixChain<'a>),
 }
 
 impl Default for PrefixChain<'_> {
     fn default() -> Self {
-        PrefixChain::Start(None)
+        PrefixChain::Start(None, Style::new())
     }
 }
 
 impl<'a: 'b, 'b> PrefixChain<'a> {
-    pub(crate) fn link(&'a self, prefix: Prefix) -> PrefixChain<'a> {
+    pub(crate) fn link(&'a self, prefix: Prefix, style: Style) -> PrefixChain<'a> {
         let width = self.width() + prefix.width();
+        let style = style.on_top_of(self.style());
         match self {
-            PrefixChain::Start(None) => PrefixChain::Start(Some(prefix)),
-            PrefixChain::Start(Some(_)) => PrefixChain::Link(self, prefix, width),
-            PrefixChain::Link(..) => PrefixChain::Link(self, prefix, width),
-            PrefixChain::Borrowed(left) => PrefixChain::Link(left, prefix, width),
+            PrefixChain::Start(None, _) => PrefixChain::Start(Some(prefix), style),
+            PrefixChain::Start(Some(_), _) => PrefixChain::Link(self, prefix, style, width),
+            PrefixChain::Link(..) => PrefixChain::Link(self, prefix, style, width),
+            PrefixChain::Borrowed(left) => PrefixChain::Link(left, prefix, style, width),
         }
     }
 
@@ -83,17 +84,25 @@ impl<'a: 'b, 'b> PrefixChain<'a> {
         }
     }
 
-    pub(crate) fn display_next(&'a self, fallback: Style) -> DisplayPrefixChain<'a> {
-        DisplayPrefixChain(self, fallback)
+    pub(crate) fn display_next(&'a self) -> DisplayPrefixChain<'a> {
+        DisplayPrefixChain(self)
+    }
+
+    fn style(&self) -> Style {
+        match self {
+            PrefixChain::Start(_, style) => *style,
+            PrefixChain::Link(_, _, style, _) => *style,
+            PrefixChain::Borrowed(b) => b.style(),
+        }
     }
 }
 
 impl UnicodeWidthStr for PrefixChain<'_> {
     fn width(&self) -> usize {
         match self {
-            PrefixChain::Start(None) => 0,
-            PrefixChain::Start(Some(start)) => start.width(),
-            PrefixChain::Link(_, _, width) => *width,
+            PrefixChain::Start(None, _) => 0,
+            PrefixChain::Start(Some(start), _) => start.width(),
+            PrefixChain::Link(_, _, _, width) => *width,
             PrefixChain::Borrowed(inner) => inner.width(),
         }
     }
@@ -103,18 +112,18 @@ impl UnicodeWidthStr for PrefixChain<'_> {
     }
 }
 
-pub(crate) struct DisplayPrefixChain<'a>(&'a PrefixChain<'a>, Style);
+pub(crate) struct DisplayPrefixChain<'a>(&'a PrefixChain<'a>);
 
 impl fmt::Display for DisplayPrefixChain<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.0 {
-            PrefixChain::Start(None) => Ok(()),
-            PrefixChain::Start(Some(prefix)) => {
-                write!(f, "{}", prefix.take_next().on_top_of(self.1))
+            PrefixChain::Start(None, _) => Ok(()),
+            PrefixChain::Start(Some(prefix), style) => {
+                write!(f, "{}", prefix.take_next().on_top_of(*style))
             }
-            PrefixChain::Link(chain, prefix, _) => {
-                write!(f, "{}", chain.display_next(self.1))?;
-                write!(f, "{}", prefix.take_next().on_top_of(self.1))
+            PrefixChain::Link(chain, prefix, style, _) => {
+                write!(f, "{}", chain.display_next())?;
+                write!(f, "{}", prefix.take_next().on_top_of(*style))
             }
             PrefixChain::Borrowed(chain) => chain.fmt(f),
         }

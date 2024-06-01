@@ -42,7 +42,7 @@ impl Block for FootnoteDef<'_> {
         // TODO: dimmed only has an effect on dark backgrounds,
         // we should have a solution for light themes too...
         let number = ctx.footnotes().get_number(&self.reference);
-        let ctx = ctx.block(prefix(number)).styled(Style::new().dimmed());
+        let ctx = ctx.block(prefix(number), Style::new().dimmed());
 
         terminated_for! {
             for event in terminated!(events, Event::End(TagEnd::FootnoteDefinition)) {
@@ -67,9 +67,7 @@ pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut Writer) -> io::R
             let mut events = footnote.events.into_iter();
             let mut events = wrap_events(&mut events);
             while let Some(event) = events.next() {
-                let ctx = ctx
-                    .block(prefix(footnote.number))
-                    .styled(Style::new().dimmed());
+                let ctx = ctx.block(prefix(footnote.number), Style::new().dimmed());
                 render_block_from_event(event, &mut events, &ctx, w)?
             }
         }
