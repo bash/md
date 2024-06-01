@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 use url::Url;
 
+// TODO: Typst has a wonderful numbering system:
+// https://github.com/typst/typst/blob/23746ee18901e08852306f35639298ad234d3481/crates/typst/src/model/numbering.rs
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Options {
