@@ -27,7 +27,7 @@ impl<'w> Writer<'w> {
         ctx: &'p Context<'p, '_, '_>,
     ) -> InlineWriter<'a, '_, impl WritePrefixFn + 'p> {
         let prefix = ctx.prefix_chain();
-        InlineWriter::new(ctx.style(), ctx.available_width(), self, move |w| {
+        InlineWriter::new(ctx.style(), ctx.text_width(), self, move |w| {
             write_prefix(prefix, w)
         })
     }

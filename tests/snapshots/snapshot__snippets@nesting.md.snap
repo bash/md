@@ -5,33 +5,36 @@ input_file: tests/snippets/nesting.md
 ---
 [1m[4m[32m[0m[1m[4m[32mNesting[0m
 
-┃[0m [0mLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore [0m
-┃[0m [0mmagna aliqua. Vitae tempus quam pellentesque nec nam aliquam sem et. Dui nunc mattis enim ut tellus elementum [0m
-┃[0m [0msagittis vitae. Feugiat pretium nibh ipsum consequat nisl vel pretium lectus. Turpis massa sed elementum tempus [0m
-┃[0m [0megestas sed sed risus pretium. Ac turpis egestas sed tempus urna et pharetra. Pellentesque habitant morbi [0m
-┃[0m [0mtristique senectus et netus et malesuada. Volutpat consequat mauris nunc congue nisi vitae suscipit tellus. [0m
-┃[0m [0mPretium aenean pharetra magna ac placerat. Vitae suscipit tellus mauris a.[0m
+┃[0m [0mLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore [0m
+┃[0m [0met dolore magna aliqua. Vitae tempus quam pellentesque nec nam aliquam sem et. Dui nunc mattis enim [0m
+┃[0m [0mut tellus elementum sagittis vitae. Feugiat pretium nibh ipsum consequat nisl vel pretium lectus. [0m
+┃[0m [0mTurpis massa sed elementum tempus egestas sed sed risus pretium. Ac turpis egestas sed tempus urna [0m
+┃[0m [0met pharetra. Pellentesque habitant morbi tristique senectus et netus et malesuada. Volutpat [0m
+┃[0m [0mconsequat mauris nunc congue nisi vitae suscipit tellus. Pretium aenean pharetra magna ac placerat. [0m
+┃[0m [0mVitae suscipit tellus mauris a.[0m
 ┃[0m [0m
 ┃[0m [0m◈─────────────────────────────────────────────────────────────────────────────────────────────────────────────────◈
 ┃[0m [0m
-┃[0m [0m┃[0m [0mA condimentum vitae sapien pellentesque. Quis auctor elit sed vulputate mi sit. Iaculis at erat pellentesque [0m
-┃[0m [0m┃[0m [0madipiscing commodo elit at imperdiet. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi [0m
-┃[0m [0m┃[0m [0mnullam. Mauris a diam maecenas sed enim ut. Et pharetra pharetra massa massa. Facilisi morbi tempus iaculis [0m
-┃[0m [0m┃[0m [0murna id volutpat lacus laoreet non. Euismod elementum nisi quis eleifend quam adipiscing. Placerat orci nulla [0m
-┃[0m [0m┃[0m [0mpellentesque dignissim enim sit amet venenatis urna. Magna sit amet purus gravida quis blandit turpis cursus [0m
-┃[0m [0m┃[0m [0min. Erat nam at lectus urna duis. Sed vulputate mi sit amet. Mattis ullamcorper velit sed ullamcorper morbi. [0m
-┃[0m [0m┃[0m [0mPosuere lorem ipsum dolor sit amet consectetur adipiscing elit duis. Est ultricies integer quis auctor elit [0m
-┃[0m [0m┃[0m [0msed vulputate. Sed faucibus turpis in eu mi. Mauris a diam maecenas sed enim. Sed turpis tincidunt id aliquet [0m
+┃[0m [0m┃[0m [0mA condimentum vitae sapien pellentesque. Quis auctor elit sed vulputate mi sit. Iaculis at erat [0m
+┃[0m [0m┃[0m [0mpellentesque adipiscing commodo elit at imperdiet. Duis tristique sollicitudin nibh sit amet [0m
+┃[0m [0m┃[0m [0mcommodo nulla facilisi nullam. Mauris a diam maecenas sed enim ut. Et pharetra pharetra massa [0m
+┃[0m [0m┃[0m [0mmassa. Facilisi morbi tempus iaculis urna id volutpat lacus laoreet non. Euismod elementum nisi [0m
+┃[0m [0m┃[0m [0mquis eleifend quam adipiscing. Placerat orci nulla pellentesque dignissim enim sit amet venenatis [0m
+┃[0m [0m┃[0m [0murna. Magna sit amet purus gravida quis blandit turpis cursus in. Erat nam at lectus urna duis. Sed [0m
+┃[0m [0m┃[0m [0mvulputate mi sit amet. Mattis ullamcorper velit sed ullamcorper morbi. Posuere lorem ipsum dolor [0m
+┃[0m [0m┃[0m [0msit amet consectetur adipiscing elit duis. Est ultricies integer quis auctor elit sed vulputate. [0m
+┃[0m [0m┃[0m [0mSed faucibus turpis in eu mi. Mauris a diam maecenas sed enim. Sed turpis tincidunt id aliquet [0m
 ┃[0m [0m┃[0m [0mrisus feugiat in.[0m
 ┃[0m [0m┃[0m [0m
-┃[0m [0m┃[0m [0m┃[0m [0mEget est lorem ipsum dolor sit amet consectetur adipiscing elit. Varius vel pharetra vel turpis nunc [0m
-┃[0m [0m┃[0m [0m┃[0m [0meget. Consequat semper viverra nam libero justo laoreet sit amet cursus. Ac placerat vestibulum lectus [0m
-┃[0m [0m┃[0m [0m┃[0m [0mmauris ultrices. Rhoncus urna neque viverra justo nec ultrices. Cursus sit amet dictum sit amet justo [0m
-┃[0m [0m┃[0m [0m┃[0m [0mdonec enim diam. Eu consequat ac felis donec et odio pellentesque. Lacus suspendisse faucibus interdum [0m
-┃[0m [0m┃[0m [0m┃[0m [0mposuere lorem ipsum. Laoreet sit amet cursus sit amet. Congue eu consequat ac felis donec et odio [0m
-┃[0m [0m┃[0m [0m┃[0m [0mpellentesque diam. Arcu non sodales neque sodales. Arcu felis bibendum ut tristique et. Felis bibendum [0m
-┃[0m [0m┃[0m [0m┃[0m [0mut tristique et egestas quis ipsum. Arcu vitae elementum curabitur vitae nunc sed velit dignissim [0m
-┃[0m [0m┃[0m [0m┃[0m [0msodales. Feugiat pretium nibh ipsum consequat nisl. Neque gravida in fermentum et sollicitudin ac.[0m
+┃[0m [0m┃[0m [0m┃[0m [0mEget est lorem ipsum dolor sit amet consectetur adipiscing elit. Varius vel pharetra vel turpis [0m
+┃[0m [0m┃[0m [0m┃[0m [0mnunc eget. Consequat semper viverra nam libero justo laoreet sit amet cursus. Ac placerat [0m
+┃[0m [0m┃[0m [0m┃[0m [0mvestibulum lectus mauris ultrices. Rhoncus urna neque viverra justo nec ultrices. Cursus sit amet [0m
+┃[0m [0m┃[0m [0m┃[0m [0mdictum sit amet justo donec enim diam. Eu consequat ac felis donec et odio pellentesque. Lacus [0m
+┃[0m [0m┃[0m [0m┃[0m [0msuspendisse faucibus interdum posuere lorem ipsum. Laoreet sit amet cursus sit amet. Congue eu [0m
+┃[0m [0m┃[0m [0m┃[0m [0mconsequat ac felis donec et odio pellentesque diam. Arcu non sodales neque sodales. Arcu felis [0m
+┃[0m [0m┃[0m [0m┃[0m [0mbibendum ut tristique et. Felis bibendum ut tristique et egestas quis ipsum. Arcu vitae elementum [0m
+┃[0m [0m┃[0m [0m┃[0m [0mcurabitur vitae nunc sed velit dignissim sodales. Feugiat pretium nibh ipsum consequat nisl. Neque [0m
+┃[0m [0m┃[0m [0m┃[0m [0mgravida in fermentum et sollicitudin ac.[0m
 
 ┃[0m [0m[1m[32m1. [0m[1m[32mCode Block inside Quote[0m
 ┃[0m [0m
