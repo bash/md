@@ -1,8 +1,9 @@
 use insta::{assert_snapshot, glob};
-use matte::{render, supported_parser_options, Options};
+use matte::{render, supported_parser_options, HeadingDecoration, Options};
 use pulldown_cmark::{Event, MetadataBlockKind, Options as ParserOptions, Parser, Tag};
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use std::fs::read_to_string;
+use std::str::FromStr;
 
 #[test]
 fn test_snippets() {
@@ -17,7 +18,13 @@ fn render_to_string(input: &str) -> String {
     let parser = Parser::new_ext(input, supported_parser_options());
     let mut buffer = Vec::new();
     let snippet_options = read_snippet_options(input);
-    let options = Options::plain_text(snippet_options.width.unwrap_or(120));
+    let mut options = Options::plain_text(snippet_options.width.unwrap_or(120));
+    options.heading_decoration = Some(
+        snippet_options
+            .heading_decoration
+            .map(|h| h.0)
+            .unwrap_or(HeadingDecoration::default()),
+    );
     render(parser, &mut buffer, options).unwrap();
     String::from_utf8(buffer).unwrap()
 }
@@ -48,4 +55,22 @@ fn extract_frontmatter(input: &str) -> String {
 #[derive(Deserialize)]
 struct SnippetOptions {
     width: Option<u16>,
+    heading_decoration: Option<DeserializeFromStr<HeadingDecoration>>,
+}
+
+struct DeserializeFromStr<T>(T);
+
+impl<'de, T> serde::Deserialize<'de> for DeserializeFromStr<T>
+where
+    T: FromStr,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let str: String = Deserialize::deserialize(deserializer)?;
+        T::from_str(&str)
+            .map(DeserializeFromStr)
+            .map_err(|_| serde::de::Error::custom("invalid value"))
+    }
 }

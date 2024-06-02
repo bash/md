@@ -1,3 +1,4 @@
+use crate::heading::HeadingDecoration;
 use std::marker::PhantomData;
 use url::Url;
 
@@ -17,6 +18,8 @@ pub struct Options {
     /// relative links found in the document.
     pub base_url: Option<Url>,
     pub footnote_definition_placement: FootnoteDefinitionPlacement,
+
+    pub heading_decoration: HeadingDecoration,
 }
 
 /// Where to place footnote definitions.
@@ -66,6 +69,7 @@ impl Options {
             hyperlinks: true,
             base_url: None,
             footnote_definition_placement: FootnoteDefinitionPlacement::default(),
+            heading_decoration: HeadingDecoration::default(),
         }
     }
 }
