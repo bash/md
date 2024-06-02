@@ -923,7 +923,7 @@ checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
 [[package]]
 name = "unicode-linebreak-chunked"
 version = "0.1.0"
-source = "git+https://github.com/bash/unicode-linebreak-chunked.git?branch=tables#420795848f26663f5d6962e211f0dd9323152d9d"
+source = "git+https://github.com/bash/unicode-linebreak-chunked.git?branch=tables#e5fe4073685193638ce4df2a3d3f11048f49637c"
 
 [[package]]
 name = "unicode-normalization"

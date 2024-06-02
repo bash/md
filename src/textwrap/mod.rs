@@ -8,8 +8,7 @@ mod tests;
 
 use buffer::{BufferedChunk, ChunkBuffer};
 use fragment::{Fragment, LinebreaksExt as _};
-use pulldown_cmark::{CowStr, InlineStr};
-use std::ops::Index;
+use pulldown_cmark::CowStr;
 use trait_set::trait_set;
 use unicode_linebreak_chunked::{BreakOpportunity, Linebreaks};
 use unicode_width::UnicodeWidthStr as _;
@@ -120,20 +119,14 @@ impl<'a, P> ChunkLayouter<'a, P> {
     }
 
     fn text<E>(&mut self, s: CowStr<'a>, mut f: impl for<'c> ChunkFn<'c, P, E>) -> Result<(), E> {
-        for fragment in self.line_breaks.fragments(&s) {
+        for fragment in self.line_breaks.fragments(s) {
             match fragment {
-                Fragment::Complete(range, opportunity) => {
-                    yield_(
-                        CowStr::Borrowed(&s[range]),
-                        &mut f,
-                        &mut self.state,
-                        &mut self.buffer,
-                        opportunity,
-                    )?;
+                Fragment::Complete(text, opportunity) => {
+                    yield_(text, &mut f, &mut self.state, &mut self.buffer, opportunity)?;
                 }
-                Fragment::Partial(range) => {
+                Fragment::Partial(text) => {
                     self.buffer
-                        .push(BufferedChunk::Text(DisplayWidth::from(slice(&s, range))));
+                        .push(BufferedChunk::Text(DisplayWidth::from(text)));
                 }
             }
         }
@@ -147,18 +140,6 @@ impl<'a, P> ChunkLayouter<'a, P> {
             self.buffer.push(BufferedChunk::Passthrough(p));
             Ok(())
         }
-    }
-}
-
-fn slice<'a, Idx>(s: &CowStr<'a>, idx: Idx) -> CowStr<'a>
-where
-    str: Index<Idx, Output = str>,
-{
-    match s {
-        CowStr::Boxed(b) => CowStr::from(b[idx].to_owned()),
-        CowStr::Borrowed(b) => CowStr::Borrowed(&b[idx]),
-        // This will always work because our new inlined string is always shorter or the same size
-        CowStr::Inlined(i) => CowStr::Inlined(InlineStr::try_from(&i[idx]).unwrap()),
     }
 }
 

@@ -1,38 +1,79 @@
-use std::iter;
-use std::ops::Range;
+use pulldown_cmark::{CowStr, InlineStr};
+use std::mem;
+use std::ops::Index;
 use unicode_linebreak_chunked::{BreakOpportunity, Linebreaks};
 
 // A piece of text that doesn't contain
 // any break opportunities.
 #[derive(Debug)]
-pub(super) enum Fragment {
-    Complete(Range<usize>, BreakOpportunity),
-    Partial(Range<usize>),
+pub(super) enum Fragment<'a> {
+    Complete(CowStr<'a>, BreakOpportunity),
+    Partial(CowStr<'a>),
 }
 
 pub(super) trait LinebreaksExt {
-    fn fragments<'a>(&'a mut self, s: &'a str) -> impl Iterator<Item = Fragment> + 'a;
+    fn fragments<'a>(&mut self, s: CowStr<'a>) -> impl Iterator<Item = Fragment<'a>>;
 }
 
 impl LinebreaksExt for Linebreaks {
-    fn fragments<'a>(&'a mut self, s: &'a str) -> impl Iterator<Item = Fragment> + 'a {
-        let mut breaks = self.chunk(s);
-        let mut start = 0;
-        iter::from_fn(move || match breaks.next() {
-            Some((index, opportunity)) => {
-                let end = index - trailing_newline_len(&s[start..index]);
-                let fragment = Fragment::Complete(start..end, opportunity);
-                start = index;
-                Some(fragment)
+    fn fragments<'a>(&mut self, s: CowStr<'a>) -> impl Iterator<Item = Fragment<'a>> {
+        FragmentsIter {
+            input: s,
+            linebreaks: self,
+            start: 0,
+            fragment_start: 0,
+        }
+    }
+}
+
+struct FragmentsIter<'l, 'a> {
+    input: CowStr<'a>,
+    start: usize,
+    fragment_start: usize,
+    linebreaks: &'l mut Linebreaks,
+}
+
+impl<'l, 'a> Iterator for FragmentsIter<'l, 'a> {
+    type Item = Fragment<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.linebreaks.chunk(&self.input, self.start) {
+            Some((index, next_start, opportunity)) => {
+                let fragment = fragment(&mut self.input, self.fragment_start, index);
+                self.start = next_start;
+                self.fragment_start = index;
+                Some(Fragment::Complete(fragment, opportunity))
             }
-            None if start < s.len() => {
-                let end = s.len() - trailing_newline_len(&s[start..]);
-                let fragment = Fragment::Partial(start..end);
-                start = s.len();
-                Some(fragment)
+            None if self.fragment_start < self.input.len() => {
+                let end = self.input.len();
+                let fragment = fragment(&mut self.input, self.fragment_start, end);
+                self.start = self.input.len();
+                self.fragment_start = self.input.len();
+                Some(Fragment::Partial(fragment))
             }
-            None => None,
-        })
+            None => {
+                self.start = self.input.len();
+                self.fragment_start = self.input.len();
+                None
+            }
+        }
+    }
+}
+
+fn fragment<'a>(s: &mut CowStr<'a>, start: usize, end: usize) -> CowStr<'a> {
+    let end = end - trailing_newline_len(&s[start..end]);
+    slice(s, start, end)
+}
+
+fn slice<'a>(s: &mut CowStr<'a>, start: usize, end: usize) -> CowStr<'a> {
+    match s {
+        // If the range covers the entire input we know that we're not called again
+        // so we take the entire CowStr...
+        _ if start == 0 && end == s.len() => mem::replace(s, CowStr::Borrowed("")),
+        CowStr::Boxed(b) => CowStr::from(b[start..end].to_owned()),
+        CowStr::Borrowed(b) => CowStr::Borrowed(&b[start..end]),
+        // This will always work because our new inlined string is always shorter or the same size
+        CowStr::Inlined(i) => CowStr::Inlined(InlineStr::try_from(&i[start..end]).unwrap()),
     }
 }
 
@@ -57,18 +98,18 @@ mod tests {
         let mut l = Linebreaks::default();
 
         assert_eq!(
-            fragments_str(input, &mut l).collect::<Vec<_>>(),
+            fragments_str(CowStr::Borrowed(input), &mut l).collect::<Vec<_>>(),
             &["foo", "bar", "baz"]
         );
     }
 
-    fn fragments_str<'a: 'l, 'l>(
-        s: &'a str,
-        l: &'l mut Linebreaks,
-    ) -> impl Iterator<Item = &'a str> + 'l {
+    fn fragments_str<'a>(
+        s: CowStr<'a>,
+        l: &'a mut Linebreaks,
+    ) -> impl Iterator<Item = String> + 'a {
         l.fragments(s).map(|f| match f {
-            Complete(range, _) => &s[range],
-            Partial(range) => &s[range],
+            Complete(s, _) => s.to_string(),
+            Partial(s) => s.to_string(),
         })
     }
 }
