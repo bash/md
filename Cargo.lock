@@ -216,8 +216,8 @@ dependencies = [
 
 [[package]]
 name = "fmtastic"
-version = "0.2.0"
-source = "git+https://github.com/bash/fmtastic.git#736fae7eedaaae6886b8b0ce73e1e4c31bbee062"
+version = "0.2.1"
+source = "git+https://github.com/bash/fmtastic.git#fb3ecc1f30272061eda846f0907a3bd3c3156366"
 
 [[package]]
 name = "fnv"
@@ -370,10 +370,7 @@ dependencies = [
  "matte-language-names",
  "pulldown-cmark",
  "serde",
- "shell-words",
  "smallvec",
- "terminal_size",
- "thiserror",
  "toml",
  "trait-set",
  "unicode-linebreak-chunked",
@@ -391,6 +388,16 @@ dependencies = [
  "serde",
  "serde_json",
  "syntect",
+]
+
+[[package]]
+name = "md"
+version = "0.1.0"
+dependencies = [
+ "matte",
+ "shell-words",
+ "terminal_size",
+ "thiserror",
 ]
 
 [[package]]
@@ -856,9 +863,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "toml"
-version = "0.8.13"
+version = "0.8.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4e43f8cc456c9704c851ae29c67e17ef65d2c30017c17a9765b89c382dc8bba"
+checksum = "6f49eb2ab21d2f26bd6db7bf383edc527a7ebaee412d17af4d40fdccd442f335"
 dependencies = [
  "serde",
  "serde_spanned",
@@ -877,9 +884,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.22.13"
+version = "0.22.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c127785850e8c20836d49732ae6abfa47616e60bf9d9f57c43c250361a9db96c"
+checksum = "f21c7aaf97f1bd9ca9d4f9e73b0a6c74bd5afef56f2bc931943a6e1c37e04e38"
 dependencies = [
  "indexmap",
  "serde",

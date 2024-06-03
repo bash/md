@@ -1,13 +1,13 @@
-use anstyle::{Reset, Style};
+use matte::anstyle::{Reset, Style};
 use matte::file_uri::{current_dir, file_in_current_dir};
-use matte::{render, supported_parser_options, Options, Theme};
+use matte::pulldown_cmark::Parser;
+use matte::url::Url;
+use matte::{render, supported_parser_options, Options};
 use output::Output;
 use paging::PagingChoice;
-use pulldown_cmark::Parser;
 use std::io::{stdin, ErrorKind, IsTerminal, Read};
 use std::path::Path;
 use std::{env, fs};
-use url::Url;
 
 mod file_detection;
 mod output;

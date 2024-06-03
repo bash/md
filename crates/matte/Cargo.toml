@@ -1,0 +1,22 @@
+[package]
+name = "matte"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anstyle.workspace = true
+bat.workspace = true
+fmtastic.workspace = true
+hostname.workspace = true
+matte-language-names = { path = "../matte-language-names" }
+pulldown-cmark.workspace = true
+smallvec.workspace = true
+trait-set.workspace = true
+unicode-linebreak-chunked.workspace = true
+unicode-width.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+insta = { workspace = true, features = ["glob"] }
+serde = { workspace = true, features = ["derive"] }
+toml.workspace = true

@@ -1,6 +1,7 @@
 //! `>_` Matte—Your friendly neighbourhood **ma**rkdown **te**rminal renderer.
 
 // Re-exports of crates that we use in our public API.
+pub use anstyle;
 pub use pulldown_cmark;
 pub use url;
 

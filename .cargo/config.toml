@@ -1,2 +1,0 @@
-[alias]
-md = ["run", "--features", "cli"]

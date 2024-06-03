@@ -1,0 +1,10 @@
+[package]
+name = "md"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+matte = { path = "../matte" }
+shell-words.workspace = true
+terminal_size.workspace = true
+thiserror.workspace = true
