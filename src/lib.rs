@@ -30,5 +30,4 @@ mod writer;
 pub use options::*;
 pub use render::*;
 pub mod file_uri;
-pub use heading::*;
 pub use themes::*;

@@ -107,7 +107,9 @@ where
 }
 
 fn line_end<F>(ctx: &mut WriterState<'_, F>) -> io::Result<()> {
-    write!(ctx.writer, "{}", Reset)?;
+    if !ctx.style_stack.head().is_plain() {
+        write!(ctx.writer, "{}", Reset)?;
+    }
     if ctx.link.as_ref().is_some() {
         write!(ctx.writer, "{CloseHyperlink}")?;
     }

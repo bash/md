@@ -5,6 +5,6 @@ input_file: tests/snippets/image-alt.md
 ---
 [1m[4m[32mImage Alt Text[0m
 
-[7m🖼 Build Status[0m [7m🖼 Coverage Status[0m [7m🖼 Code Style[0m [7m🖼 NPM[0m[0m
+[7m🖼 Build Status[0m [7m🖼 Coverage Status[0m [7m🖼 Code Style[0m [7m🖼 NPM[0m
 
-[7m🖼 This project has a very [3m[7mambitious[0m[7m [7m[9mroadmap[0m[7m for [3m[7m[33mdiscovering[0m[7m and [1m[7mimplementing[0m[7m new algorithms.[0m[0m
+[7m🖼 This project has a very [3m[7mambitious[0m[7m [7m[9mroadmap[0m[7m for [3m[7m[33mdiscovering[0m[7m and [1m[7mimplementing[0m[7m new algorithms.[0m
