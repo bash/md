@@ -1,10 +1,9 @@
+use crate::pager::Pager;
+use crate::paging::PagingChoice;
 use core::fmt;
 use std::io::{self, stdout, LineWriter, Stdout, Write as _};
 use std::process::{Child, ChildStdin};
 use thiserror::Error;
-
-use crate::pager::Pager;
-use crate::paging::PagingChoice;
 
 #[derive(Debug)]
 pub(crate) enum Output {

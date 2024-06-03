@@ -7,6 +7,7 @@ anstyle = "1.0.7"
 bat = { version = "0.24.0", default-features = false, features = ["regex-onig"] }
 fmtastic = { version = "0.2.0", git = "https://github.com/bash/fmtastic.git" }
 hostname = "0.4.0"
+human-panic = "2.0.0"
 insta = "1.39"
 phf = { version = "0.11.1", default-features = false }
 phf_codegen = "0.11.1"

@@ -5,6 +5,7 @@ use matte::url::Url;
 use matte::{render, supported_parser_options, Options};
 use output::Output;
 use paging::PagingChoice;
+use panic::setup_human_panic;
 use std::io::{stdin, ErrorKind, IsTerminal, Read};
 use std::path::Path;
 use std::{env, fs};
@@ -13,6 +14,8 @@ mod file_detection;
 mod output;
 mod pager;
 mod paging;
+mod panic;
+mod term;
 
 // TODO: nonprintables
 // TODO: trim trailing whitespace (ah I think that's why I had to add - 1 somehwere)
@@ -20,6 +23,8 @@ mod paging;
 // TODO: `mdcat`-compatible CLI when run as `mdcat`.
 // TODO: parindent.
 fn main() {
+    setup_human_panic();
+
     let width = terminal_size::terminal_size()
         .map(|(width, _)| width.0)
         .unwrap_or(180);

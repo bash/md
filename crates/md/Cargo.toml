@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+human-panic.workspace = true
 matte = { path = "../matte" }
 shell-words.workspace = true
 terminal_size.workspace = true
