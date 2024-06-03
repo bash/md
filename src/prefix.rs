@@ -2,7 +2,7 @@ use crate::style::{StyleExt as _, StyledStr};
 use crate::textwrap::DisplayWidth;
 use anstyle::Style;
 use std::cell::RefCell;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default)]
@@ -43,6 +43,12 @@ impl Prefix {
         } else {
             self.rest.value().borrowed()
         }
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        let first = self.first.borrow();
+        let is_first_empty = first.is_none() || first.as_ref().is_some_and(|f| f.is_empty());
+        is_first_empty && self.rest.is_empty()
     }
 
     fn with_first_special(mut self, value: impl Into<StyledStr<'static>>) -> Self {
@@ -125,7 +131,7 @@ impl fmt::Display for DisplayPrefixChain<'_> {
                 write!(f, "{}", chain.display_next())?;
                 write!(f, "{}", prefix.take_next().on_top_of(*style))
             }
-            PrefixChain::Borrowed(chain) => chain.fmt(f),
+            PrefixChain::Borrowed(chain) => Display::fmt(&DisplayPrefixChain(chain), f),
         }
     }
 }

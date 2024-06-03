@@ -3,11 +3,11 @@ source: tests/snapshot.rs
 expression: rendered
 input_file: tests/snippets/lists.md
 ---
-[1m[4m[32m[0m[1m[4m[32mLists[0m
+[1m[4m[32mLists[0m
 
 [1m[32m1. [0m[1m[32mBlock Quote Followed by List[0m
 
-┃[0m [0mBlock quote[0m
+┃ Block quote[0m
 
 [1m• [0mFoo[0m
 [1m• [0mBar[0m
@@ -52,10 +52,10 @@ input_file: tests/snippets/lists.md
 
 [1m[32m5. [0m[1m[32mQuoted List[0m
 
-┃[0m [0m[1m1. [0mWow[0m
-┃[0m [0m[1m2. [0mWhat[0m
-┃[0m [0m[1m3. [0mA[0m
-┃[0m [0m[1m4. [0mQuote[0m
+┃ [1m1. [0mWow[0m
+┃ [1m2. [0mWhat[0m
+┃ [1m3. [0mA[0m
+┃ [1m4. [0mQuote[0m
 
 [1m[32m6. [0m[1m[32mDeeply Nested List[0m
 
@@ -75,6 +75,6 @@ input_file: tests/snippets/lists.md
 
 [1m[32m7. [0m[1m[32mTasks[0m
 
-☐ [0mbuy groceries[0m
-☒ [0mclean kitchen[0m
-☒ [0mfix bathroom lights[0m
+☐ buy groceries[0m
+☒ clean kitchen[0m
+☒ fix bathroom lights[0m

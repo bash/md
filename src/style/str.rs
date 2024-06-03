@@ -60,6 +60,10 @@ impl<'a> From<CowStr<'a>> for StyledStr<'a> {
 
 impl fmt::Display for StyledStr<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.1, self.0, Reset)
+        if self.1.is_plain() {
+            write!(f, "{}", self.0)
+        } else {
+            write!(f, "{}{}{}", self.1, self.0, Reset)
+        }
     }
 }

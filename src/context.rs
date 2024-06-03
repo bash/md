@@ -1,11 +1,12 @@
+use crate::block::BlockKind;
 use crate::counting::Counters;
 use crate::footnotes::Footnotes;
 use crate::list::Bullets;
 use crate::prefix::{Prefix, PrefixChain};
 use crate::style::StyleExt;
+use crate::themes::Theme;
 use crate::Options;
 use anstyle::Style;
-use pulldown_cmark::HeadingLevel;
 use std::cell::Cell;
 use std::cmp::min;
 use unicode_width::UnicodeWidthStr as _;
@@ -60,8 +61,8 @@ impl<'a, 'e, 's> Context<'a, 'e, 's> {
     ) -> Context<'b, 'e, 's> {
         let style = style.into().on_top_of(self.style);
         let prefix = match prefix.into() {
-            Some(p) => self.prefix.link(p, style),
-            None => self.prefix.reborrow(),
+            Some(p) if !p.is_empty() => self.prefix.link(p, style),
+            Some(_) | None => self.prefix.reborrow(),
         };
         Self {
             prefix,
@@ -127,16 +128,8 @@ impl<'a, 'e> Context<'a, 'e, '_> {
     pub(crate) fn bullet(&self) -> &str {
         self.state.bullets.nth(self.list_depth)
     }
-}
 
-#[derive(Debug, Copy, Clone)]
-pub(crate) enum BlockKind {
-    Heading(HeadingLevel),
-    Paragraph,
-    CodeBlock,
-    BlockQuote,
-    List,
-    Rule,
-    Table,
-    FootnoteDefinition,
+    pub(crate) fn theme(&self) -> &Theme {
+        &self.options().theme
+    }
 }

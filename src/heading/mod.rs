@@ -1,11 +1,7 @@
 use crate::block::prelude::*;
 use crate::inline::into_inlines;
-use anstyle::AnsiColor::Green;
-use anstyle::Style;
+use crate::ThemeProvider;
 use pulldown_cmark::HeadingLevel;
-
-mod decoration;
-pub use decoration::*;
 
 pub(crate) struct Heading {
     pub(crate) level: HeadingLevel,
@@ -24,11 +20,8 @@ impl Block for Heading {
     ) -> io::Result<()> {
         ctx.counters().update_section(self.level);
 
-        let style = heading_style(self.level);
-        let prefix = ctx
-            .options()
-            .heading_decoration
-            .prefix(self.level, || ctx.counters().section());
+        let style = ctx.theme().heading_style(self.level, ctx);
+        let prefix = ctx.theme().heading_prefix(self.level, ctx);
         let ctx = ctx.block(prefix, style);
 
         let writer = w.inline_writer(&ctx);
@@ -36,13 +29,5 @@ impl Block for Heading {
             terminated!(events, Event::End(TagEnd::Heading(..)))
                 .flat_map(|event| into_inlines(event, &ctx)),
         )
-    }
-}
-
-fn heading_style(level: HeadingLevel) -> Style {
-    match level {
-        HeadingLevel::H1 => Green.on_default().bold().underline(),
-        HeadingLevel::H2 => Green.on_default().bold(),
-        _ => Green.on_default(),
     }
 }

@@ -24,9 +24,11 @@ mod render;
 mod style;
 mod syntax_highlighting;
 mod textwrap;
+mod themes;
 mod writer;
 
 pub use options::*;
 pub use render::*;
 pub mod file_uri;
 pub use heading::*;
+pub use themes::*;

@@ -1,9 +1,8 @@
 use insta::{assert_snapshot, glob};
-use matte::{render, supported_parser_options, HeadingDecoration, Options};
+use matte::{render, supported_parser_options, Options, Theme};
 use pulldown_cmark::{Event, MetadataBlockKind, Options as ParserOptions, Parser, Tag};
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use std::fs::read_to_string;
-use std::str::FromStr;
 
 #[test]
 fn test_snippets() {
@@ -19,12 +18,7 @@ fn render_to_string(input: &str) -> String {
     let mut buffer = Vec::new();
     let snippet_options = read_snippet_options(input);
     let mut options = Options::plain_text(snippet_options.width.unwrap_or(120));
-    options.heading_decoration = Some(
-        snippet_options
-            .heading_decoration
-            .map(|h| h.0)
-            .unwrap_or(HeadingDecoration::default()),
-    );
+    options.theme = snippet_options.theme.unwrap_or_default().into();
     render(parser, &mut buffer, options).unwrap();
     String::from_utf8(buffer).unwrap()
 }
@@ -55,22 +49,22 @@ fn extract_frontmatter(input: &str) -> String {
 #[derive(Deserialize)]
 struct SnippetOptions {
     width: Option<u16>,
-    heading_decoration: Option<DeserializeFromStr<HeadingDecoration>>,
+    theme: Option<ThemeName>,
 }
 
-struct DeserializeFromStr<T>(T);
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum ThemeName {
+    #[default]
+    Default,
+    Mdcat,
+}
 
-impl<'de, T> serde::Deserialize<'de> for DeserializeFromStr<T>
-where
-    T: FromStr,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let str: String = Deserialize::deserialize(deserializer)?;
-        T::from_str(&str)
-            .map(DeserializeFromStr)
-            .map_err(|_| serde::de::Error::custom("invalid value"))
+impl From<ThemeName> for Theme {
+    fn from(value: ThemeName) -> Self {
+        match value {
+            ThemeName::Default => Theme::default(),
+            ThemeName::Mdcat => Theme::mdcat(),
+        }
     }
 }

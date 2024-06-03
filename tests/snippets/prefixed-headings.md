@@ -1,5 +1,5 @@
 +++
-heading_decoration = "prefixed(┈)"
+theme = "mdcat"
 +++
 
 # Heading 1

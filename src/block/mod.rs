@@ -1,12 +1,26 @@
 use prelude::*;
+use pulldown_cmark::HeadingLevel;
 
 mod event;
 pub(crate) use event::*;
 
+#[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
+pub(crate) enum BlockKind {
+    Heading(HeadingLevel),
+    Paragraph,
+    CodeBlock,
+    BlockQuote,
+    List,
+    Rule,
+    Table,
+    FootnoteDefinition,
+}
+
 /// Useful imports when implementing a [`Block`]
 pub(crate) mod prelude {
-    pub(crate) use super::Block;
-    pub(crate) use crate::context::{BlockKind, Context};
+    pub(crate) use super::{Block, BlockKind};
+    pub(crate) use crate::context::Context;
     pub(crate) use crate::writer::Writer;
     pub(crate) use crate::Events;
     pub(crate) use pulldown_cmark::{Event, Tag, TagEnd};

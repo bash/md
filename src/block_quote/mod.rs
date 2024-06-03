@@ -2,13 +2,15 @@ use crate::block::prelude::*;
 use crate::block::render_block_from_event;
 use crate::inline::Inline;
 use crate::prefix::Prefix;
+use crate::themes::ThemeProvider as _;
 use anstyle::{Reset, Style};
 use author::peek_quote_author;
-use classification::{classify, Kind};
+use classification::classify;
 use pulldown_cmark::BlockQuoteKind;
 
 mod author;
 mod classification;
+pub(crate) use classification::Kind;
 
 pub(crate) struct BlockQuote {
     pub(crate) kind: Option<BlockQuoteKind>,
@@ -42,7 +44,9 @@ fn write_block_quote<'e>(
     w: &mut Writer,
 ) -> io::Result<()> {
     let kind = classify(events, kind);
-    let ctx = ctx.block(prefix(kind), Style::default());
+    let prefix = ctx.theme().block_quote_prefix(kind, ctx);
+    let style = ctx.theme().block_quote_style(kind, ctx);
+    let ctx = ctx.block(prefix, style);
 
     write_title(kind, &ctx, w)?;
 
@@ -53,11 +57,6 @@ fn write_block_quote<'e>(
     }
 
     Ok(())
-}
-
-fn prefix(kind: Option<Kind>) -> Prefix {
-    let style = kind.map(|k| k.style()).unwrap_or_default();
-    Prefix::uniform(format!("{style}┃{Reset} "))
 }
 
 fn write_title(kind: Option<Kind>, ctx: &Context, w: &mut Writer) -> io::Result<()> {

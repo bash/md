@@ -1,6 +1,6 @@
 use anstyle::{Reset, Style};
 use matte::file_uri::{current_dir, file_in_current_dir};
-use matte::{render, supported_parser_options, Options};
+use matte::{render, supported_parser_options, Options, Theme};
 use output::Output;
 use paging::PagingChoice;
 use pulldown_cmark::Parser;

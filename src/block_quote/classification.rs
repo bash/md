@@ -12,13 +12,13 @@ pub(super) fn classify(events: Events, kind: Option<BlockQuoteKind>) -> Option<K
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(super) enum Kind {
+pub(crate) enum Kind {
     Markup(BlockQuoteKind),
     Text(BlockQuoteKind),
 }
 
 impl Kind {
-    pub(super) fn style(self) -> Style {
+    pub(crate) fn style(self) -> Style {
         match BlockQuoteKind::from(self) {
             Note => Blue.on_default(),
             Tip => Green.on_default(),

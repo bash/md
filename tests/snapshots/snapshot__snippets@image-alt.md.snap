@@ -3,7 +3,7 @@ source: tests/snapshot.rs
 expression: rendered
 input_file: tests/snippets/image-alt.md
 ---
-[1m[4m[32m[0m[1m[4m[32mImage Alt Text[0m
+[1m[4m[32mImage Alt Text[0m
 
 [7m🖼 Build Status[0m [7m🖼 Coverage Status[0m [7m🖼 Code Style[0m [7m🖼 NPM[0m[0m
 

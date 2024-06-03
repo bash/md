@@ -6,14 +6,12 @@ use crate::options::Options;
 
 mod code_block;
 mod footnote_def;
-mod heading;
 mod paragraph;
 mod rule;
 mod table;
 
 pub(crate) use code_block::*;
 pub(crate) use footnote_def::*;
-pub(crate) use heading::*;
 pub(crate) use paragraph::*;
 pub(crate) use rule::*;
 pub(crate) use table::*;
@@ -21,7 +19,8 @@ pub(crate) use table::*;
 // TODO: get rid of this
 mod prelude {
     pub(super) use super::Events;
-    pub(super) use crate::context::{BlockKind, Context};
+    pub(super) use crate::block::BlockKind;
+    pub(super) use crate::context::Context;
     pub(super) use crate::writer::Writer;
     pub(super) use anstyle::{Reset, Style};
     pub(super) use pulldown_cmark::{Event, TagEnd};

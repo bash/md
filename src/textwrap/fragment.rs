@@ -1,6 +1,5 @@
 use pulldown_cmark::{CowStr, InlineStr};
 use std::mem;
-use std::ops::Index;
 use unicode_linebreak_chunked::{BreakOpportunity, Linebreaks};
 
 // A piece of text that doesn't contain
