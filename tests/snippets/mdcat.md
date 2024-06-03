@@ -26,7 +26,7 @@ fn main() {
 
 `mdcat` prints images and hyperlinks:
 
-![Rust](./rust-logo-128x128.png)
+![Rust](https://github.com/swsnr/mdcat/raw/main/sample/rust-logo-128x128.png)
 
 Source: [Rust](https://www.rust-lang.org/)
 
