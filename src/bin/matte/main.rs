@@ -9,6 +9,7 @@ use std::path::Path;
 use std::{env, fs};
 use url::Url;
 
+mod file_detection;
 mod output;
 mod pager;
 mod paging;
