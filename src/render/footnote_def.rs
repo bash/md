@@ -20,13 +20,6 @@ impl Block for FootnoteDef<'_> {
         !matches!(state.options().footnote_definition_placement, InPlace)
     }
 
-    // Yes this is a quite bad implementation, but footnotes are *soooo* annoying:
-    // https://github.com/pulldown-cmark/pulldown-cmark/blob/8713a415b04cdb0b7980a9a17c0ed0df0b36395e/pulldown-cmark/specs/footnotes.txt
-    //
-    // I think it would be quite nice to give the users a choice about where to position footnotes:
-    // * in place (current implementation)
-    // * end of section (I really like this idea)
-    // * end of document (this is how GitHub renders footnotes)
     fn render<'e>(
         self,
         events: Events<'_, 'e, '_>,
@@ -34,13 +27,10 @@ impl Block for FootnoteDef<'_> {
         w: &mut Writer,
     ) -> io::Result<()> {
         // TODO: collapse multiple footnote defs following each other into one logical "section".
-        // TODO: write prefix and writeln is getting awfully repetitive...
         if let InPlace = ctx.options().footnote_definition_placement {
             write_divider(w, ctx)?;
         }
 
-        // TODO: dimmed only has an effect on dark backgrounds,
-        // we should have a solution for light themes too...
         let number = ctx.footnotes().get_number(&self.reference);
         let ctx = ctx.block(prefix(number), Style::new().dimmed());
 
