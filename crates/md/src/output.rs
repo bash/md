@@ -92,9 +92,12 @@ impl Drop for Output {
     }
 }
 
-struct SetTitle<'a>(&'a str);
+struct SetTitle<T>(T);
 
-impl fmt::Display for SetTitle<'_> {
+impl<T> fmt::Display for SetTitle<T>
+where
+    T: fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         const OSC: &str = "\x1b]";
         const ST: &str = "\x1b\\";
