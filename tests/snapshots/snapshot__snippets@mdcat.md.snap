@@ -1,0 +1,29 @@
+---
+source: tests/snapshot.rs
+expression: rendered
+input_file: tests/snippets/mdcat.md
+---
+[1m[34m┈[0m[1m[34mCommonMark[0m
+
+[1m[34m┈┈[0m[1m[34mMarkup[0m
+
+[3m[33mmdcat[0m supports standard [3minline[0m [1mmarkup[0m and block markup, even with syntax highlighting for code 
+blocks.
+
+[3m    [0m[3mDon't believe everything you read on the Internet.[0m
+[3m    [0m
+[3m    [0m[3m—Abraham Lincoln[0m
+
+[35mfn[0m [34mmain[0m() {
+    println!([32m"[0m[32mHello world![0m[32m"[0m);
+}
+
+[1m[34m┈┈[0m[1m[34mSpecials[0m
+
+[3m[33mmdcat[0m prints images and hyperlinks:
+
+[7m🖼 Rust[0m
+
+Source: ]8;id=1;https://www.rust-lang.org/\Rust]8;;\
+
+Enjoy ❤️
