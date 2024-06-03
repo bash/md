@@ -1,0 +1,42 @@
+---
+source: tests/snapshot.rs
+expression: rendered
+input_file: tests/snippets/admonitions.md
+---
+[1m[4m[32mAdmonitions[0m
+
+[1m[32m1. [0m[1m[32mGitHub Style[0m
+
+[34m┃ [0m[1m[34mℹ️️ Note[0m
+[34m┃ [0mHighlights information that users should take into account, even when skimming.
+
+[32m┃ [0m[1m[32m💡 Tip[0m
+[32m┃ [0mOptional information to help a user be more successful.
+
+[35m┃ [0m[1m[35m💬 Important[0m
+[35m┃ [0mCrucial information necessary for users to succeed.
+
+[33m┃ [0m[1m[33m⚠️️ Warning[0m
+[33m┃ [0mCritical content demanding immediate user attention due to potential risks.
+
+[31m┃ [0m[1m[31m🛑 Caution[0m
+[31m┃ [0mNegative potential consequences of an action.
+
+[1m[32m2. [0m[1m[32mEmoji[0m
+
+Using the appropriate emoji will change the color of the block quote:
+
+[34m┃ [0m[1mℹ️ Note[0m 
+[34m┃ [0mHighlights information that users should take into account, even when skimming.
+
+[32m┃ [0m[1m💡 Tip[0m 
+[32m┃ [0mOptional information to help a user be more successful.
+
+[35m┃ [0m[1m💬 Note[0m 
+[35m┃ [0mCrucial information necessary for users to succeed.
+
+[33m┃ [0m[1m⚠️ Warning[0m 
+[33m┃ [0mCritical content demanding immediate user attention due to potential risks.
+
+[31m┃ [0m[1m🛑 Caution[0m 
+[31m┃ [0mNegative potential consequences of an action.
