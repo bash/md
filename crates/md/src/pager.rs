@@ -17,24 +17,17 @@ impl Pager {
         Self::from_env_var("MD_PAGER").or_else(|| Self::from_env_var("PAGER"))
     }
 
-    pub(crate) fn less_from_env() -> Self {
-        let args = if env::var_os("LESS").is_some() {
-            // If the user has set `LESS` then they want to customize
-            // the args passed to `less`. Let's not override any preferences.
-            Vec::new()
-        } else {
-            vec!["--quit-if-one-screen".to_owned()]
-        };
+    pub(crate) const fn less() -> Self {
         Self {
             program: Some(Cow::Borrowed("less")),
-            args,
+            args: Vec::new(),
             kind: PagerKind::Less,
         }
     }
 
     pub(crate) fn hyperlinks(&self) -> bool {
         use PagerKind::*;
-        !matches!(self.kind, More | Most)
+        !matches!(self.kind, More | Most | Lv)
     }
 
     // Takes a best-effort guess at how much
@@ -77,9 +70,9 @@ impl Pager {
 
         command
             .stdin(Stdio::piped())
-            .args(&self.args)
-            .args(self.mandatory_args())
             .args(self.title_args(title))
+            .args(self.mandatory_args())
+            .args(&self.args)
             // Setting it as env var means that we get a nice prompt
             // when using bat (which in turn uses less) as pager.
             .env("LESS", less_prompt_env_var(title));
@@ -98,6 +91,7 @@ impl Pager {
         match self.kind {
             PagerKind::Less => &["--RAW-CONTROL-CHARS"],
             PagerKind::Bat => &["--language", "txt"],
+            PagerKind::Lv => &["-c"],
             _ => &[],
         }
     }
@@ -128,16 +122,18 @@ enum PagerKind {
     More,
     Most,
     Bat,
+    Lv,
     Other,
 }
 
 impl PagerKind {
     fn from_program(program: &str) -> Self {
         match Path::new(program).file_stem().and_then(|s| s.to_str()) {
+            Some("bat" | "batcat") => PagerKind::Bat,
+            Some("lv") => PagerKind::Lv,
             Some("less") => PagerKind::Less,
             Some("more") => PagerKind::More,
             Some("most") => PagerKind::Most,
-            Some("bat" | "batcat") => PagerKind::Bat,
             Some(_) | None => PagerKind::Other,
         }
     }

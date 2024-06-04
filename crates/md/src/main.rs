@@ -3,6 +3,7 @@ use cli::Args;
 use matte::pulldown_cmark::Parser;
 use matte::{render, supported_parser_options, Options};
 use output::Output;
+use pager::Pager;
 use paging::PagingChoice;
 use panic::setup_human_panic;
 use std::io::ErrorKind;
