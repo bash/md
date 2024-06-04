@@ -7,7 +7,7 @@ use std::{env, fmt, io};
 
 #[derive(Debug, Clone)]
 pub(crate) struct Pager {
-    program: Cow<'static, str>,
+    program: Option<Cow<'static, str>>,
     args: Vec<String>,
     kind: PagerKind,
 }
@@ -26,7 +26,7 @@ impl Pager {
             vec!["--quit-if-one-screen".to_owned()]
         };
         Self {
-            program: Cow::Borrowed("less"),
+            program: Some(Cow::Borrowed("less")),
             args,
             kind: PagerKind::Less,
         }
@@ -50,8 +50,11 @@ impl Pager {
         let value = env::var(name).ok()?;
         let mut words = shell_words::split(&value).ok()?;
         let mut words = words.drain(..);
-        let program = Cow::Owned(words.next().unwrap_or_default());
-        let kind = PagerKind::from_program(&program);
+        let program = words.next().map(Cow::Owned);
+        let kind = program
+            .as_deref()
+            .map(PagerKind::from_program)
+            .unwrap_or(PagerKind::Other);
         let args = words.collect();
         Some(Pager {
             program,
@@ -66,11 +69,11 @@ impl Pager {
     pub(crate) fn spawn(&self, title: &str) -> io::Result<Option<(Child, ChildStdin)>> {
         // An empty `PAGER` env var disables paging.
         // No need to try to spawn a process in that case.
-        if self.program == "" {
+        let Some(program) = self.program.as_deref() else {
             return Ok(None);
-        }
+        };
 
-        let mut command = Command::new(&*self.program);
+        let mut command = Command::new(program);
 
         command
             .stdin(Stdio::piped())
