@@ -13,7 +13,7 @@ impl Block for Rule {
         self,
         _events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
-        mut w: &mut dyn Write,
+        w: &mut impl Write,
     ) -> io::Result<()> {
         // let decoration = "∗ ∗ ∗";
         // let padding_size = state

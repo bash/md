@@ -25,7 +25,7 @@ impl Block for BlockQuote {
         self,
         events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut dyn Write,
+        w: &mut impl Write,
     ) -> io::Result<()> {
         write_block_quote(self.kind, events, ctx, w)?;
 
@@ -41,7 +41,7 @@ fn write_block_quote<'e>(
     kind: Option<BlockQuoteKind>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<()> {
     let kind = classify(events, kind);
     let prefix = ctx.theme().block_quote_prefix(kind, ctx);
@@ -59,7 +59,7 @@ fn write_block_quote<'e>(
     Ok(())
 }
 
-fn write_title(kind: Option<Kind>, ctx: &Context, mut w: &mut dyn Write) -> io::Result<()> {
+fn write_title(kind: Option<Kind>, ctx: &Context, w: &mut impl Write) -> io::Result<()> {
     if let Some(kind) = kind {
         if let Some(title) = kind.title(ctx.options().symbol_repertoire) {
             w.write_prefix(ctx)?;
@@ -72,7 +72,7 @@ fn write_title(kind: Option<Kind>, ctx: &Context, mut w: &mut dyn Write) -> io::
 fn write_author<'a>(
     inlines: impl IntoIterator<Item = Inline<'a>>,
     ctx: &Context,
-    mut w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<()> {
     // This is not a regular dash, it's a "quotation dash".
     // https://english.stackexchange.com/a/59320

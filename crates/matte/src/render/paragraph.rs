@@ -13,7 +13,7 @@ impl Block for Paragraph {
         self,
         events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
-        mut w: &mut dyn Write,
+        w: &mut impl Write,
     ) -> io::Result<()> {
         let writer = w.inline_writer(ctx);
         writer.write_all(

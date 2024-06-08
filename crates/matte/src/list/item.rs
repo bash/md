@@ -10,7 +10,7 @@ pub(super) fn render_item<'e>(
     counter: &CounterStyle,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<()> {
     let ctx = ctx
         .block(item_prefix(counter, events), Style::default())
@@ -27,7 +27,7 @@ enum ListItemState<'e> {
 fn render_item_contents<'e>(
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<()> {
     let mut state = ListItemState::Inlines(None);
     loop {
@@ -51,7 +51,7 @@ fn list_item_inlines<'e>(
     first_event: Option<Event<'e>>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    mut w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<ListItemState<'e>> {
     let mut writer = w.inline_writer(ctx);
 
@@ -79,7 +79,7 @@ fn list_item_blocks<'e>(
     first_event: Event<'e>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn Write,
+    w: &mut impl Write,
 ) -> io::Result<ListItemState<'e>> {
     render_block_from_event(first_event, events, ctx, w)?;
 

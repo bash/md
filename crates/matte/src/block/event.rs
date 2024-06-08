@@ -11,7 +11,7 @@ pub(crate) fn render_block_from_event<'e>(
     event: Event<'e>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn io::Write,
+    w: &mut impl io::Write,
 ) -> io::Result<()> {
     if let Some(rejected) = try_render_block_from_event(event, events, ctx, w)? {
         panic!("Unexpected event {:?} in block context", rejected);
@@ -23,7 +23,7 @@ pub(crate) fn try_render_block_from_event<'e>(
     event: Event<'e>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut dyn io::Write,
+    w: &mut impl io::Write,
 ) -> io::Result<Option<Event<'e>>> {
     use Event::Start;
     match event {

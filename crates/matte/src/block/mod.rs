@@ -32,7 +32,7 @@ pub(crate) fn render_block<'e, B: Block>(
     block: B,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
-    mut writer: &mut dyn Write,
+    writer: &mut impl Write,
 ) -> io::Result<()> {
     let kind = block.kind();
     if !is_blank(&block, kind, events, ctx) {
@@ -51,7 +51,7 @@ pub(crate) trait Block {
         self,
         events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
-        writer: &mut dyn Write,
+        writer: &mut impl Write,
     ) -> io::Result<()>;
 
     fn is_blank(&self, _ctx: &Context) -> bool {

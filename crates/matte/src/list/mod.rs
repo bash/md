@@ -21,7 +21,7 @@ impl Block for List {
         self,
         events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut dyn Write,
+        w: &mut impl Write,
     ) -> io::Result<()> {
         let mut counter = CounterStyle::from_context(self.first_item_number, ctx);
 
