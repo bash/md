@@ -16,7 +16,7 @@ impl Block for Table {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut Writer,
+        mut w: &mut dyn Write,
     ) -> io::Result<()> {
         w.write_prefix(ctx)?;
         writeln!(w, "{}[TODO: table]{}", Red.on_default().invert(), Reset)?;

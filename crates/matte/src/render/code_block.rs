@@ -16,7 +16,7 @@ impl Block for CodeBlock<'_> {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut Writer,
+        mut w: &mut dyn Write,
     ) -> io::Result<()> {
         // TODO: yes, yes we could use a buffer that only buffers until the next line...
         let mut code = String::new();

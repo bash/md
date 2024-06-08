@@ -24,7 +24,7 @@ impl Block for FootnoteDef<'_> {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut Writer,
+        w: &mut dyn Write,
     ) -> io::Result<()> {
         // TODO: collapse multiple footnote defs following each other into one logical "section".
         if let InPlace = ctx.options().footnote_definition_placement {
@@ -46,7 +46,7 @@ impl Block for FootnoteDef<'_> {
     }
 }
 
-pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut Writer) -> io::Result<()> {
+pub(super) fn render_collected_footnotes(ctx: &Context, mut w: &mut dyn Write) -> io::Result<()> {
     let footnotes = ctx.footnotes().take();
 
     if !footnotes.is_empty() {
@@ -66,7 +66,7 @@ pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut Writer) -> io::R
     Ok(())
 }
 
-fn write_divider(w: &mut Writer, ctx: &Context) -> io::Result<()> {
+fn write_divider(mut w: &mut dyn Write, ctx: &Context) -> io::Result<()> {
     w.write_prefix(ctx)?;
     writeln!(w, "──────")
 }

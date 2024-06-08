@@ -21,17 +21,17 @@ pub(crate) enum BlockKind {
 pub(crate) mod prelude {
     pub(crate) use super::{Block, BlockKind};
     pub(crate) use crate::context::Context;
-    pub(crate) use crate::writer::Writer;
+    pub(crate) use crate::writer::WriteExt as _;
     pub(crate) use crate::Events;
     pub(crate) use pulldown_cmark::{Event, Tag, TagEnd};
-    pub(crate) use std::io::{self, Write as _};
+    pub(crate) use std::io::{self, Write};
 }
 
 pub(crate) fn render_block<'e, B: Block>(
     block: B,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    writer: &mut Writer,
+    mut writer: &mut dyn Write,
 ) -> io::Result<()> {
     let kind = block.kind();
     if !is_blank(&block, kind, events, ctx) {
@@ -50,7 +50,7 @@ pub(crate) trait Block {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        writer: &mut Writer,
+        writer: &mut dyn Write,
     ) -> io::Result<()>;
 
     fn is_blank(&self, _ctx: &Context) -> bool {

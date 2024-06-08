@@ -3,7 +3,6 @@ use crate::block_quote::BlockQuote;
 use crate::context::Context;
 use crate::heading::Heading;
 use crate::list::List;
-use crate::writer::Writer;
 use crate::{CodeBlock, Events, FootnoteDef, Paragraph, Rule, Table};
 use pulldown_cmark::{Event, Tag, TagEnd};
 use std::io;
@@ -12,7 +11,7 @@ pub(crate) fn render_block_from_event<'e>(
     event: Event<'e>,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut Writer,
+    w: &mut dyn io::Write,
 ) -> io::Result<()> {
     if let Some(rejected) = try_render_block_from_event(event, events, ctx, w)? {
         panic!("Unexpected event {:?} in block context", rejected);
@@ -24,7 +23,7 @@ pub(crate) fn try_render_block_from_event<'e>(
     event: Event<'e>,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut Writer,
+    w: &mut dyn io::Write,
 ) -> io::Result<Option<Event<'e>>> {
     use Event::Start;
     match event {

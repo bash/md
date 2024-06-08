@@ -10,12 +10,12 @@ pub(super) fn render_item<'e>(
     counter: &CounterStyle,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    writer: &mut Writer,
+    w: &mut dyn Write,
 ) -> io::Result<()> {
     let ctx = ctx
         .block(item_prefix(counter, events), Style::default())
         .list_depth_incremented();
-    render_item_contents(events, &ctx, writer)
+    render_item_contents(events, &ctx, w)
 }
 
 enum ListItemState<'e> {
@@ -27,7 +27,7 @@ enum ListItemState<'e> {
 fn render_item_contents<'e>(
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut Writer,
+    w: &mut dyn Write,
 ) -> io::Result<()> {
     let mut state = ListItemState::Inlines(None);
     loop {
@@ -51,7 +51,7 @@ fn list_item_inlines<'e>(
     first_event: Option<Event<'e>>,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut Writer,
+    mut w: &mut dyn Write,
 ) -> io::Result<ListItemState<'e>> {
     let mut writer = w.inline_writer(ctx);
 
@@ -79,7 +79,7 @@ fn list_item_blocks<'e>(
     first_event: Event<'e>,
     events: Events<'_, 'e, '_>,
     ctx: &Context<'_, 'e, '_>,
-    w: &mut Writer,
+    w: &mut dyn Write,
 ) -> io::Result<ListItemState<'e>> {
     render_block_from_event(first_event, events, ctx, w)?;
 

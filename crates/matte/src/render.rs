@@ -21,11 +21,10 @@ mod prelude {
     pub(super) use super::Events;
     pub(super) use crate::block::BlockKind;
     pub(super) use crate::context::Context;
-    pub(super) use crate::writer::Writer;
+    pub(super) use crate::writer::WriteExt as _;
     pub(super) use anstyle::{Reset, Style};
     pub(super) use pulldown_cmark::{Event, TagEnd};
-    pub(super) use std::io;
-    pub(super) use std::io::Write as _;
+    pub(super) use std::io::{self, Write};
 }
 
 // TODO: these lifetimes are horrible, make them clearer
@@ -41,13 +40,12 @@ where
     let mut events = wrap_events(&mut events);
     let state = State::new(options);
     let ctx = Context::new(&state);
-    let mut writer = Writer::new(&mut output);
 
     while let Some(event) = events.next() {
-        render_block_from_event(event, &mut events, &ctx, &mut writer)?;
+        render_block_from_event(event, &mut events, &ctx, &mut output)?;
     }
 
-    render_collected_footnotes(&ctx, &mut writer)?;
+    render_collected_footnotes(&ctx, &mut output)?;
 
     Ok(())
 }

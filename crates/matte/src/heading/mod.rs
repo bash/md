@@ -16,7 +16,7 @@ impl Block for Heading {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        w: &mut Writer,
+        mut w: &mut dyn Write,
     ) -> io::Result<()> {
         ctx.counters().update_section(self.level);
 

@@ -21,7 +21,7 @@ impl Block for List {
         self,
         events: Events<'_, 'e, '_>,
         ctx: &Context<'_, 'e, '_>,
-        writer: &mut Writer,
+        w: &mut dyn Write,
     ) -> io::Result<()> {
         let mut counter = CounterStyle::from_context(self.first_item_number, ctx);
 
@@ -29,7 +29,7 @@ impl Block for List {
             for event in terminated!(events, Event::End(TagEnd::List(..))) {
                 reachable! {
                     let Event::Start(Tag::Item) = event {
-                        render_item(&counter, events, ctx, writer)?;
+                        render_item(&counter, events, ctx, w)?;
                         counter.next();
                     }
                 }
