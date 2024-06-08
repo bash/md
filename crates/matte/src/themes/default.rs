@@ -1,6 +1,6 @@
 use super::*;
 use crate::counting::SectionCounter;
-use anstyle::AnsiColor::Green;
+use anstyle::AnsiColor::{Blue, Green};
 use std::fmt::Write as _;
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl ThemeProvider for DefaultTheme {
         match level {
             HeadingLevel::H1 => Green.on_default().bold().underline(),
             HeadingLevel::H2 => Green.on_default().bold(),
-            _ => Green.on_default(),
+            _ => Blue.on_default(),
         }
     }
 
