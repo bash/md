@@ -11,7 +11,7 @@ pub(super) enum CounterStyle<'a> {
 }
 
 impl<'a> CounterStyle<'a> {
-    pub(super) fn from_context(number: Option<u64>, ctx: &'a Context) -> Self {
+    pub(super) fn from_context(number: Option<u64>, ctx: &'a Context<'_, '_, '_>) -> Self {
         match number {
             Some(n) => Numbered(n),
             None => Bulleted(ctx.bullet()),

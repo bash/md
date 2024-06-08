@@ -17,7 +17,7 @@ impl Block for FootnoteDef<'_> {
         BlockKind::FootnoteDefinition
     }
 
-    fn is_blank(&self, state: &Context) -> bool {
+    fn is_blank(&self, state: &Context<'_, '_, '_>) -> bool {
         !matches!(state.options().footnote_definition_placement, InPlace)
     }
 
@@ -47,7 +47,10 @@ impl Block for FootnoteDef<'_> {
     }
 }
 
-pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut impl Write) -> io::Result<()> {
+pub(super) fn render_collected_footnotes(
+    ctx: &Context<'_, '_, '_>,
+    w: &mut impl Write,
+) -> io::Result<()> {
     let footnotes = ctx.footnotes().take();
 
     if !footnotes.is_empty() {
@@ -66,7 +69,7 @@ pub(super) fn render_collected_footnotes(ctx: &Context, w: &mut impl Write) -> i
     Ok(())
 }
 
-fn write_divider(w: &mut impl Write, ctx: &Context) -> io::Result<()> {
+fn write_divider(w: &mut impl Write, ctx: &Context<'_, '_, '_>) -> io::Result<()> {
     w.write_prefix(ctx)?;
     writeln!(w, "──────")
 }

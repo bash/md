@@ -13,3 +13,6 @@ phf_codegen.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 syntect.workspace = true
+
+[lints]
+workspace = true

@@ -9,12 +9,12 @@ use std::borrow::Cow;
 
 // TODO: can we detect if bat supports a given language
 // so we can gracefully fall back to plain?
-pub(crate) fn highlight(code: &str, options: &Options) -> String {
+pub(crate) fn highlight(code: &str, options: &Options<'_>) -> String {
     try_highlight(code, options)
         .unwrap_or_else(|_error| format!("{}{code}{Reset}", Style::new().italic()))
 }
 
-fn try_highlight(code: &str, options: &Options) -> bat::error::Result<String> {
+fn try_highlight(code: &str, options: &Options<'_>) -> bat::error::Result<String> {
     let assets = HighlightingAssets::from_binary(); // TODO: re-use
     let config = bat_config(options, &assets);
     let controller = BatController::new(&config, &assets);
@@ -34,7 +34,7 @@ pub(crate) struct Options<'a> {
 
 // TODO: use theme appropriate for dark/light mode
 // TODO: make theme configurable
-fn bat_config<'a>(options: &'a Options, assets: &'a HighlightingAssets) -> BatConfig<'a> {
+fn bat_config<'a>(options: &'a Options<'_>, assets: &'a HighlightingAssets) -> BatConfig<'a> {
     let language = options
         .language
         .as_ref()

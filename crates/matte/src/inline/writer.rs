@@ -82,7 +82,10 @@ where
     }
 }
 
-fn write_chunk<F>(chunk: Chunk<PassthroughInline>, ctx: &mut WriterState<'_, F>) -> io::Result<()>
+fn write_chunk<F>(
+    chunk: Chunk<'_, PassthroughInline>,
+    ctx: &mut WriterState<'_, F>,
+) -> io::Result<()>
 where
     F: WritePrefixFn,
 {

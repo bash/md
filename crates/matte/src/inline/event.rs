@@ -61,7 +61,7 @@ fn is_br_tag(html: &str) -> bool {
     html == "<br>" || html == "<br/>"
 }
 
-fn code(code: CowStr, color: AnsiColor) -> Inlines {
+fn code(code: CowStr<'_>, color: AnsiColor) -> Inlines<'_> {
     inlines![color.on_default().italic(), code, Inline::PopStyle]
 }
 
@@ -86,7 +86,7 @@ fn link<'a>(
     dest_url: &str,
     _title: &str,
     _id: &str,
-    ctx: &Context,
+    ctx: &Context<'_, '_, '_>,
 ) -> Inlines<'a> {
     if ctx.options().hyperlinks {
         if let Some(url) = parse_url(dest_url, ctx) {
@@ -97,7 +97,7 @@ fn link<'a>(
     Inlines::default()
 }
 
-fn parse_url(url: &str, ctx: &Context) -> Option<Url> {
+fn parse_url(url: &str, ctx: &Context<'_, '_, '_>) -> Option<Url> {
     Url::parse(url).ok().or_else(|| {
         ctx.options()
             .base_url
@@ -106,7 +106,7 @@ fn parse_url(url: &str, ctx: &Context) -> Option<Url> {
     })
 }
 
-fn footnote_reference<'a>(reference: &str, ctx: &Context) -> Inlines<'a> {
+fn footnote_reference<'a>(reference: &str, ctx: &Context<'_, '_, '_>) -> Inlines<'a> {
     let text = format!("{}", Superscript(ctx.footnotes().get_number(reference)));
     inlines![
         AnsiColor::Green.on_default(),

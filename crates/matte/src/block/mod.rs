@@ -54,7 +54,7 @@ pub(crate) trait Block {
         writer: &mut impl Write,
     ) -> io::Result<()>;
 
-    fn is_blank(&self, _ctx: &Context) -> bool {
+    fn is_blank(&self, _ctx: &Context<'_, '_, '_>) -> bool {
         false
     }
 }
@@ -63,7 +63,7 @@ fn is_blank<'e>(
     block: &impl Block,
     kind: BlockKind,
     events: &mut impl Events<'e>,
-    ctx: &Context,
+    ctx: &Context<'_, '_, '_>,
 ) -> bool {
     let mut events = events.lookahead();
     block.is_blank(ctx)

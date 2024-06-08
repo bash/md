@@ -10,3 +10,6 @@ matte = { path = "../matte" }
 shell-words.workspace = true
 terminal_size.workspace = true
 thiserror.workspace = true
+
+[lints]
+workspace = true

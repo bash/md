@@ -7,20 +7,28 @@ use std::fmt::Write as _;
 pub(super) struct DefaultTheme;
 
 impl ThemeProvider for DefaultTheme {
-    fn margin_size(&self, _a: &BlockKind, _b: &BlockKind, _ctx: &Context) -> usize {
+    fn margin_size(&self, _a: &BlockKind, _b: &BlockKind, _ctx: &Context<'_, '_, '_>) -> usize {
         1
     }
 
-    fn block_quote_style(&self, _kind: Option<block_quote::Kind>, _ctx: &Context) -> Style {
+    fn block_quote_style(
+        &self,
+        _kind: Option<block_quote::Kind>,
+        _ctx: &Context<'_, '_, '_>,
+    ) -> Style {
         Style::default()
     }
 
-    fn block_quote_prefix(&self, kind: Option<block_quote::Kind>, _ctx: &Context) -> Prefix {
+    fn block_quote_prefix(
+        &self,
+        kind: Option<block_quote::Kind>,
+        _ctx: &Context<'_, '_, '_>,
+    ) -> Prefix {
         let style = kind.map(|k| k.style()).unwrap_or_default();
         Prefix::uniform(StyledStr::new("┃ ", style))
     }
 
-    fn heading_style(&self, level: HeadingLevel, _ctx: &Context) -> Style {
+    fn heading_style(&self, level: HeadingLevel, _ctx: &Context<'_, '_, '_>) -> Style {
         match level {
             HeadingLevel::H1 => Green.on_default().bold().underline(),
             HeadingLevel::H2 => Green.on_default().bold(),
@@ -28,7 +36,7 @@ impl ThemeProvider for DefaultTheme {
         }
     }
 
-    fn heading_prefix(&self, _level: HeadingLevel, ctx: &Context) -> Prefix {
+    fn heading_prefix(&self, _level: HeadingLevel, ctx: &Context<'_, '_, '_>) -> Prefix {
         Prefix::continued(numbering(ctx.counters().section()))
     }
 }

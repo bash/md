@@ -4,24 +4,24 @@ use crate::prefix::PrefixChain;
 use std::io::{self, Write};
 
 pub(crate) trait WriteExt {
-    fn write_prefix(&mut self, ctx: &Context) -> io::Result<()>;
+    fn write_prefix(&mut self, ctx: &Context<'_, '_, '_>) -> io::Result<()>;
 
-    fn write_blank_line(&mut self, ctx: &Context) -> io::Result<()>;
+    fn write_blank_line(&mut self, ctx: &Context<'_, '_, '_>) -> io::Result<()>;
 
     fn inline_writer<'a, 'p>(
         &mut self,
         ctx: &'p Context<'p, '_, '_>,
     ) -> InlineWriter<'a, '_, impl WritePrefixFn + 'p>;
 
-    fn write_block_start(&mut self, b: &Context) -> io::Result<()>;
+    fn write_block_start(&mut self, b: &Context<'_, '_, '_>) -> io::Result<()>;
 }
 
 impl<W: io::Write> WriteExt for W {
-    fn write_prefix(&mut self, ctx: &Context) -> io::Result<()> {
+    fn write_prefix(&mut self, ctx: &Context<'_, '_, '_>) -> io::Result<()> {
         write_prefix(ctx.prefix_chain(), self)
     }
 
-    fn write_blank_line(&mut self, ctx: &Context) -> io::Result<()> {
+    fn write_blank_line(&mut self, ctx: &Context<'_, '_, '_>) -> io::Result<()> {
         self.write_prefix(ctx)?;
         writeln!(self)
     }
@@ -39,7 +39,7 @@ impl<W: io::Write> WriteExt for W {
     }
 
     // TODO: Make this an actual margin control thing
-    fn write_block_start(&mut self, b: &Context) -> io::Result<()> {
+    fn write_block_start(&mut self, b: &Context<'_, '_, '_>) -> io::Result<()> {
         if b.previous_block().is_some() {
             self.write_blank_line(b)?;
         }

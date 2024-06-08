@@ -25,3 +25,6 @@ trait-set = "0.3.0"
 unicode-linebreak-chunked = { git = "https://github.com/bash/unicode-linebreak-chunked.git", branch = "tables" }
 unicode-width = "0.1.12"
 url = "2.5.0"
+
+[workspace.lints.rust]
+elided_lifetimes_in_paths = "warn"

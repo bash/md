@@ -103,7 +103,7 @@ impl RuleStyle {
     }
 
     /// An ornamental symbol e.g. a dingbat or a fleuron.
-    pub const fn ornament(c: char) -> Self {
+    pub const fn ornament(_c: char) -> Self {
         todo!()
     }
 }

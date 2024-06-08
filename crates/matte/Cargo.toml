@@ -20,3 +20,6 @@ url.workspace = true
 insta = { workspace = true, features = ["glob"] }
 serde = { workspace = true, features = ["derive"] }
 toml.workspace = true
+
+[lints]
+workspace = true

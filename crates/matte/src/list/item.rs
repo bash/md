@@ -7,7 +7,7 @@ use crate::prefix::Prefix;
 use anstyle::Style;
 
 pub(super) fn render_item<'e>(
-    counter: &CounterStyle,
+    counter: &CounterStyle<'_>,
     events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut impl Write,
@@ -40,7 +40,7 @@ fn render_item_contents<'e>(
     Ok(())
 }
 
-fn item_prefix<'e>(list_type: &CounterStyle, events: &mut impl Events<'e>) -> Prefix {
+fn item_prefix<'e>(list_type: &CounterStyle<'_>, events: &mut impl Events<'e>) -> Prefix {
     match TaskListMarker::try_consume(events) {
         Some(marker) => marker.to_prefix(),
         None => list_type.to_prefix(),

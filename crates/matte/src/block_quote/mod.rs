@@ -59,7 +59,7 @@ fn write_block_quote<'e>(
     Ok(())
 }
 
-fn write_title(kind: Option<Kind>, ctx: &Context, w: &mut impl Write) -> io::Result<()> {
+fn write_title(kind: Option<Kind>, ctx: &Context<'_, '_, '_>, w: &mut impl Write) -> io::Result<()> {
     if let Some(kind) = kind {
         if let Some(title) = kind.title(ctx.options().symbol_repertoire) {
             w.write_prefix(ctx)?;
@@ -71,7 +71,7 @@ fn write_title(kind: Option<Kind>, ctx: &Context, w: &mut impl Write) -> io::Res
 
 fn write_author<'a>(
     inlines: impl IntoIterator<Item = Inline<'a>>,
-    ctx: &Context,
+    ctx: &Context<'_, '_, '_>,
     w: &mut impl Write,
 ) -> io::Result<()> {
     // This is not a regular dash, it's a "quotation dash".
