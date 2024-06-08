@@ -1,6 +1,18 @@
 use std::collections::VecDeque;
 use std::mem;
 
+pub(crate) trait IteratorWithLookahead: Iterator {
+    type Lookahead<'a>: Lookahead<Item = Self::Item>
+    where
+        Self: 'a;
+
+    fn lookahead(&mut self) -> Self::Lookahead<'_>;
+}
+
+pub(crate) trait Lookahead: Iterator {
+    fn commit(self) -> impl Iterator<Item = Self::Item>;
+}
+
 pub(crate) struct Lookaheadable<T, I> {
     buffer: VecDeque<Option<T>>,
     inner: I,
@@ -13,9 +25,17 @@ impl<T, I> Lookaheadable<T, I> {
             buffer: VecDeque::new(),
         }
     }
+}
 
-    pub(crate) fn lookahead(&mut self) -> Lookahead<'_, T, I> {
-        Lookahead {
+impl<T, I> IteratorWithLookahead for Lookaheadable<T, I>
+where
+    T: Clone,
+    I: Iterator<Item = T>,
+{
+    type Lookahead<'a> = LookaheadImpl<'a, T, I> where I: 'a, T: 'a;
+
+    fn lookahead(&mut self) -> Self::Lookahead<'_> {
+        LookaheadImpl {
             inner: self,
             buffer: VecDeque::new(),
         }
@@ -39,12 +59,12 @@ where
 
 impl<T, I> Lookaheadable<T, I> {}
 
-pub(crate) struct Lookahead<'a, T, I> {
+pub(crate) struct LookaheadImpl<'a, T, I> {
     buffer: VecDeque<Option<T>>,
     inner: &'a mut Lookaheadable<T, I>,
 }
 
-impl<'a, T, I> Iterator for Lookahead<'a, T, I>
+impl<'a, T, I> Iterator for LookaheadImpl<'a, T, I>
 where
     I: Iterator<Item = T>,
     T: Clone,
@@ -58,14 +78,17 @@ where
     }
 }
 
-impl<'a, T, I> Lookahead<'a, T, I> {
-    pub(crate) fn commit(mut self) -> impl Iterator<Item = T> {
+impl<'a, T, I> Lookahead for LookaheadImpl<'a, T, I>
+where
+    Self: Iterator<Item = T>,
+{
+    fn commit(mut self) -> impl Iterator<Item = T> {
         let buffer = mem::take(&mut self.buffer);
         buffer.into_iter().flatten()
     }
 }
 
-impl<'a, T, I> Drop for Lookahead<'a, T, I> {
+impl<'a, T, I> Drop for LookaheadImpl<'a, T, I> {
     fn drop(&mut self) {
         for item in self.buffer.drain(..).rev() {
             self.inner.buffer.push_front(item)

@@ -6,7 +6,10 @@ use AnsiColor::*;
 use BlockQuoteKind::*;
 use Kind::*;
 
-pub(super) fn classify(events: Events, kind: Option<BlockQuoteKind>) -> Option<Kind> {
+pub(super) fn classify<'e>(
+    events: &mut impl Events<'e>,
+    kind: Option<BlockQuoteKind>,
+) -> Option<Kind> {
     kind.map(Kind::Markup)
         .or_else(|| classify_from_text(events).map(Kind::Text))
 }
@@ -56,7 +59,7 @@ impl From<Kind> for BlockQuoteKind {
     }
 }
 
-fn classify_from_text(events: Events) -> Option<BlockQuoteKind> {
+fn classify_from_text<'e>(events: &mut impl Events<'e>) -> Option<BlockQuoteKind> {
     macro_rules! starts_with {
         ($text:ident, $symbol:literal) => {
             $text.trim_start().starts_with($symbol)
@@ -93,7 +96,8 @@ fn classify_from_text(events: Events) -> Option<BlockQuoteKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::{supported_parser_options, wrap_events};
+    use crate::lookahead::Lookaheadable;
+    use crate::render::supported_parser_options;
     use pulldown_cmark::Parser;
 
     #[test]
@@ -150,7 +154,7 @@ mod tests {
 
     fn classify(markdown: &str) -> Option<BlockQuoteKind> {
         let mut parser = Parser::new_ext(markdown, supported_parser_options());
-        let mut events = wrap_events(&mut parser);
+        let mut events = Lookaheadable::new(&mut parser);
         classify_from_text(&mut events)
     }
 

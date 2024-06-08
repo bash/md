@@ -1,6 +1,7 @@
-use super::{prelude::*, wrap_events};
+use super::prelude::*;
 use crate::block::{render_block_from_event, Block};
 use crate::chars::NO_BREAK_SPACE;
+use crate::lookahead::Lookaheadable;
 use crate::prefix::Prefix;
 use crate::style::StyledStr;
 use crate::FootnoteDefinitionPlacement::*;
@@ -22,7 +23,7 @@ impl Block for FootnoteDef<'_> {
 
     fn render<'e>(
         self,
-        events: Events<'_, 'e, '_>,
+        events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         w: &mut dyn Write,
     ) -> io::Result<()> {
@@ -54,8 +55,7 @@ pub(super) fn render_collected_footnotes(ctx: &Context, mut w: &mut dyn Write) -
         write_divider(w, ctx)?;
 
         for footnote in footnotes {
-            let mut events = footnote.events.into_iter();
-            let mut events = wrap_events(&mut events);
+            let mut events = Lookaheadable::new(footnote.events.into_iter());
             while let Some(event) = events.next() {
                 let ctx = ctx.block(prefix(footnote.number), Style::new().dimmed());
                 render_block_from_event(event, &mut events, &ctx, w)?

@@ -21,6 +21,7 @@ pub(crate) enum BlockKind {
 pub(crate) mod prelude {
     pub(crate) use super::{Block, BlockKind};
     pub(crate) use crate::context::Context;
+    pub(crate) use crate::lookahead::Lookahead as _;
     pub(crate) use crate::writer::WriteExt as _;
     pub(crate) use crate::Events;
     pub(crate) use pulldown_cmark::{Event, Tag, TagEnd};
@@ -29,7 +30,7 @@ pub(crate) mod prelude {
 
 pub(crate) fn render_block<'e, B: Block>(
     block: B,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     mut writer: &mut dyn Write,
 ) -> io::Result<()> {
@@ -48,7 +49,7 @@ pub(crate) trait Block {
 
     fn render<'e>(
         self,
-        events: Events<'_, 'e, '_>,
+        events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         writer: &mut dyn Write,
     ) -> io::Result<()>;
@@ -58,7 +59,12 @@ pub(crate) trait Block {
     }
 }
 
-fn is_blank(block: &impl Block, kind: BlockKind, events: Events, ctx: &Context) -> bool {
+fn is_blank<'e>(
+    block: &impl Block,
+    kind: BlockKind,
+    events: &mut impl Events<'e>,
+    ctx: &Context,
+) -> bool {
     let mut events = events.lookahead();
     block.is_blank(ctx)
         || (has_start_and_end_tag(kind) && matches!(events.next(), Some(Event::End(_))))

@@ -1,8 +1,9 @@
 use self::prelude::*;
 use crate::block::render_block_from_event;
 use crate::context::State;
-use crate::lookahead::Lookaheadable;
+use crate::lookahead::{IteratorWithLookahead, Lookaheadable};
 use crate::options::Options;
+use trait_set::trait_set;
 
 mod code_block;
 mod footnote_def;
@@ -27,17 +28,16 @@ mod prelude {
     pub(super) use std::io::{self, Write};
 }
 
-// TODO: these lifetimes are horrible, make them clearer
-pub(crate) type EventsOwned<'b, 'c> =
-    Lookaheadable<Event<'b>, &'c mut dyn Iterator<Item = Event<'b>>>;
-pub(crate) type Events<'a, 'b, 'c> = &'a mut EventsOwned<'b, 'c>;
+trait_set! {
+    pub(crate) trait Events<'e> = IteratorWithLookahead<Item = Event<'e>>;
+}
 
-pub fn render<'e, I, W>(mut events: I, mut output: W, options: Options) -> io::Result<()>
+pub fn render<'e, I, W>(events: I, mut output: W, options: Options) -> io::Result<()>
 where
     I: Iterator<Item = Event<'e>>,
     W: io::Write,
 {
-    let mut events = wrap_events(&mut events);
+    let mut events = Lookaheadable::new(events);
     let state = State::new(options);
     let ctx = Context::new(&state);
 
@@ -62,10 +62,4 @@ pub const fn supported_parser_options() -> pulldown_cmark::Options {
         .union(Options::ENABLE_STRIKETHROUGH)
         .union(Options::ENABLE_MATH)
         .union(Options::ENABLE_GFM) // Enables admonitions i.e. [!NOTE], ...
-}
-
-pub(crate) fn wrap_events<'b, 'c>(
-    events: &'c mut dyn Iterator<Item = Event<'b>>,
-) -> EventsOwned<'b, 'c> {
-    Lookaheadable::new(events)
 }

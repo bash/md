@@ -9,7 +9,7 @@ use std::io;
 
 pub(crate) fn render_block_from_event<'e>(
     event: Event<'e>,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn io::Write,
 ) -> io::Result<()> {
@@ -21,7 +21,7 @@ pub(crate) fn render_block_from_event<'e>(
 
 pub(crate) fn try_render_block_from_event<'e>(
     event: Event<'e>,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn io::Write,
 ) -> io::Result<Option<Event<'e>>> {
@@ -45,12 +45,12 @@ pub(crate) fn try_render_block_from_event<'e>(
     Ok(None)
 }
 
-fn metadata_block(events: Events) -> io::Result<()> {
+fn metadata_block<'e>(events: &mut impl Events<'e>) -> io::Result<()> {
     terminated!(events, Event::End(TagEnd::MetadataBlock(..))).for_each(|_event| {});
     Ok(())
 }
 
-fn html_block(events: Events) -> io::Result<()> {
+fn html_block<'e>(events: &mut impl Events<'e>) -> io::Result<()> {
     terminated!(events, Event::End(TagEnd::HtmlBlock)).for_each(|_event| {});
     Ok(())
 }

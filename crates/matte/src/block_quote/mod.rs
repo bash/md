@@ -23,7 +23,7 @@ impl Block for BlockQuote {
 
     fn render<'e>(
         self,
-        events: Events<'_, 'e, '_>,
+        events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         w: &mut dyn Write,
     ) -> io::Result<()> {
@@ -39,7 +39,7 @@ impl Block for BlockQuote {
 
 fn write_block_quote<'e>(
     kind: Option<BlockQuoteKind>,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn Write,
 ) -> io::Result<()> {

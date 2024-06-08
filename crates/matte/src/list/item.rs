@@ -8,7 +8,7 @@ use anstyle::Style;
 
 pub(super) fn render_item<'e>(
     counter: &CounterStyle,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn Write,
 ) -> io::Result<()> {
@@ -25,7 +25,7 @@ enum ListItemState<'e> {
 }
 
 fn render_item_contents<'e>(
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn Write,
 ) -> io::Result<()> {
@@ -40,7 +40,7 @@ fn render_item_contents<'e>(
     Ok(())
 }
 
-fn item_prefix(list_type: &CounterStyle, events: Events) -> Prefix {
+fn item_prefix<'e>(list_type: &CounterStyle, events: &mut impl Events<'e>) -> Prefix {
     match TaskListMarker::try_consume(events) {
         Some(marker) => marker.to_prefix(),
         None => list_type.to_prefix(),
@@ -49,7 +49,7 @@ fn item_prefix(list_type: &CounterStyle, events: Events) -> Prefix {
 
 fn list_item_inlines<'e>(
     first_event: Option<Event<'e>>,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     mut w: &mut dyn Write,
 ) -> io::Result<ListItemState<'e>> {
@@ -77,7 +77,7 @@ fn list_item_inlines<'e>(
 
 fn list_item_blocks<'e>(
     first_event: Event<'e>,
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
     w: &mut dyn Write,
 ) -> io::Result<ListItemState<'e>> {

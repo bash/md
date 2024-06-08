@@ -1,4 +1,3 @@
-use std::ffi::OsStr;
 use std::path::PathBuf;
 
 pub(crate) fn is_changelog(path: &PathBuf) -> bool {

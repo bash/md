@@ -14,7 +14,7 @@ impl Block for Heading {
 
     fn render<'e>(
         self,
-        events: Events<'_, 'e, '_>,
+        events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         mut w: &mut dyn Write,
     ) -> io::Result<()> {

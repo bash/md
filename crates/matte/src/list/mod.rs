@@ -19,7 +19,7 @@ impl Block for List {
 
     fn render<'e>(
         self,
-        events: Events<'_, 'e, '_>,
+        events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         w: &mut dyn Write,
     ) -> io::Result<()> {

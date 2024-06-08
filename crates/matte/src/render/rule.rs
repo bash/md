@@ -11,7 +11,7 @@ impl Block for Rule {
 
     fn render<'e>(
         self,
-        _events: Events<'_, 'e, '_>,
+        _events: &mut impl Events<'e>,
         ctx: &Context<'_, 'e, '_>,
         mut w: &mut dyn Write,
     ) -> io::Result<()> {

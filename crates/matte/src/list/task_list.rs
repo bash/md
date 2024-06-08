@@ -1,13 +1,12 @@
+use crate::block::prelude::*;
 use crate::prefix::Prefix;
-use crate::Events;
 use fmtastic::BallotBox;
-use pulldown_cmark::Event;
 
 #[derive(Debug)]
 pub(super) struct TaskListMarker(pub(super) bool);
 
 impl TaskListMarker {
-    pub(super) fn try_consume(events: Events) -> Option<Self> {
+    pub(super) fn try_consume<'e>(events: &mut impl Events<'e>) -> Option<Self> {
         let mut events = events.lookahead();
         if let Event::TaskListMarker(checked) = events.next()? {
             _ = events.commit();

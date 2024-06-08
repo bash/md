@@ -4,7 +4,7 @@ use smallvec::{Array, SmallVec};
 use PeekState::*;
 
 pub(super) fn peek_quote_author<'e>(
-    events: Events<'_, 'e, '_>,
+    events: &mut impl Events<'e>,
     ctx: &Context<'_, 'e, '_>,
 ) -> Option<impl IntoIterator<Item = Inline<'e>>> {
     let mut state = Initial;
